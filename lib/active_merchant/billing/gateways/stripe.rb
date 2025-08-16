@@ -1,20 +1,24 @@
 require 'active_support/core_ext/hash/slice'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This gateway uses an older version of the Stripe API.
     # To utilize the updated {Payment Intents API}[https://stripe.com/docs/api/payment_intents], integrate with the StripePaymentIntents gateway
     class StripeGateway < Gateway
+      # version '2020-08-27'
+
       self.live_url = 'https://api.stripe.com/v1/'
 
+      # Docs on AVS codes: https://en.wikipedia.org/w/index.php?title=Address_verification_service&_ga=2.97570079.1027215965.1655989706-2008268124.1655989706#AVS_response_codes
+      # possible response values: https://stripe.com/docs/api/payment_methods/object#payment_method_object-card-checks
       AVS_CODE_TRANSLATOR = {
-        'line1: pass, zip: pass' => 'Y',
         'line1: pass, zip: fail' => 'A',
         'line1: pass, zip: unchecked' => 'B',
-        'line1: fail, zip: pass' => 'Z',
+        'line1: unchecked, zip: unchecked' => 'I',
         'line1: fail, zip: fail' => 'N',
         'line1: unchecked, zip: pass' => 'P',
-        'line1: unchecked, zip: unchecked' => 'I'
+        'line1: pass, zip: pass' => 'Y',
+        'line1: fail, zip: pass' => 'Z'
       }
 
       CVC_CODE_TRANSLATOR = {
@@ -86,18 +90,10 @@ module ActiveMerchant #:nodoc:
           return Response.new(false, direct_bank_error)
         end
 
-        MultiResponse.run do |r|
-          if payment.is_a?(ApplePayPaymentToken)
-            r.process { tokenize_apple_pay_token(payment) }
-            payment = StripePaymentToken.new(r.params['token']) if r.success?
-          end
-          r.process do
-            post = create_post_for_auth_or_purchase(money, payment, options)
-            add_application_fee(post, options) if emv_payment?(payment)
-            post[:capture] = 'false'
-            commit(:post, 'charges', post, options)
-          end
-        end.responses.last
+        post = create_post_for_auth_or_purchase(money, payment, options)
+        add_application_fee(post, options) if emv_payment?(payment)
+        post[:capture] = 'false'
+        commit(:post, 'charges', post, options)
       end
 
       # To create a charge on a card or a token, call
@@ -113,17 +109,9 @@ module ActiveMerchant #:nodoc:
           return Response.new(false, direct_bank_error)
         end
 
-        MultiResponse.run do |r|
-          if payment.is_a?(ApplePayPaymentToken)
-            r.process { tokenize_apple_pay_token(payment) }
-            payment = StripePaymentToken.new(r.params['token']) if r.success?
-          end
-          r.process do
-            post = create_post_for_auth_or_purchase(money, payment, options)
-            post[:card][:processing_method] = 'quick_chip' if quickchip_payment?(payment)
-            commit(:post, 'charges', post, options)
-          end
-        end.responses.last
+        post = create_post_for_auth_or_purchase(money, payment, options)
+        post[:card][:processing_method] = 'quick_chip' if quickchip_payment?(payment)
+        commit(:post, 'charges', post, options)
       end
 
       def capture(money, authorization, options = {})
@@ -145,7 +133,8 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         post = {}
-        post[:metadata] = options[:metadata] if options[:metadata]
+        post[:reverse_transfer] = options[:reverse_transfer] if options[:reverse_transfer]
+        add_metadata(post, options)
         post[:reason] = options[:reason] if options[:reason]
         post[:expand] = [:charge]
         commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options)
@@ -156,7 +145,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         post[:refund_application_fee] = true if options[:refund_application_fee]
         post[:reverse_transfer] = options[:reverse_transfer] if options[:reverse_transfer]
-        post[:metadata] = options[:metadata] if options[:metadata]
+        add_metadata(post, options)
         post[:reason] = options[:reason] if options[:reason]
         post[:expand] = [:charge]
 
@@ -196,12 +185,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         post = {}
 
-        if payment.is_a?(ApplePayPaymentToken)
-          token_exchange_response = tokenize_apple_pay_token(payment)
-          params = { card: token_exchange_response.params['token']['id'] } if token_exchange_response.success?
-        elsif payment.is_a?(StripePaymentToken)
-          add_payment_token(params, payment, options)
-        elsif payment.is_a?(Check)
+        if payment.is_a?(Check)
           bank_token_response = tokenize_bank_account(payment)
           return bank_token_response unless bank_token_response.success?
 
@@ -252,17 +236,6 @@ module ActiveMerchant #:nodoc:
         commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
       end
 
-      def tokenize_apple_pay_token(apple_pay_payment_token, options = {})
-        token_response = api_request(:post, "tokens?pk_token=#{CGI.escape(apple_pay_payment_token.payment_data.to_json)}")
-        success = !token_response.key?('error')
-
-        if success && token_response.key?('id')
-          Response.new(success, nil, token: token_response)
-        else
-          Response.new(success, token_response['error']['message'])
-        end
-      end
-
       def verify_credentials
         begin
           ssl_get(live_url + 'charges/nonexistent', headers)
@@ -280,6 +253,7 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((Authorization: Bearer )\w+), '\1[FILTERED]').
           gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2').
           gsub(%r(((\[card\]|card)\[cryptogram\]=)[^&]+(&?)), '\1[FILTERED]\3').
           gsub(%r(((\[card\]|card)\[cvc\]=)\d+), '\1[FILTERED]').
@@ -290,7 +264,9 @@ module ActiveMerchant #:nodoc:
           gsub(%r(((\[card\]|card)\[number\]=)\d+), '\1[FILTERED]').
           gsub(%r(((\[card\]|card)\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\3').
           gsub(%r(((\[bank_account\]|bank_account)\[account_number\]=)\d+), '\1[FILTERED]').
-          gsub(%r(((\[payment_method_data\]|payment_method_data)\[card\]\[token\]=)[^&]+(&?)), '\1[FILTERED]\3')
+          gsub(%r(((\[payment_method_data\]|payment_method_data)\[card\]\[token\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[payment_method_data\]|payment_method_data)\[card\]\[network_token\]\[number\]=)\d+), '\1[FILTERED]').
+          gsub(%r(((\[payment_method_options\]|payment_method_options)\[card\]\[network_token\]\[cryptogram\]=)[^&]+(&?)), '\1[FILTERED]')
       end
 
       def supports_network_tokenization?
@@ -301,7 +277,7 @@ module ActiveMerchant #:nodoc:
       def delete_latest_test_external_account(account)
         return unless test?
 
-        auth_header = { 'Authorization': "Bearer #{options[:login]}" }
+        auth_header = { 'Authorization' => 'Basic ' + Base64.strict_encode64(options[:login].to_s + ':').strip }
         url = "#{live_url}accounts/#{CGI.escape(account)}/external_accounts"
         accounts_response = JSON.parse(ssl_get("#{url}?limit=100", auth_header))
         to_delete = accounts_response['data'].reject { |ac| ac['default_for_currency'] }
@@ -362,12 +338,7 @@ module ActiveMerchant #:nodoc:
       def create_post_for_auth_or_purchase(money, payment, options)
         post = {}
 
-        if payment.is_a?(StripePaymentToken)
-          add_payment_token(post, payment, options)
-        else
-          add_creditcard(post, payment, options)
-        end
-
+        add_creditcard(post, payment, options)
         add_charge_details(post, money, payment, options)
         post
       end
@@ -434,7 +405,7 @@ module ActiveMerchant #:nodoc:
         post[:level3] = level_three unless level_three.empty?
       end
 
-      def add_expand_parameters(post, options)
+      def add_expand_parameters(post, options, method, url)
         post[:expand] ||= []
         post[:expand].concat(Array.wrap(options[:expand]).map(&:to_sym)).uniq!
       end
@@ -506,9 +477,10 @@ module ActiveMerchant #:nodoc:
           end
 
           if creditcard.is_a?(NetworkTokenizationCreditCard)
+            tokenization_method = creditcard.source == :google_pay ? :android_pay : creditcard.source
             card[:cryptogram] = creditcard.payment_cryptogram
             card[:eci] = creditcard.eci.rjust(2, '0') if creditcard.eci =~ /^[0-9]+$/
-            card[:tokenization_method] = creditcard.source.to_s
+            card[:tokenization_method] = tokenization_method.to_s
           end
           post[:card] = card
 
@@ -529,10 +501,6 @@ module ActiveMerchant #:nodoc:
 
       def add_emv_creditcard(post, icc_data, options = {})
         post[:card] = { emv_auth_data: icc_data }
-      end
-
-      def add_payment_token(post, token, options = {})
-        post[:card] = token.payment_data['id']
       end
 
       def add_customer(post, payment, options)
@@ -575,7 +543,7 @@ module ActiveMerchant #:nodoc:
 
       def add_source_owner(post, creditcard, options)
         post[:owner] = {}
-        post[:owner][:name] = creditcard.name if creditcard.name
+        post[:owner][:name] = creditcard.name if creditcard.respond_to?(:name) && creditcard.name
         post[:owner][:email] = options[:email] if options[:email]
 
         if address = options[:billing_address] || options[:address]
@@ -611,8 +579,32 @@ module ActiveMerchant #:nodoc:
         post[:radar_options] = radar_options unless radar_options.empty?
       end
 
+      def add_header_fields(response)
+        return unless @response_headers.present?
+
+        headers = {}
+        headers['response_headers'] = {}
+        headers['response_headers']['idempotent_replayed'] = @response_headers['idempotent-replayed'] if @response_headers['idempotent-replayed']
+        headers['response_headers']['stripe_should_retry'] = @response_headers['stripe-should-retry'] if @response_headers['stripe-should-retry']
+
+        response.merge!(headers)
+      end
+
+      def add_card_response_field(response)
+        return if @card_3d_supported.nil?
+
+        card_details = {}
+        card_details['three_d_secure_usage_supported'] = @card_3d_supported
+
+        response.merge!(card_details)
+      end
+
       def parse(body)
-        JSON.parse(body)
+        response = JSON.parse(body)
+        add_header_fields(response)
+        add_card_response_field(response)
+
+        response
       end
 
       def post_data(params)
@@ -650,18 +642,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def headers(options = {})
-        key = options[:key] || @api_key
-        idempotency_key = options[:idempotency_key]
+      def key(options = {})
+        options[:key] || @api_key
+      end
 
+      def headers(method = :post, options = {})
         headers = {
-          'Authorization' => 'Basic ' + Base64.strict_encode64(key.to_s + ':').strip,
+          'Authorization' => 'Basic ' + Base64.strict_encode64(key(options).to_s + ':').strip,
           'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Stripe-Version' => api_version(options),
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
           'X-Stripe-Client-User-Metadata' => { ip: options[:ip] }.to_json
         }
-        headers['Idempotency-Key'] = idempotency_key if idempotency_key
+        headers['Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key] && method != :get
         headers['Stripe-Account'] = options[:stripe_account] if options[:stripe_account]
         headers
       end
@@ -679,7 +672,7 @@ module ActiveMerchant #:nodoc:
       def api_request(method, endpoint, parameters = nil, options = {})
         raw_response = response = nil
         begin
-          raw_response = ssl_request(method, self.live_url + endpoint, post_data(parameters), headers(options))
+          raw_response = ssl_request(method, self.live_url + endpoint, post_data(parameters), headers(method, options))
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -691,35 +684,54 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, url, parameters = nil, options = {})
-        add_expand_parameters(parameters, options) if parameters
+        add_expand_parameters(parameters, options, method, url) if parameters
+        return Response.new(false, 'Invalid API Key provided') unless key_valid?(options)
+
         response = api_request(method, url, parameters, options)
         response['webhook_id'] = options[:webhook_id] if options[:webhook_id]
         success = success_from(response, options)
 
-        card = card_from_response(response)
-        avs_code = AVS_CODE_TRANSLATOR["line1: #{card['address_line1_check']}, zip: #{card['address_zip_check']}"]
-        cvc_code = CVC_CODE_TRANSLATOR[card['cvc_check']]
-        Response.new(success,
+        card_checks = card_from_response(response)
+        avs_code = AVS_CODE_TRANSLATOR["line1: #{card_checks['address_line1_check']}, zip: #{card_checks['address_zip_check'] || card_checks['address_postal_code_check']}"]
+        cvc_code = CVC_CODE_TRANSLATOR[card_checks['cvc_check']]
+        Response.new(
+          success,
           message_from(success, response),
           response,
           test: response_is_test?(response),
-          authorization: authorization_from(success, url, method, response),
+          authorization: authorization_from(success, url, method, response, options),
           avs_result: { code: avs_code },
           cvv_result: cvc_code,
           emv_authorization: emv_authorization_from_response(response),
-          error_code: success ? nil : error_code_from(response))
+          error_code: success ? nil : error_code_from(response)
+        )
       end
 
-      def authorization_from(success, url, method, response)
-        return response.fetch('error', {})['charge'] unless success
+      def key_valid?(options)
+        return true unless test?
+
+        %w(sk rk).each do |k|
+          return false if key(options).start_with?(k) && !key(options).start_with?("#{k}_test")
+        end
+
+        true
+      end
+
+      def authorization_from(success, url, method, response, options)
+        return error_id(response, url) unless success
 
         if url == 'customers'
           [response['id'], response.dig('sources', 'data').first&.dig('id')].join('|')
-        elsif method == :post && (url.match(/customers\/.*\/cards/) || url.match(/payment_methods\/.*\/attach/))
-          [response['customer'], response['id']].join('|')
+        elsif method == :post && (url.match(/customers\/.*\/cards/) || url.match(/payment_methods\/.*\/attach/) || options[:action] == :store)
+          response_id = options[:action] == :store ? response['payment_method'] : response['id']
+          [response['customer'], response_id].join('|')
         else
           response['id']
         end
+      end
+
+      def error_id(response, url)
+        response.dig('error', 'charge') || response.dig('error', 'setup_intent', 'id') || response['id']
       end
 
       def message_from(success, response)
@@ -728,6 +740,18 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response, options)
         !response.key?('error') && response['status'] != 'failed'
+      end
+
+      # Override the regular handle response so we can access the headers
+      # set header fields and values so we can add them to the response body
+      def handle_response(response)
+        @response_headers = response.each_header.to_h if response.respond_to?(:header)
+        case response.code.to_i
+        when 200...300
+          response.body
+        else
+          raise ResponseError.new(response)
+        end
       end
 
       def response_error(raw_response)
