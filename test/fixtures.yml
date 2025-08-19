@@ -1333,6 +1333,11 @@ sage_pay:
 sallie_mae:
   login: TEST0
 
+secure_co:
+  username: USERNAME
+  password: PASSWORD
+  merchant_account_id: 00000000-0000-0000-0000-000000000000
+
 secure_net:
   login: X
   password: Y
