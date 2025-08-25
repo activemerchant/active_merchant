@@ -329,8 +329,8 @@ module ActiveMerchant # :nodoc:
         end
         if payment_method.is_a?(String)
           if /tok/.match?(payment_method)
-            post[:type] = 'token'
-            post[:token] = payment_method
+            post[key][:type] = 'token'
+            post[key][:token] = payment_method
           elsif /src/.match?(payment_method)
             post[key][:type] = 'id'
             post[key][:id] = payment_method
