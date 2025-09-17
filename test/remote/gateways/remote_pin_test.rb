@@ -249,6 +249,22 @@ class RemotePinTest < Test::Unit::TestCase
     assert_failure already_voided
   end
 
+  def test_successful_find
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+
+    assert find = @gateway.find(authorization.authorization, @options)
+    assert_success find
+  end
+
+  def test_failed_find
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+
+    assert find = @gateway.find(authorization.authorization, @options)
+    assert_success find
+  end
+
   def test_invalid_login
     gateway = PinGateway.new(api_key: '')
     response = gateway.purchase(@amount, @credit_card, @options)

@@ -87,6 +87,11 @@ module ActiveMerchant #:nodoc:
         commit(:get, "/charges/verify?session_token=#{session_token}", nil, options)
       end
 
+      # Returns the details of a charge
+      def find(token, options = {})
+        commit(:get, "charges/#{CGI.escape(token)}", nil, options)
+      end
+
       # Updates the credit card for the customer.
       def update(token, creditcard, options = {})
         post = {}
