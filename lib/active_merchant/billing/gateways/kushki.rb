@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class KushkiGateway < Gateway
       self.display_name = 'Kushki'
       self.homepage_url = 'https://www.kushkipagos.com'
@@ -11,6 +11,9 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = %i[visa master american_express discover diners_club alia]
+
+      # Define the API version using the Versionable module
+      version 'v1'
 
       def initialize(options = {})
         requires!(options, :public_merchant_id, :private_merchant_id)
@@ -317,9 +320,9 @@ module ActiveMerchant #:nodoc:
         base_url = test? ? test_url : live_url
 
         if %w[void refund].include?(action)
-          base_url + 'v1/' + ENDPOINT[action] + '/' + params[:ticketNumber].to_s
+          base_url + "#{fetch_version}/" + ENDPOINT[action] + '/' + params[:ticketNumber].to_s
         else
-          base_url + 'card/v1/' + ENDPOINT[action]
+          base_url + "card/#{fetch_version}/" + ENDPOINT[action]
         end
       end
 

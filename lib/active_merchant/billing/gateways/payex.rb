@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayexGateway < Gateway
       class_attribute :live_external_url, :test_external_url, :live_confined_url, :test_confined_url
 
@@ -245,7 +245,7 @@ module ActiveMerchant #:nodoc:
         properties = {
           accountNumber: @options[:account],
           transactionNumber: transaction_number,
-          amount: amount,
+          amount:,
           orderId: options[:order_id] || '',
           vatAmount: options[:vat_amount] || 0,
           additionalValues: ''
@@ -262,7 +262,7 @@ module ActiveMerchant #:nodoc:
         properties = {
           accountNumber: @options[:account],
           transactionNumber: transaction_number,
-          amount: amount,
+          amount:,
           orderId: options[:order_id],
           vatAmount: options[:vat_amount] || 0,
           additionalValues: ''

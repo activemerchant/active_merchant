@@ -5,7 +5,7 @@ class RemotePlexoTest < Test::Unit::TestCase
     @gateway = PlexoGateway.new(fixtures(:plexo))
 
     @amount = 100
-    @credit_card = credit_card('5555555555554444', month: '12', year: '2024', verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+    @credit_card = credit_card('5555555555554444', month: '12', year: Time.now.year + 1, verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
     @declined_card = credit_card('5555555555554445')
     @options = {
       email: 'snavatta@plexo.com.uy',
@@ -60,6 +60,27 @@ class RemotePlexoTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @decrypted_network_token, @options.merge({ invoice_number: '12345abcde' }))
     assert_success response
     assert_equal 'You have been mocked.', response.message
+  end
+
+  def test_successful_inquire_with_payment_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    auth = response.authorization
+    inquire = @gateway.inquire(auth, @options)
+    assert_success inquire
+    assert_match auth, response.params['id']
+  end
+
+  def test_successful_purchase_and_inquire_with_payment_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    purchase_transaction = response.params
+    inquire = @gateway.inquire(response.authorization, @options)
+    assert_success inquire
+    inquire_transaction = inquire.params
+    assert_equal purchase_transaction['id'], inquire_transaction['id']
+    assert_equal purchase_transaction['referenceId'], inquire_transaction['referenceId']
+    assert_equal purchase_transaction['status'], inquire_transaction['status']
   end
 
   def test_successful_purchase
@@ -182,6 +203,9 @@ class RemotePlexoTest < Test::Unit::TestCase
     assert_equal 'The selected payment state is not valid.', response.message
   end
 
+  # for verify tests: sometimes those fails but re-running after
+  # few seconds they can works
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
@@ -221,7 +245,7 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_passcard
-    credit_card = credit_card('6280260025383009', month: '12', year: '2024',
+    credit_card = credit_card('6280260025383009', month: '12', year: Time.now.year + 1,
       verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
 
     response = @gateway.purchase(@amount, credit_card, @options)
@@ -229,7 +253,7 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_edenred
-    credit_card = credit_card('6374830000000823', month: '12', year: '2024',
+    credit_card = credit_card('6374830000000823', month: '12', year: Time.now.year + 1,
       verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
 
     response = @gateway.purchase(@amount, credit_card, @options)
@@ -237,7 +261,7 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_anda
-    credit_card = credit_card('6031991248204901', month: '12', year: '2024',
+    credit_card = credit_card('6031991248204901', month: '12', year: Time.now.year + 1,
       verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
 
     response = @gateway.purchase(@amount, credit_card, @options)
@@ -274,7 +298,7 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_tarjetad
-    credit_card = credit_card('6018287227431046', month: '12', year: '2024',
+    credit_card = credit_card('6018287227431046', month: '12', year: Time.now.year + 1,
       verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
 
     response = @gateway.purchase(@amount, credit_card, @options)
@@ -282,7 +306,7 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_failure_purchase_tarjetad
-    credit_card = credit_card('6018282227431033', month: '12', year: '2024',
+    credit_card = credit_card('6018282227431033', month: '12', year: Time.now.year + 1,
       verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
 
     response = @gateway.purchase(@amount, credit_card, @options)
@@ -292,7 +316,7 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_sodexo
-    credit_card = credit_card('5058645584812145', month: '12', year: '2024',
+    credit_card = credit_card('5058645584812145', month: '12', year: Time.now.year + 1,
       verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
 
     response = @gateway.purchase(@amount, credit_card, @options)
@@ -315,7 +339,7 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_and_declined_cancellation_sodexo
-    credit_card = credit_card('5058646599260130', month: '12', year: '2024',
+    credit_card = credit_card('5058646599260130', month: '12', year: Time.now.year + 1,
       verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
 
     purchase = @gateway.purchase(@amount, credit_card, @options)

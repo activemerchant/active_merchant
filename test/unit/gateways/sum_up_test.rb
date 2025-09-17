@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class SumUpTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = SumUpGateway.new(
       access_token: 'sup_sk_ABC123',
@@ -12,7 +14,9 @@ class SumUpTest < Test::Unit::TestCase
     @options = {
       payment_type: 'card',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      partner_id: 'PartnerId',
+      order_id: SecureRandom.uuid
     }
   end
 
@@ -26,6 +30,29 @@ class SumUpTest < Test::Unit::TestCase
     assert_equal 'PENDING', response.message
     refute_empty response.params
     assert response.test?
+  end
+
+  def test_successful_purchase_with_options
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      if checkout_ref = json_data['checkout_reference']
+        assert_match(/#{@options[:partner_id]}-#{@options[:order_id]}/, checkout_ref)
+      end
+    end.respond_with(successful_create_checkout_response)
+  end
+
+  def test_successful_purchase_without_partner_id
+    @options.delete(:partner_id)
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      if checkout_ref = json_data['checkout_reference']
+        assert_match(/#{@options[:order_id]}/, checkout_ref)
+      end
+    end.respond_with(successful_create_checkout_response)
   end
 
   def test_failed_purchase
@@ -78,6 +105,16 @@ class SumUpTest < Test::Unit::TestCase
     response = @gateway.send(:parse, failed_complete_checkout_response)
     error_code_from = @gateway.send(:error_code_from, false, response.symbolize_keys)
     assert_equal 'CHECKOUT_SESSION_IS_EXPIRED', error_code_from
+  end
+
+  def test_base_url_includes_version
+    assert_includes @gateway.live_url, '/v0.1/'
+  end
+
+  def test_default_version_in_endpoint_url
+    action = 'checkouts'
+    url = @gateway.live_url + action
+    assert_match(%r{/v0.1/checkouts\z}, url)
   end
 
   private

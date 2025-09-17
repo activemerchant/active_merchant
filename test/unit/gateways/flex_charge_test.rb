@@ -63,6 +63,43 @@ class FlexChargeTest < Test::Unit::TestCase
     }.merge(@options)
   end
 
+  def test_access_token_valid_when_token_present_and_not_expired
+    @gateway.instance_variable_set(:@options, {
+      access_token: 'valid_token',
+      token_expires: (DateTime.now + 10.minutes).strftime('%Q').to_i
+    })
+    assert @gateway.send(:access_token_valid?)
+  end
+
+  def test_access_token_valid_when_token_present_but_expired
+    @gateway.instance_variable_set(:@options, {
+      access_token: 'expired_token',
+      token_expires: (DateTime.now - 10.minutes).strftime('%Q').to_i
+    })
+    refute @gateway.send(:access_token_valid?)
+  end
+
+  def test_access_token_valid_when_token_not_present
+    @gateway.instance_variable_set(:@options, {
+      access_token: nil,
+      token_expires: (DateTime.now + 10.minutes).strftime('%Q').to_i
+    })
+    refute @gateway.send(:access_token_valid?)
+  end
+
+  def test_access_token_valid_when_token_is_an_string
+    @gateway.instance_variable_set(:@options, {
+      access_token:  'valid_token',
+      token_expires: (DateTime.now + 10.minutes).strftime('%Q')
+    })
+    assert @gateway.send(:access_token_valid?)
+  end
+
+  def test_valid_homepage_url
+    assert @gateway.homepage_url.present?
+    assert_equal 'https://www.flexfactor.io/', @gateway.homepage_url
+  end
+
   def test_supported_countries
     assert_equal %w(US), FlexChargeGateway.supported_countries
   end
@@ -123,6 +160,8 @@ class FlexChargeTest < Test::Unit::TestCase
         assert_equal request['payer']['email'], @options[:email]
         assert_equal request['description'], @options[:description]
 
+        assert_equal request['paymentMethod']['verificationValue'], @credit_card.verification_value
+
         assert_equal request['billingInformation']['firstName'], 'Cure'
         assert_equal request['billingInformation']['country'], 'CA'
         assert_equal request['shippingInformation']['firstName'], 'Jhon'
@@ -143,6 +182,19 @@ class FlexChargeTest < Test::Unit::TestCase
       request = JSON.parse(data)
       assert_equal request['transactionType'], 'Authorization' if /evaluate/.match?(endpoint)
     end.respond_with(successful_access_token_response, successful_purchase_response)
+  end
+
+  def test_failed_authorization_with_async_flag
+    @options[:async] = true
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_method, endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionType'], 'Authorization' if /evaluate/.match?(endpoint)
+    end.respond_with(successful_access_token_response, successful_purchase_response)
+
+    assert_failure response
+    assert_equal 'CHALLENGE', response.message
   end
 
   def test_successful_purchase_three_ds_global
@@ -220,6 +272,26 @@ class FlexChargeTest < Test::Unit::TestCase
 
     assert_failure response
     assert response.test?
+  end
+
+  def test_failed_purchase_idempotency_key
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_access_token_response, missed_idempotency_key_field)
+
+    assert_failure response
+    assert_nil response.error_code
+    assert_equal '{"IdempotencyKey":["The IdempotencyKey field is required."]}', response.message
+  end
+
+  def test_failed_purchase_expiry_date
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_access_token_response, invalid_expiry_date_utc)
+
+    assert_failure response
+    assert_nil response.error_code
+    assert_equal '{"ExpiryDateUtc":["The field ExpiryDateUtc is invalid."]}', response.message
   end
 
   def test_scrub
@@ -304,6 +376,17 @@ class FlexChargeTest < Test::Unit::TestCase
     @gateway.send(:add_base_data, post, @options)
 
     assert_equal 5, post[:idempotencyKey].split('-').size
+  end
+
+  def test_base_urls_include_version
+    assert_includes @gateway.test_url, '/v1/'
+    assert_includes @gateway.live_url, '/v1/'
+  end
+
+  def test_default_version_in_endpoint_url
+    action = :purchase
+    url = @gateway.send(:url, action)
+    assert_match(%r{/v1/evaluate\z}, url)
   end
 
   private
@@ -620,6 +703,28 @@ class FlexChargeTest < Test::Unit::TestCase
           }
         ],
         "customProperties": {}
+      }
+    RESPONSE
+  end
+
+  def missed_idempotency_key_field
+    <<~RESPONSE
+      {
+        "TraceId": ["00-bf5a1XXXTRACEXXX174b8a-f58XXXIDXXX32-01"],
+        "IdempotencyKey": ["The IdempotencyKey field is required."],
+        "access_token": "SomeAccessTokenXXXX1ZWE5ZmY0LTM4MjUtNDc0ZC04ZDhhLTk2OGZjM2NlYTA5ZCIsImlhdCI6IjE3MjI1Mjc1ODI1MjIiLCJhdWQiOlsicGF5bWVudHMiLCJvcmRlcnMiLCJtZXJjaGFudHMiLCJlbGlnaWJpbGl0eS1zZnRwIiwiZWxpZ2liaWxpdHkiLCJjb250YWN0Il0sImN1c3RvbTptaWQiOiJkOWQwYjVmZC05NDMzLTQ0ZDMtODA1MS02M2ZlZTI4NzY4ZTgiLCJuYmYiOjE3MjI1Mjc1ODIsImV4cCI6MTcyMjUyODE4MiwiaXNzIjoiQXBpLUNsaWVudC1TZXJ2aWNlIn0.Q7b5CViX4x3Qmna-JmLS2pQD8kWbrI5-GLLT1Ki9t3o",
+        "token_expires": 1722528182522
+      }
+    RESPONSE
+  end
+
+  def invalid_expiry_date_utc
+    <<~RESPONSE
+      {
+        "TraceId": ["00-bf5a1XXXTRACEXXX174b8a-f58XXXIDXXX32-01"],
+        "ExpiryDateUtc":["The field ExpiryDateUtc is invalid."],
+        "access_token": "SomeAccessTokenXXXX1ZWE5ZmY0LTM4MjUtNDc0ZC04ZDhhLTk2OGZjM2NlYTA5ZCIsImlhdCI6IjE3MjI1Mjc1ODI1MjIiLCJhdWQiOlsicGF5bWVudHMiLCJvcmRlcnMiLCJtZXJjaGFudHMiLCJlbGlnaWJpbGl0eS1zZnRwIiwiZWxpZ2liaWxpdHkiLCJjb250YWN0Il0sImN1c3RvbTptaWQiOiJkOWQwYjVmZC05NDMzLTQ0ZDMtODA1MS02M2ZlZTI4NzY4ZTgiLCJuYmYiOjE3MjI1Mjc1ODIsImV4cCI6MTcyMjUyODE4MiwiaXNzIjoiQXBpLUNsaWVudC1TZXJ2aWNlIn0.Q7b5CViX4x3Qmna-JmLS2pQD8kWbrI5-GLLT1Ki9t3o",
+        "token_expires": 1722528182522
       }
     RESPONSE
   end

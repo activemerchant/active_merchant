@@ -7,13 +7,14 @@ class RemotePaysafeTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4037111111000000')
     @mastercard = credit_card('5200400000000009', brand: 'master')
-    @pm_token = 'Ci3S9DWyOP9CiJ5'
     @options = {
       billing_address: address,
       merchant_descriptor: {
         dynamic_descriptor: 'Store Purchase',
         phone: '999-8887777'
-      }
+      },
+      email: 'profile@memail.com',
+      customer_id: SecureRandom.hex(16)
     }
     @profile_options = {
       date_of_birth: {
@@ -23,8 +24,9 @@ class RemotePaysafeTest < Test::Unit::TestCase
       },
       email: 'profile@memail.com',
       phone: '111-222-3456',
-      address: address
+      address:
     }
+    @pm_token = @gateway.store(credit_card('4111111111111111'), @profile_options).authorization
     @mc_three_d_secure_2_options = {
       currency: 'EUR',
       three_d_secure: {
@@ -163,7 +165,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token
-    response = @gateway.purchase(200, @pm_token, @options)
+    response = @gateway.purchase(150, @pm_token, @options)
     assert_success response
     assert_equal 'COMPLETED', response.message
     assert_equal 0, response.params['availableToSettle']
@@ -171,7 +173,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token_3ds2
-    response = @gateway.purchase(200, @pm_token, @options.merge(@visa_three_d_secure_2_options))
+    response = @gateway.purchase(155, @pm_token, @options.merge(@visa_three_d_secure_2_options))
     assert_success response
     assert_equal 'COMPLETED', response.message
     assert_not_nil response.params['authCode']
@@ -222,7 +224,33 @@ class RemotePaysafeTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'installment',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, stored_options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+  end
+
+  def test_successful_purchase_with_external_initial_transaction_id
+    initial_options = @options.merge(
+      external_initial_transaction_id: 'abc123',
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled'
+      }
+    )
+
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+    assert_not_nil initial_response.params['storedCredential']
+    network_transaction_id = initial_response.params['id']
+
+    stored_options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        network_transaction_id:
       }
     )
     response = @gateway.purchase(@amount, @credit_card, stored_options)
@@ -241,9 +269,9 @@ class RemotePaysafeTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_incorrect_funding_transaction_type
-    response = @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'SVDW_FUNDS_TRANSFER' }))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'PERSON_TO_ACCOUNT' }))
     assert_failure response
-    assert_equal 'Error(s)- code:3068, message:You submitted a funding transaction that is not correct for the merchant account.', response.message
+    assert_equal 'Error(s)- code:5068, message:Field Error(s)', response.message
   end
 
   def test_failed_purchase
@@ -265,6 +293,8 @@ class RemotePaysafeTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture_with_token
     auth = @gateway.authorize(@amount, @pm_token, @options)
     assert_success auth
+    assert_equal 'COMPLETED', auth.message
+    assert_not_nil auth.params['authCode']
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
@@ -272,22 +302,15 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_equal @amount, capture.params['availableToRefund']
   end
 
-  def test_successful_authorize_with_token
-    response = @gateway.authorize(250, @pm_token, @options)
-    assert_success response
-    assert_equal 'COMPLETED', response.message
-    assert_not_nil response.params['authCode']
-  end
-
   def test_successful_authorize_with_token_3ds1
-    response = @gateway.authorize(200, @pm_token, @options.merge(@visa_three_d_secure_1_options))
+    response = @gateway.authorize(250, @pm_token, @options.merge(@visa_three_d_secure_1_options))
     assert_success response
     assert_equal 'COMPLETED', response.message
     assert_not_nil response.params['authCode']
   end
 
   def test_successful_authorize_with_token_3ds2
-    response = @gateway.authorize(200, @pm_token, @options.merge(@visa_three_d_secure_2_options))
+    response = @gateway.authorize(180, @pm_token, @options.merge(@visa_three_d_secure_2_options))
     assert_success response
     assert_equal 'COMPLETED', response.message
     assert_not_nil response.params['authCode']
@@ -358,7 +381,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal "Error(s)- code:5023, message:Request method 'POST' not supported", response.message
+    assert_equal "Error(s)- code:5023, message:Request method 'POST' is not supported", response.message
   end
 
   def test_successful_verify
@@ -377,29 +400,49 @@ class RemotePaysafeTest < Test::Unit::TestCase
   # gateway is with a specific dollar amount
 
   def test_successful_store
-    response = @gateway.store(credit_card('4111111111111111'), @profile_options)
-    assert_success response
-    assert_equal 'ACTIVE', response.params['status']
-    assert_equal 1979, response.params['dateOfBirth']['year']
-    assert_equal '456 My Street', response.params['addresses'].first['street']
+    @profile_options[:customer_id] = SecureRandom.uuid
+    store = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    assert_success store
+
+    @profile_options[:profile_id] = store.authorization.split('|').last
+    second_store = @gateway.store(credit_card('4037111111000000'), @profile_options)
+    assert_success second_store
   end
 
-  def test_successful_store_and_purchase
-    response = @gateway.store(credit_card('4111111111111111'), @profile_options)
-    assert_success response
-    token = response.authorization
+  def test_successful_unsuccessful_store_with_duplicate_card
+    @profile_options[:customer_id] = SecureRandom.uuid
+    store = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    assert_success store
 
-    purchase = @gateway.purchase(300, token, @options)
-    assert_success purchase
-    assert_match 'COMPLETED', purchase.message
+    @profile_options[:profile_id] = store.authorization.split('|').last
+    second_store = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    message = "Error(s)- code:7503, message:Card number already in use - #{store.params['cards'].first['id']}"
+
+    assert_failure second_store
+    assert_equal message, second_store.message
+  end
+
+  def test_successful_unsuccessful_store_for_duplicate_customer_id
+    @profile_options[:customer_id] = SecureRandom.uuid
+    store = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    assert_success store
+
+    second_store = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    message = "Error(s)- code:7505, message:The merchantCustomerId provided for this profile has already been used for another profile - #{store.authorization.split('|').last}"
+
+    assert_failure second_store
+    assert_equal message, second_store.message
   end
 
   def test_successful_store_and_unstore
-    response = @gateway.store(credit_card('4111111111111111'), @profile_options)
-    assert_success response
-    id = response.authorization
-    unstore = @gateway.unstore(id)
+    unstore = @gateway.unstore(@pm_token)
     assert_success unstore
+  end
+
+  def test_successful_credit
+    response = @gateway.credit(100, @credit_card, @options)
+    assert_success response
+    assert_match 'PENDING', response.message
   end
 
   def test_invalid_login

@@ -1,23 +1,27 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PriorityGateway < Gateway
+      version 'v3'
+      version 'v1', :verify_card_api
+      version 'v1', :jwt_api
+
       # Sandbox and Production
-      self.test_url = 'https://sandbox.api.mxmerchant.com/checkout/v3/payment'
-      self.live_url = 'https://api.mxmerchant.com/checkout/v3/payment'
+      self.test_url = "https://sandbox.api.mxmerchant.com/checkout/#{fetch_version}/payment"
+      self.live_url = "https://api.mxmerchant.com/checkout/#{fetch_version}/payment"
 
       class_attribute :test_url_verify, :live_url_verify, :test_auth, :live_auth, :test_env_verify, :live_env_verify, :test_url_batch, :live_url_batch, :test_url_jwt, :live_url_jwt, :merchant
 
       # Sandbox and Production - verify card
-      self.test_url_verify = 'https://sandbox-api2.mxmerchant.com/merchant/v1/bin'
-      self.live_url_verify = 'https://api2.mxmerchant.com/merchant/v1/bin'
+      self.test_url_verify = "https://sandbox-api2.mxmerchant.com/merchant/#{fetch_version(:verify_card_api)}/bin"
+      self.live_url_verify = "https://api2.mxmerchant.com/merchant/#{fetch_version(:verify_card_api)}/bin"
 
       # Sandbox and Production - check batch status
-      self.test_url_batch = 'https://sandbox.api.mxmerchant.com/checkout/v3/batch'
-      self.live_url_batch = 'https://api.mxmerchant.com/checkout/v3/batch'
+      self.test_url_batch = "https://sandbox.api.mxmerchant.com/checkout/#{fetch_version}/batch"
+      self.live_url_batch = "https://api.mxmerchant.com/checkout/#{fetch_version}/batch"
 
       # Sandbox and Production - generate jwt for verify card url
-      self.test_url_jwt = 'https://sandbox-api2.mxmerchant.com/security/v1/application/merchantId'
-      self.live_url_jwt = 'https://api2.mxmerchant.com/security/v1/application/merchantId'
+      self.test_url_jwt = "https://sandbox-api2.mxmerchant.com/security/#{fetch_version(:jwt_api)}/application/merchantId"
+      self.live_url_jwt = "https://api2.mxmerchant.com/security/#{fetch_version(:jwt_api)}/application/merchantId"
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -58,7 +62,7 @@ module ActiveMerchant #:nodoc:
         add_auth_purchase_params(params, options)
         add_credit_card(params, credit_card, 'purchase', options)
 
-        commit('purchase', params: params)
+        commit('purchase', params:)
       end
 
       def authorize(amount, credit_card, options = {})
@@ -71,7 +75,7 @@ module ActiveMerchant #:nodoc:
         add_auth_purchase_params(params, options)
         add_credit_card(params, credit_card, 'purchase', options)
 
-        commit('purchase', params: params)
+        commit('purchase', params:)
       end
 
       def credit(amount, credit_card, options = {})
@@ -83,7 +87,7 @@ module ActiveMerchant #:nodoc:
         add_merchant_id(params)
         add_amount(params, amount, options)
         add_credit_params(params, credit_card, options)
-        commit('credit', params: params)
+        commit('credit', params:)
       end
 
       def refund(amount, authorization, options = {})
@@ -94,7 +98,7 @@ module ActiveMerchant #:nodoc:
         # refund amounts must be negative
         params['amount'] = ('-' + localized_amount(amount.to_f, options[:currency])).to_f
 
-        commit('refund', params: params)
+        commit('refund', params:)
       end
 
       def capture(amount, authorization, options = {})
@@ -104,19 +108,19 @@ module ActiveMerchant #:nodoc:
         params['paymentToken'] = payment_token(authorization) || options[:payment_token]
         add_auth_purchase_params(params, options)
 
-        commit('capture', params: params)
+        commit('capture', params:)
       end
 
       def void(authorization, options = {})
         params = {}
 
-        commit('void', params: params, iid: payment_id(authorization))
+        commit('void', params:, iid: payment_id(authorization))
       end
 
       def verify(credit_card, _options = {})
         jwt = create_jwt.params['jwtToken']
 
-        commit('verify', card_number: credit_card.number, jwt: jwt)
+        commit('verify', card_number: credit_card.number, jwt:)
       end
 
       def get_payment_status(batch_id)
@@ -315,7 +319,7 @@ module ActiveMerchant #:nodoc:
         when 'void'
           base_url + "/#{ref_number}?force=true"
         when 'verify'
-          (verify_url + '?search=') + credit_card_number.to_s[0..6]
+          (verify_url + '?search=') + credit_card_number.to_s[0..7]
         when 'get_payment_status', 'close_batch'
           batch_url + "/#{params}"
         when 'create_jwt'
@@ -366,7 +370,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response, action)
-        return !response['bank'].empty? if action == 'verify' && response['bank']
+        return !response['bank'].empty? if action == 'verify' && response['bank'] && !response.dig('bank', 'name').blank?
 
         %w[Approved Open Success Settled Voided].include?(response['status'])
       end

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DecidirGateway < Gateway
       self.test_url = 'https://developers.decidir.com/api/v2'
       self.live_url = 'https://live.decidir.com/api/v2'
@@ -7,12 +7,13 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AR']
       self.money_format = :cents
       self.default_currency = 'ARS'
-      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal tuya]
+      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal tuya patagonia_365 tarjeta_sol discover]
 
       self.homepage_url = 'http://www.decidir.com'
       self.display_name = 'Decidir'
 
       STANDARD_ERROR_CODE_MAPPING = {
+        -1 => STANDARD_ERROR_CODE[:processing_error],
         1 => STANDARD_ERROR_CODE[:call_issuer],
         2 => STANDARD_ERROR_CODE[:call_issuer],
         3 => STANDARD_ERROR_CODE[:config_error],
@@ -106,7 +107,9 @@ module ActiveMerchant #:nodoc:
           gsub(%r((apikey: )\w+)i, '\1[FILTERED]').
           gsub(%r((\"card_number\\\":\\\")\d+), '\1[FILTERED]').
           gsub(%r((\"security_code\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"emv_issuer_data\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r((\"emv_issuer_data\\\":\\\")\d+), '\1[FILTERED]').
+          gsub(%r((\"cryptogram\\\":\\\"/)\w+), '\1[FILTERED]').
+          gsub(%r((\"token_card_data\\\":{.*\\\"token\\\":\\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -116,6 +119,7 @@ module ActiveMerchant #:nodoc:
         post[:site_transaction_id] = options[:order_id]
         post[:bin] = credit_card.number[0..5]
         post[:payment_type] = options[:payment_type] || 'single'
+        post[:wallet_id] = options[:wallet_id] if options[:wallet_id]
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]
@@ -131,31 +135,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method_id(credit_card, options)
-        if options[:payment_method_id]
-          options[:payment_method_id].to_i
-        elsif options[:debit]
-          if CreditCard.brand?(credit_card.number) == 'visa'
-            31
-          elsif CreditCard.brand?(credit_card.number) == 'master'
-            105
-          elsif CreditCard.brand?(credit_card.number) == 'maestro'
-            106
-          elsif CreditCard.brand?(credit_card.number) == 'cabal'
-            108
-          end
-        elsif CreditCard.brand?(credit_card.number) == 'master'
-          104
-        elsif CreditCard.brand?(credit_card.number) == 'american_express'
-          65
-        elsif CreditCard.brand?(credit_card.number) == 'diners_club'
-          8
-        elsif CreditCard.brand?(credit_card.number) == 'cabal'
-          63
-        elsif CreditCard.brand?(credit_card.number) == 'naranja'
-          24
-        else
-          1
-        end
+        return options[:payment_method_id].to_i if options[:payment_method_id]
+
+        card_brand = CreditCard.brand?(credit_card.number)
+        debit = options[:debit]
+
+        payment_method_ids = {
+          'visa' => debit ? 31 : 1,
+          'master' => debit ? 105 : 104,
+          'maestro' => 106,
+          'cabal' => debit ? 108 : 63,
+          'american_express' => 65,
+          'diners_club' => 8,
+          'naranja' => 24,
+          'patagonia_365' => 55,
+          'tarjeta_sol' => 64,
+          'discover' => 139
+        }
+
+        payment_method_ids.fetch(card_brand, 1)
       end
 
       def add_invoice(post, money, options)
@@ -198,8 +196,11 @@ module ActiveMerchant #:nodoc:
         post[:fraud_detection] ||= {}
         post[:fraud_detection][:sent_to_cs] = false
         post[:card_data][:last_four_digits] = options[:last_4]
+        post[:card_data][:security_code] = payment_method.verification_value if payment_method.verification_value?
 
         post[:token_card_data] = {
+          expiration_month: format(payment_method.month, :two_digits),
+          expiration_year: format(payment_method.year, :two_digits),
           token: payment_method.number,
           eci: payment_method.eci,
           cryptogram: payment_method.payment_cryptogram

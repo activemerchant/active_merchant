@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Public: This gateway allows you to interact with any gateway you've
     # created in Spreedly (https://spreedly.com).  It's an adapter which can be
     # particularly useful if you already have code interacting with

@@ -2,8 +2,8 @@ require 'active_merchant/billing/gateways/paypal/paypal_common_api'
 require 'active_merchant/billing/gateways/paypal/paypal_express_response'
 require 'active_merchant/billing/gateways/paypal_express_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaypalDigitalGoodsGateway < PaypalExpressGateway
       self.test_redirect_url = 'https://www.sandbox.paypal.com/incontext'
       self.live_redirect_url = 'https://www.paypal.com/incontext'

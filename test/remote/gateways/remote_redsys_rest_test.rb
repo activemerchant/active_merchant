@@ -9,6 +9,16 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
     @declined_card = credit_card
     @threeds2_credit_card = credit_card('4918019199883839')
 
+    @network_tokenized_credit_card = network_tokenization_credit_card(
+      '4548812049400004',
+      payment_cryptogram: 'AOC/WIoqDoS3AdTkVpb5AAADFA==',
+      eci: '05',
+      source: :network_token,
+      brand: 'visa',
+      month: '04',
+      year: '26'
+    )
+
     @threeds2_credit_card_frictionless = credit_card('4548814479727229')
     @threeds2_credit_card_alt = credit_card('4548817212493017')
     @options = {
@@ -26,6 +36,12 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, order_id: "a%4#{generate_order_id}")
     assert_success response
     assert_equal 'Transaction Approved', response.message
+  end
+
+  def test_successful_purchase_with_network_token
+    response = @gateway.purchase(100, @network_tokenized_credit_card, @options.merge(terminal: '001'))
+    assert_success response
+    assert_equal 'Requires SCA authentication', response.message
   end
 
   def test_failed_purchase
@@ -134,6 +150,35 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
 
+  def test_transcript_scrubbing_for_network_tokens
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @network_tokenized_credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@gateway.options[:secret_key], clean_transcript)
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+
+    # Ensure the encoded returned answer scrub the sensitive files.
+
+    decoded_merchant_params = Base64.decode64(transcript.match(%r(Ds_MerchantParameters=(\w+)))[1])
+    parsed_decoded_params = JSON.parse decoded_merchant_params
+    assert_equal parsed_decoded_params['Ds_Merchant_TokenData']['token'], @network_tokenized_credit_card.number
+    assert_equal parsed_decoded_params['Ds_Merchant_TokenData']['tokenCryptogram'], @network_tokenized_credit_card.payment_cryptogram
+
+    decoded_clean_merchant_params = Base64.decode64(clean_transcript.match(%r(Ds_MerchantParameters=(\w+)))[1])
+
+    parsed_clean_params = JSON.parse decoded_clean_merchant_params
+    assert_equal parsed_clean_params['Ds_Merchant_TokenData']['token'], '[FILTERED]'
+
+    assert_equal parsed_decoded_params['Ds_Merchant_TokenData']['token'], @network_tokenized_credit_card.number
+    assert_equal parsed_decoded_params['Ds_Merchant_TokenData']['tokenCryptogram'], @network_tokenized_credit_card.payment_cryptogram
+
+    assert_scrubbed(@network_tokenized_credit_card.number, decoded_clean_merchant_params)
+    assert_scrubbed(@network_tokenized_credit_card.payment_cryptogram, decoded_clean_merchant_params)
+  end
+
   def test_transcript_scrubbing_on_failed_transactions
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @declined_card, @options)
@@ -164,6 +209,16 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_authorize_3ds_setup_with_network_token
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.authorize(@amount, @network_tokenized_credit_card, options)
+    assert_success response
+    assert response.params['ds_emv3ds']
+    assert_equal '2.2.0', response.params['ds_emv3ds']['protocolVersion']
+    assert_equal 'CardConfiguration', response.message
+    assert response.authorization
+  end
+
   def test_successful_purchase_3ds
     options = @options.merge(execute_threed: true)
     response = @gateway.purchase(@amount, @threeds2_credit_card, options)
@@ -173,6 +228,10 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
     assert_equal 'https://sis-d.redsys.es/sis-simulador-web/threeDsMethod.jsp', three_ds_data['threeDSMethodURL']
     assert_equal 'CardConfiguration', response.message
     assert response.authorization
+    order, amount, currency = response.authorization.split('|')
+    assert_match(/\d+/, order)
+    assert_equal '100', amount
+    assert_equal '978', currency
   end
 
   # Pending 3DS support
@@ -260,6 +319,6 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
 
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
-                   stored_credential: stored_credential(*args, id: id))
+                   stored_credential: stored_credential(*args, id:))
   end
 end

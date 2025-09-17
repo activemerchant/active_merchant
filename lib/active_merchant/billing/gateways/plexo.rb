@@ -1,8 +1,10 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PlexoGateway < Gateway
-      self.test_url = 'https://api.testing.plexo.com.uy/v1/payments'
-      self.live_url = 'https://api.plexo.com.uy/v1/payments'
+      version 'v1'
+
+      self.test_url = "https://api.testing.plexo.com.uy/#{fetch_version}/payments"
+      self.live_url = "https://api.plexo.com.uy/#{fetch_version}/payments"
 
       self.supported_countries = ['UY']
       self.default_currency = 'UYU'
@@ -42,6 +44,11 @@ module ActiveMerchant #:nodoc:
         post[:Amount] = amount(money)
 
         commit("/#{authorization}/captures", post, options)
+      end
+
+      def inquire(authorization, options = {})
+        post = { payment_id: authorization }
+        commit('status', post, options)
       end
 
       def refund(money, authorization, options = {})
@@ -212,8 +219,6 @@ module ActiveMerchant #:nodoc:
             id: payment.brand,
             NetworkToken: {
               Number: payment.number,
-              Bin: get_last_eight_digits(payment.number),
-              Last4: get_last_four_digits(payment.number),
               ExpMonth: (format(payment.month, :two_digits) if payment.month),
               ExpYear: (format(payment.year, :two_digits) if payment.year),
               Cryptogram: payment.payment_cryptogram
@@ -230,14 +235,6 @@ module ActiveMerchant #:nodoc:
             }
           }
         end
-      end
-
-      def get_last_eight_digits(number)
-        number[-8..-1]
-      end
-
-      def get_last_four_digits(number)
-        number[-4..-1]
       end
 
       def add_card_holder(card, payment, options)
@@ -274,8 +271,11 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def build_url(action, base)
-        url = base
+      def build_url(action, options, parameters)
+        base_url = test? ? test_url : live_url
+        return "#{base_url}/#{parameters[:payment_id]}" if action == 'status' && parameters[:payment_id]
+
+        url = base_url
         url += action if APPENDED_URLS.any? { |key| action.include?(key) }
         url
       end
@@ -295,10 +295,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters, options = {})
-        base_url = (test? ? test_url : live_url)
-        url = build_url(action, base_url)
-        response = parse(ssl_post(url, parameters.to_json, header(options)))
-        response = reorder_amount_fields(response) if AMOUNT_IN_RESPONSE.include?(action)
+        url = build_url(action, options, parameters)
+
+        raw = make_request(action, url, parameters, options)
+        response = parse(raw)
+
+        reorder_amount_fields(response) if AMOUNT_IN_RESPONSE.include?(action)
 
         Response.new(
           success_from(response),
@@ -308,6 +310,16 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response)
         )
+      end
+
+      def make_request(action, url, parameters, options)
+        if action == 'status'
+          ssl_get(url, header(options))
+        else
+          ssl_post(url, parameters.to_json, header(options))
+        end
+      rescue ResponseError => e
+        e.response.body
       end
 
       def handle_response(response)

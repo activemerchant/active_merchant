@@ -37,6 +37,15 @@ class CommerceHubTest < Test::Unit::TestCase
       source: :no_source,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     )
+    @network_token = network_tokenization_credit_card(
+      '4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
     @dynamic_descriptors = {
       mcc: '1234',
@@ -54,6 +63,10 @@ class CommerceHubTest < Test::Unit::TestCase
     }
     @options = {}
     @post = {}
+  end
+
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
   end
 
   def test_successful_authorize_with_full_headers
@@ -148,6 +161,24 @@ class CommerceHubTest < Test::Unit::TestCase
       assert_equal request['source']['card']['cardData'], @apple_pay.number
       assert_equal request['source']['cavv'], @apple_pay.payment_cryptogram
       assert_equal request['source']['walletType'], 'APPLE_PAY'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_network_token
+    response = stub_comms do
+      @gateway.purchase(@amount, @network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionDetails']['captureFlag'], true
+      assert_equal request['merchantDetails']['terminalId'], @gateway.options[:terminal_id]
+      assert_equal request['merchantDetails']['merchantId'], @gateway.options[:merchant_id]
+      assert_equal request['amount']['total'], (@amount / 100.0).to_f
+      assert_equal request['source']['tokenData'], @network_token.number
+      assert_equal request['source']['cryptogram'], @network_token.payment_cryptogram
+      assert_equal request['source']['tokenSource'], 'NETWORK_TOKEN'
+      assert_equal request['source']['card']['expirationMonth'], "0#{@network_token.month}"
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -283,12 +314,17 @@ class CommerceHubTest < Test::Unit::TestCase
     options[:data_entry_source] = 'MOBILE_WEB'
     options[:pos_entry_mode] = 'MANUAL'
     options[:pos_condition_code] = 'CARD_PRESENT'
+    options[:three_d_secure] = {
+      cavv: '12345678901234567890',
+      xid: '12345678901234567890',
+      eci: '05'
+    }
     response = stub_comms do
       @gateway.purchase(@amount, 'authorization123', options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['transactionInteraction']['origin'], 'ECOM'
-      assert_equal request['transactionInteraction']['eciIndicator'], 'CHANNEL_ENCRYPTED'
+      assert_equal request['transactionInteraction']['eciIndicator'], 'SECURE_ECOM'
       assert_equal request['transactionInteraction']['posConditionCode'], 'CARD_PRESENT'
       assert_equal request['transactionInteraction']['posEntryMode'], 'MANUAL'
       assert_equal request['transactionInteraction']['additionalPosInformation']['dataEntrySource'], 'MOBILE_WEB'
@@ -301,6 +337,11 @@ class CommerceHubTest < Test::Unit::TestCase
     options[:origin] = 'POS'
     options[:pos_entry_mode] = 'MANUAL'
     options[:data_entry_source] = 'MOBILE_WEB'
+    options[:three_d_secure] = {
+      cavv: '12345678901234567890',
+      xid: '12345678901234567890',
+      eci: '07'
+    }
     response = stub_comms do
       @gateway.purchase(@amount, 'authorization123', options)
     end.check_request do |_endpoint, data, _headers|
@@ -332,7 +373,7 @@ class CommerceHubTest < Test::Unit::TestCase
   def stored_credential_options(*args, ntid: nil)
     {
       order_id: '#1001',
-      stored_credential: stored_credential(*args, ntid: ntid)
+      stored_credential: stored_credential(*args, ntid:)
     }
   end
 
@@ -353,12 +394,16 @@ class CommerceHubTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
+    @options[:order_id] = 'abc123'
+
     stub_comms do
       @gateway.verify(@credit_card, @options)
     end.check_request do |endpoint, data, _headers|
       request = JSON.parse(data)
       assert_match %r{verification}, endpoint
       assert_equal request['source']['sourceType'], 'PaymentCard'
+      assert_equal request['transactionDetails']['merchantOrderId'], @options[:order_id]
+      assert_equal request['transactionDetails']['merchantInvoiceNumber'], @options[:order_id]
     end.respond_with(successful_authorize_response)
   end
 
@@ -470,6 +515,25 @@ class CommerceHubTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
+  end
+
+  def test_client_request_id_is_uuidv4
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, _data, headers|
+      client_request_id = headers['Client-Request-Id']
+      assert_not_nil client_request_id, 'Client-Request-Id header is missing'
+      uuid_v4_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      assert_match uuid_v4_regex, client_request_id, 'Client-Request-Id is not a valid UUIDv4'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_endpoints
+    assert_equal '/payments/v1/charges', CommerceHubGateway::ENDPOINTS['sale']
+    assert_equal '/payments/v1/cancels', CommerceHubGateway::ENDPOINTS['void']
+    assert_equal '/payments/v1/refunds', CommerceHubGateway::ENDPOINTS['refund']
+    assert_equal '/payments-vas/v1/tokens', CommerceHubGateway::ENDPOINTS['vault']
+    assert_equal '/payments-vas/v1/accounts/verification', CommerceHubGateway::ENDPOINTS['verify']
   end
 
   private

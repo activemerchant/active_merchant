@@ -110,6 +110,34 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_customer_vault_data
+    vault_id = SecureRandom.hex(16)
+
+    options = {
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store purchase',
+      customer_vault: 'add_customer'
+    }
+
+    assert response = @gateway.purchase(@amount, @credit_card, options.merge(customer_vault_id: vault_id))
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert_equal vault_id, response.params['customer_vault_id']
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_customer_vault_and_auto_generate_customer_vault_id
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(customer_vault: 'add_customer'))
+    assert_success response
+    assert response.test?
+
+    assert_equal 'Succeeded', response.message
+    assert response.params.include?('customer_vault_id')
+    assert response.authorization
+  end
+
   def test_successful_purchase_sans_cvv
     @credit_card.verification_value = nil
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -150,9 +178,40 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_apple_pay_and_industry_field
+    assert @gateway_secure.supports_network_tokenization?
+    assert response = @gateway_secure.purchase(@amount, @apple_pay, @options.merge(industry_indicator: 'ecommerce'))
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
   def test_successful_purchase_with_google_pay
     assert @gateway_secure.supports_network_tokenization?
     assert response = @gateway_secure.purchase(@amount, @google_pay, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_google_pay_without_billing_address
+    assert @gateway_secure.supports_network_tokenization?
+    @options.delete(:billing_address)
+
+    assert response = @gateway_secure.purchase(@amount, @google_pay, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_apple_pay_without_billing_address
+    assert @gateway_secure.supports_network_tokenization?
+    @options.delete(:billing_address)
+
+    assert response = @gateway_secure.purchase(@amount, @apple_pay, @options)
     assert_success response
     assert response.test?
     assert_equal 'Succeeded', response.message
@@ -223,7 +282,7 @@ class RemoteNmiTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_shipping_fields
-    options = @options.merge({ shipping_address: shipping_address, shipping_email: 'test@example.com' })
+    options = @options.merge({ shipping_address:, shipping_email: 'test@example.com' })
 
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
@@ -329,6 +388,34 @@ class RemoteNmiTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, options)
     assert_success response
     assert_match 'Succeeded', response.message
+  end
+
+  def test_successful_verify_with_customer_vault_data
+    vault_id = SecureRandom.hex(16)
+
+    options = {
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store purchase',
+      customer_vault: 'add_customer'
+    }
+
+    assert response = @gateway.verify(@credit_card, options.merge(customer_vault_id: vault_id))
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert_equal vault_id, response.params['customer_vault_id']
+    assert response.authorization
+  end
+
+  def test_successful_verify_with_customer_vault_and_auto_generate_customer_vault_id
+    assert response = @gateway.verify(@credit_card, @options.merge(customer_vault: 'add_customer'))
+    assert_success response
+    assert response.test?
+
+    assert_equal 'Succeeded', response.message
+    assert response.params.include?('customer_vault_id')
+    assert response.authorization
   end
 
   def test_failed_verify
@@ -550,6 +637,6 @@ class RemoteNmiTest < Test::Unit::TestCase
 
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
-                   stored_credential: stored_credential(*args, id: id))
+                   stored_credential: stored_credential(*args, id:))
   end
 end

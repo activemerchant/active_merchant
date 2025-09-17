@@ -36,18 +36,18 @@ class ElavonTest < Test::Unit::TestCase
 
     @google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :google_pay,
-      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+      payment_data: { 'version' => 'EC_v1', 'data' => 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9' }
     })
 
     @apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :apple_pay,
-      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+      payment_data: { 'version' => 'EC_v1', 'data' => 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9' }
     })
   end
 
   def test_successful_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge!(stored_cred_v2: true))
+      @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_cvv2cvc2>123<\/ssl_cvv2cvc2>/, data)
     end.respond_with(successful_purchase_response)
@@ -163,7 +163,7 @@ class ElavonTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @apple_pay, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<ssl_applepay_web>%7B %27version%27%3A %27EC_v1%27%2C %27data%27%3A %27QlzLxRFnNP9%2FGTaMhBwgmZ2ywntbr9%27%7D<\/ssl_applepay_web>/, data)
+      assert_match(/<ssl_applepay_web>%7B%22version%22%3A%22EC_v1%22%2C %22data%22%3A%22QlzLxRFnNP9%2FGTaMhBwgmZ2ywntbr9%22%7D<\/ssl_applepay_web>/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -171,7 +171,7 @@ class ElavonTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @google_pay, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<ssl_google_pay>%7B %27version%27%3A %27EC_v1%27%2C %27data%27%3A %27QlzLxRFnNP9%2FGTaMhBwgmZ2ywntbr9%27%7D<\/ssl_google_pay>/, data)
+      assert_match(/<ssl_google_pay>%7B%22version%22%3A%22EC_v1%22%2C %22data%22%3A%22QlzLxRFnNP9%2FGTaMhBwgmZ2ywntbr9%22%7D<\/ssl_google_pay>/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -289,6 +289,15 @@ class ElavonTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_verify_with_ssl_email
+    response = stub_comms do
+                 @gateway.verify(@credit_card, @options.merge(email: 'abc@example.com'))
+               end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_email>abc%40example.com<\/ssl_email>/, data)
+    end.respond_with(successful_authorization_response)
+    assert_success response
+  end
+
   def test_unsuccessful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
@@ -388,7 +397,7 @@ class ElavonTest < Test::Unit::TestCase
     ps2000_data = 'A8181831435010530042VE'
     network_transaction_id = "#{oar_data}|#{ps2000_data}"
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: network_transaction_id }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: }))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_oar_data>#{oar_data}<\/ssl_oar_data>/, data)
       assert_match(/<ssl_ps2000_data>#{ps2000_data}<\/ssl_ps2000_data>/, data)
@@ -400,7 +409,7 @@ class ElavonTest < Test::Unit::TestCase
     ps2000_data = nil
     network_transaction_id = "#{oar_data}|#{ps2000_data}"
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: network_transaction_id }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: }))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_oar_data>#{oar_data}<\/ssl_oar_data>/, data)
       refute_match(/<ssl_ps2000_data/, data)
@@ -409,7 +418,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_pass_in_initial_recurring_request
     recurring_params = {
-      stored_cred_v2: true,
       stored_credential: {
         initial_transaction: true,
         reason_type: 'recurring',
@@ -431,7 +439,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_pass_in_recurring_request
     recurring_params = {
-      stored_cred_v2: true,
       approval_code: '1234566',
       stored_credential: {
         reason_type: 'recurring',
@@ -448,13 +455,12 @@ class ElavonTest < Test::Unit::TestCase
       assert_match(/<ssl_approval_code>1234566<\/ssl_approval_code>/, data)
       assert_match(/<ssl_recurring_flag>1<\/ssl_recurring_flag>/, data)
       refute_match(/<ssl_entry_mode/, data)
-      refute_match(/<ssl_cvv2cvc2/, data)
+      assert_match(/<ssl_cvv2cvc2/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_stored_credential_pass_in_installment_request
     installment_params = {
-      stored_cred_v2: true,
       installments: '4',
       payment_number: '2',
       approval_code: '1234566',
@@ -475,13 +481,12 @@ class ElavonTest < Test::Unit::TestCase
       assert_match(/<ssl_payment_number>2<\/ssl_payment_number>/, data)
       assert_match(/<ssl_payment_count>4<\/ssl_payment_count>/, data)
       refute_match(/<ssl_entry_mode/, data)
-      refute_match(/<ssl_cvv2cvc2/, data)
+      assert_match(/<ssl_cvv2cvc2/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_stored_credential_pass_in_unscheduled_with_additional_data_request
     unscheduled_params = {
-      stored_cred_v2: true,
       approval_code: '1234566',
       par_value: '1234567890',
       association_token_data: '1',
@@ -502,13 +507,12 @@ class ElavonTest < Test::Unit::TestCase
       assert_match(/<ssl_entry_mode>12<\/ssl_entry_mode>/, data)
       assert_match(/<ssl_par_value>1234567890<\/ssl_par_value>/, data)
       assert_match(/<ssl_association_token_data>1<\/ssl_association_token_data>/, data)
-      refute_match(/<ssl_cvv2cvc2/, data)
+      assert_match(/<ssl_cvv2cvc2/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_stored_credential_tokenized_card_initial_recurring_request
     recurring_params = {
-      stored_cred_v2: true,
       stored_credential: {
         initial_transaction: true,
         reason_type: 'recurring',
@@ -530,7 +534,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_tokenized_card_recurring_request
     recurring_params = {
-      stored_cred_v2: true,
       stored_credential: {
         reason_type: 'recurring',
         initiator: 'merchant',
@@ -551,7 +554,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_tokenized_card_installment_request
     installment_params = {
-      stored_cred_v2: true,
       installments: '4',
       payment_number: '2',
       stored_credential: {
@@ -576,7 +578,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_tokenized_card_unscheduled_with_additional_data_request
     unscheduled_params = {
-      stored_cred_v2: true,
       par_value: '1234567890',
       association_token_data: '1',
       stored_credential: {
@@ -601,7 +602,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_manual_token_recurring_request
     recurring_params = {
-      stored_cred_v2: true,
       ssl_token: '4421912014039990',
       stored_credential: {
         reason_type: 'recurring',
@@ -623,7 +623,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_manual_token_installment_request
     installment_params = {
-      stored_cred_v2: true,
       ssl_token: '4421912014039990',
       installments: '4',
       payment_number: '2',
@@ -649,7 +648,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_manual_token_unscheduled_with_additional_data_request
     unscheduled_params = {
-      stored_cred_v2: true,
       ssl_token: '4421912014039990',
       par_value: '1234567890',
       association_token_data: '1',
@@ -678,7 +676,7 @@ class ElavonTest < Test::Unit::TestCase
     ps2000_data = 'A8181831435010530042VE'
     network_transaction_id = "#{oar_data}|#{ps2000_data}"
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: network_transaction_id }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: }))
     end.check_request do |_endpoint, data, _headers|
       refute_match(/<ssl_oar_data/, data)
       assert_match(/<ssl_ps2000_data>#{ps2000_data}<\/ssl_ps2000_data>/, data)
@@ -820,7 +818,7 @@ class ElavonTest < Test::Unit::TestCase
       ]
     }
 
-    options = @options.merge(level_3_data: level_3_data)
+    options = @options.merge(level_3_data:)
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -873,7 +871,7 @@ class ElavonTest < Test::Unit::TestCase
       country: 'USA',
       zip: '27701'
     }
-    options = @options.merge(shipping_address: shipping_address)
+    options = @options.merge(shipping_address:)
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|

@@ -115,6 +115,26 @@ class PaysafeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_external_initial_transaction_id
+    stored_credential_options = {
+      external_initial_transaction_id: 'abc123',
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        initiator: 'merchant'
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential_options))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"type":"TOPUP"}, data)
+      assert_match(%r{"occurrence":"SUBSEQUENT"}, data)
+      assert_match(%r{"externalInitialTransactionId":"abc123"}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_funding_transaction
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'SDW_WALLET_TRANSFER' }))
@@ -243,6 +263,40 @@ class PaysafeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_with_customer_id
+    options = {
+      profile_id: '123456',
+      account_id: 'account_id',
+      nickname: 'nickname',
+      billing_address_id: '3456',
+      default_card_indicator: 'true'
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"cardNum":"#{@credit_card.number}"/, data)
+      assert_match(/"accountId":"#{options[:account_id]}"/, data)
+      assert_match(/"nickName":"#{options[:nickname]}"/, data)
+      assert_match(/"holderName":"#{@credit_card.name}"/, data)
+      assert_match(/"billingAddressId":"#{options[:billing_address_id]}"/, data)
+      assert_match(/"defaultCardIndicator":#{options[:default_card_indicator]}/, data)
+    end.respond_with(successful_store_response)
+
+    assert_success response
+  end
+
+  def test_successful_credit
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(100, @credit_card, @options.merge({ email: 'profile@memail.com', customer_id: SecureRandom.hex(16) }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r("profile":{.+"merchantCustomerId"), data)
+      assert_match(%r("profile":{.+"email"), data)
+      assert_match(%r("profile":{"firstName":"Longbob".+}), data)
+      assert_match(%r("profile":{.+"lastName"), data)
+      assert_match(%r("merchantDescriptor":{"dynamicDescriptor"), data)
+    end.respond_with(successful_credit_response)
+  end
+
   def test_merchant_ref_num_and_order_id
     options = @options.merge({ order_id: '12345678' })
     response = stub_comms(@gateway, :ssl_request) do
@@ -287,6 +341,19 @@ class PaysafeTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_urls_for_test_and_live_mode
+    assert_equal 'https://api.test.paysafe.com/customervault/v1/profiles', @gateway.send(:url, 'profiles')
+    assert_equal 'https://api.test.paysafe.com/cardpayments/v1/accounts/account_id/auths', @gateway.send(:url, 'auths')
+
+    @gateway.expects(:test?).returns(false).twice
+    assert_equal 'https://api.paysafe.com/customervault/v1/profiles', @gateway.send(:url, 'profiles')
+    assert_equal 'https://api.paysafe.com/cardpayments/v1/accounts/account_id/auths', @gateway.send(:url, 'auths')
+  end
+
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
   end
 
   private
@@ -381,5 +448,9 @@ class PaysafeTest < Test::Unit::TestCase
 
   def successful_store_response
     '{"id":"bd4e8c66-b023-4b38-b499-bc6d447d1466","status":"ACTIVE","merchantCustomerId":"965d3aff71fb93343ee48513","locale":"en_US","firstName":"Longbob","lastName":"Longsen","dateOfBirth":{"year":1979,"month":1,"day":1},"paymentToken":"PnCQ1xyGCB4sOEq","phone":"111-222-3456","email":"profile@memail.com","addresses":[],"cards":[{"status":"ACTIVE","id":"77685b40-e953-4999-a161-d13b46a8232a","cardBin":"411111","lastDigits":"1111","cardExpiry":{"year":2022,"month":9},"holderName":"Longbob Longsen","cardType":"VI","cardCategory":"CREDIT","paymentToken":"Ct0RrnyIs4lizeH","defaultCardIndicator":true}]}'
+  end
+
+  def successful_credit_response
+    '{"id":"b40c327e-92d7-4026-a043-be1f1b03c08a","merchantRefNum":"b0ca10f1ab6b782e6bf8a43e17ff41f8","txnTime":"2024-10-02T19:00:27Z","status":"PENDING","gatewayReconciliationId":"2309329680","amount":100,"card":{"type":"VI", "lastDigits":"0000", "cardExpiry":{"month":9, "year":2025}, "issuingCountry":"US"},"profile":{"firstName":"Longbob", "lastName":"Longsen", "email":"profile@memail.com"},"billingDetails":{"street":"456 My Street","street2":"Apt 1","city":"Ottawa","state":"ON","country":"CA","zip":"K1C2N6","phone":"(555)555-5555"},"currencyCode":"USD","merchantDescriptor":{"dynamicDescriptor":"Store Purchase"},"links":[{"rel":"self","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002179730/standalonecredits/b40c327e-92d7-4026-a043-be1f1b03c08a"}]}'
   end
 end

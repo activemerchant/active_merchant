@@ -1,9 +1,11 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class IveriGateway < Gateway
       class_attribute :iveri_url
+      # Define the API version using the Versionable module
+      version '2.0'
 
       self.live_url = self.test_url = 'https://portal.nedsecure.co.za/iVeriWebService/Service.asmx'
       self.iveri_url = 'https://portal.host.iveri.com/iVeriWebService/Service.asmx'
@@ -55,7 +57,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options = {})
-        post = build_vxml_request('Void', options) do |xml|
+        txn_type = options[:reference_type] == :authorize ? 'AuthorisationReversal' : 'Void'
+        post = build_vxml_request(txn_type, options) do |xml|
           add_authorization(xml, authorization, options)
         end
 
@@ -65,7 +68,7 @@ module ActiveMerchant #:nodoc:
       def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process(:ignore_result) { void(r.authorization, options.merge(reference_type: :authorize)) }
         end
       end
 
@@ -96,7 +99,7 @@ module ActiveMerchant #:nodoc:
               xml.Execute 'xmlns' => 'http://iveri.com/' do
                 xml.validateRequest('false')
                 xml.protocol 'V_XML'
-                xml.protocolVersion '2.0'
+                xml.protocolVersion fetch_version # Fetch the version dynamically
                 xml.request vxml
               end
             end
@@ -108,7 +111,7 @@ module ActiveMerchant #:nodoc:
 
       def build_vxml_request(action, options)
         builder = Nokogiri::XML::Builder.new do |xml|
-          xml.V_XML('Version' => '2.0', 'CertificateID' => @options[:cert_id], 'Direction' => 'Request') do
+          xml.V_XML('Version' => fetch_version, 'CertificateID' => @options[:cert_id], 'Direction' => 'Request') do
             xml.Transaction('ApplicationID' => @options[:app_id], 'Command' => action, 'Mode' => mode) do
               yield(xml)
             end

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MoneyMoversGateway < Gateway
       self.live_url = self.test_url = 'https://secure.mmoagateway.com/api/transact.php'
 

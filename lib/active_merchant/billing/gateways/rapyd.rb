@@ -1,13 +1,15 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class RapydGateway < Gateway
       class_attribute :payment_redirect_test, :payment_redirect_live
 
-      self.test_url = 'https://sandboxapi.rapyd.net/v1/'
-      self.live_url = 'https://api.rapyd.net/v1/'
+      version 'v1'
 
-      self.payment_redirect_test = 'https://sandboxpayment-redirect.rapyd.net/v1/'
-      self.payment_redirect_live = 'https://payment-redirect.rapyd.net/v1/'
+      self.test_url = "https://sandboxapi.rapyd.net/#{fetch_version}/"
+      self.live_url = "https://api.rapyd.net/#{fetch_version}/"
+
+      self.payment_redirect_test = "https://sandboxpayment-redirect.rapyd.net/#{fetch_version}/"
+      self.payment_redirect_live = "https://payment-redirect.rapyd.net/#{fetch_version}/"
 
       self.supported_countries = %w(CA CL CO DO SV PE PT VI AU HK IN ID JP MY NZ PH SG KR TW TH VN AD AT BE BA BG HR CY CZ DK EE FI FR GE DE GI GR GL HU IS IE IL IT LV LI LT LU MK MT MD MC ME NL GB NO PL RO RU SM SK SI ZA ES SE CH TR VA)
       self.default_currency = 'USD'
@@ -43,6 +45,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
+        add_idempotency(options)
         commit(:post, "payments/#{add_reference(authorization)}/capture", post)
       end
 
@@ -52,12 +55,14 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_metadata(post, options)
         add_ewallet(post, options)
+        add_idempotency(options)
 
         commit(:post, 'refunds', post)
       end
 
       def void(authorization, options = {})
         post = {}
+        add_idempotency(options)
         commit(:delete, "payments/#{add_reference(authorization)}", post)
       end
 
@@ -74,6 +79,7 @@ module ActiveMerchant #:nodoc:
         add_payment_fields(post, options)
         add_payment_urls(post, options, 'store')
         add_address(post, payment, options)
+        add_idempotency(options)
         commit(:post, 'customers', post)
       end
 
@@ -120,7 +126,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, creditcard, options)
-        return unless address = options[:billing_address]
+        address = options[:billing_address]
+        return unless valid_address?(address)
 
         post[:address] = {}
         # name and line_1 are required at the gateway
@@ -132,6 +139,14 @@ module ActiveMerchant #:nodoc:
         post[:address][:country] = address[:country] if address[:country]
         post[:address][:zip] = address[:zip] if address[:zip]
         post[:address][:phone_number] = address[:phone].gsub(/\D/, '') if address[:phone]
+      end
+
+      def valid_address?(address)
+        return false unless address
+
+        required_fields = %i[name address1 city state country zip]
+        missing_fields = required_fields.select { |field| address[field].to_s.strip.empty? }
+        missing_fields.empty?
       end
 
       def add_invoice(post, money, options)
@@ -261,7 +276,6 @@ module ActiveMerchant #:nodoc:
         phone_number = options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
         post[:phone_number] = phone_number.gsub(/\D/, '') unless phone_number.nil?
         post[:receipt_email] = options[:email] if payment.is_a?(String) && options[:customer_id].present? && !send_customer_object?(options)
-
         return if payment.is_a?(String)
         return add_customer_id(post, options) if options[:customer_id]
 
@@ -279,12 +293,15 @@ module ActiveMerchant #:nodoc:
         customer_data = {}
         customer_data[:name] = "#{payment.first_name} #{payment.last_name}" unless payment.is_a?(String)
         customer_data[:email] = options[:email] unless payment.is_a?(String) && options[:customer_id].blank?
+        customer_data[:phone_number] = options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
+        customer_data[:phone_number] = customer_data[:phone_number].gsub(/\D/, '') if customer_data[:phone_number]
         customer_data[:addresses] = [customer_address] if customer_address
         customer_data
       end
 
       def address(options)
-        return unless address = options[:billing_address]
+        address = options[:billing_address]
+        return unless valid_address?(address)
 
         formatted_address = {}
 
@@ -320,7 +337,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, action, parameters)
-        rel_path = "#{method}/v1/#{action}"
+        rel_path = "#{method}/#{fetch_version}/#{action}"
         response = api_request(method, url(action, @options[:url_override]), rel_path, parameters)
 
         Response.new(
@@ -376,7 +393,7 @@ module ActiveMerchant #:nodoc:
       def avs_result(response)
         return nil unless (code = response.dig('data', 'payment_method_data', 'acs_check'))
 
-        AVSResult.new(code: code)
+        AVSResult.new(code:)
       end
 
       def cvv_result(response)

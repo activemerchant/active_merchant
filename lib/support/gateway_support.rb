@@ -2,7 +2,7 @@ require 'rubygems'
 require 'active_support'
 require 'active_merchant'
 
-class GatewaySupport #:nodoc:
+class GatewaySupport # :nodoc:
   ACTIONS = %i[purchase authorize capture void credit recurring]
 
   include ActiveMerchant::Billing

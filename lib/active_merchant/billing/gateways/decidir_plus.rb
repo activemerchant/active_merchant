@@ -1,12 +1,12 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DecidirPlusGateway < Gateway
       self.test_url = 'https://developers.decidir.com/api/v2'
       self.live_url = 'https://live.decidir.com/api/v2'
 
       self.supported_countries = ['AR']
       self.default_currency = 'ARS'
-      self.supported_cardtypes = %i[visa master american_express discover diners_club naranja cabal]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club naranja cabal patagonia_365 tarjeta_sol discover]
 
       self.homepage_url = 'http://decidir.com.ar/home'
       self.display_name = 'Decidir Plus'
@@ -93,6 +93,12 @@ module ActiveMerchant #:nodoc:
         authorization.split('|')[0]
       end
 
+      def add_wallet_id(post, options)
+        return unless options[:wallet_id]
+
+        post[:wallet_id] = options[:wallet_id]
+      end
+
       def add_payment(post, payment, options = {})
         if payment.is_a?(String)
           token, bin = payment.split('|')
@@ -133,6 +139,7 @@ module ActiveMerchant #:nodoc:
 
         add_aggregate_data(post, options) if options[:aggregate_data]
         add_sub_payments(post, options)
+        add_wallet_id(post, options)
       end
 
       def add_aggregate_data(post, options)
@@ -177,37 +184,23 @@ module ActiveMerchant #:nodoc:
       def add_payment_method_id(options)
         return options[:payment_method_id].to_i if options[:payment_method_id]
 
-        if options[:debit]
-          case options[:card_brand]
-          when 'visa'
-            31
-          when 'master'
-            105
-          when 'maestro'
-            106
-          when 'cabal'
-            108
-          else
-            31
-          end
-        else
-          case options[:card_brand]
-          when 'visa'
-            1
-          when 'master'
-            104
-          when 'american_express'
-            65
-          when 'american_express_prisma'
-            111
-          when 'cabal'
-            63
-          when 'diners_club'
-            8
-          else
-            1
-          end
-        end
+        card_brand = options[:card_brand]
+        debit = options[:debit]
+
+        payment_method_ids = {
+          'visa' => debit ? 31 : 1,
+          'master' => debit ? 105 : 104,
+          'maestro' => 106,
+          'cabal' => debit ? 108 : 63,
+          'american_express' => 65,
+          'american_express_prisma' => 111,
+          'diners_club' => 8,
+          'patagonia_365' => 55,
+          'tarjeta_sol' => 64,
+          'discover' => 139
+        }
+
+        payment_method_ids.fetch(card_brand, debit ? 31 : 1)
       end
 
       def add_fraud_detection(post, options)

@@ -1,14 +1,16 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FlexChargeGateway < Gateway
-      self.test_url = 'https://api-sandbox.flex-charge.com/v1/'
-      self.live_url = 'https://api.flex-charge.com/v1/'
+      version 'v1'
+
+      self.test_url = "https://api-sandbox.flex-charge.com/#{fetch_version}/"
+      self.live_url = "https://api.flex-charge.com/#{fetch_version}/"
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover]
       self.money_format = :cents
-      self.homepage_url = 'https://www.flex-charge.com/'
+      self.homepage_url = 'https://www.flexfactor.io/'
       self.display_name = 'FlexCharge'
 
       ENDPOINTS_MAPPING = {
@@ -23,6 +25,8 @@ module ActiveMerchant #:nodoc:
       }
 
       SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED SUCCESS PROCESSING CAPTUREREQUIRED).freeze
+
+      NO_ERROR_KEYS = %w(TraceId access_token token_expires).freeze
 
       def initialize(options = {})
         requires!(options, :app_key, :app_secret, :site_id, :mid)
@@ -43,7 +47,7 @@ module ActiveMerchant #:nodoc:
         add_three_ds(post, options)
         add_metadata(post, options)
 
-        commit(:purchase, post)
+        commit(:purchase, post, nil, :post, options)
       end
 
       def authorize(money, credit_card, options = {})
@@ -57,7 +61,7 @@ module ActiveMerchant #:nodoc:
           idempotencyKey: options[:idempotency_key] || SecureRandom.uuid,
           orderId: order_id,
           amount: money,
-          currency: currency
+          currency:
         }
 
         commit(:capture, post, authorization)
@@ -80,8 +84,8 @@ module ActiveMerchant #:nodoc:
         post = {
           payment_method: {
             credit_card: {
-              first_name: first_name,
-              last_name: last_name,
+              first_name:,
+              last_name:,
               month: credit_card.month,
               year: credit_card.year,
               number: credit_card.number,
@@ -107,7 +111,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("environment\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("number\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("cardNumber\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("verification_value\\?":\\?")\d+), '\1[FILTERED]')
+          gsub(%r(("verification_value\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("verificationValue\\?":\\?")\d+), '\1[FILTERED]')
       end
 
       def inquire(authorization, options = {})
@@ -217,6 +222,7 @@ module ActiveMerchant #:nodoc:
                                cardBinNumber: credit_card.number[0..5],
                                cardLast4Digits: credit_card.number[-4..-1],
                                cardNumber: credit_card.number,
+                               verificationValue: credit_card.verification_value,
                                Token: false
                              }
                            else
@@ -238,7 +244,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def access_token_valid?
-        @options[:access_token].present? && @options.fetch(:token_expires, 0) > DateTime.now.strftime('%Q').to_i
+        @options[:access_token].present? && @options.fetch(:token_expires, 0).to_i > DateTime.now.strftime('%Q').to_i
       end
 
       def fetch_access_token
@@ -248,10 +254,10 @@ module ActiveMerchant #:nodoc:
         @options[:access_token] = response[:accessToken]
         @options[:token_expires] = response[:expires]
         @options[:new_credentials] = true
-
+        success = response[:accessToken].present?
         Response.new(
-          response[:accessToken].present?,
-          message_from(response),
+          success,
+          message_from(response, success),
           response,
           test: test?,
           error_code: response[:statusCode]
@@ -281,27 +287,27 @@ module ActiveMerchant #:nodoc:
         }.with_indifferent_access
       end
 
-      def commit(action, post, authorization = nil, method = :post)
+      def commit(action, post, authorization = nil, method = :post, options = {})
         MultiResponse.run do |r|
           r.process { fetch_access_token } unless access_token_valid?
           r.process do
-            api_request(action, post, authorization, method).tap do |response|
+            api_request(action, post, authorization, method, options).tap do |response|
               response.params.merge!(@options.slice(:access_token, :token_expires)) if @options[:new_credentials]
             end
           end
         end
       end
 
-      def api_request(action, post, authorization = nil, method = :post)
+      def api_request(action, post, authorization = nil, method = :post, options = {})
         response = parse ssl_request(method, url(action, authorization), post.to_json, headers)
-
+        success = success_from(action, response, options)
         Response.new(
-          success_from(action, response),
-          message_from(response),
+          success,
+          message_from(response, success),
           response,
           authorization: authorization_from(action, response, post),
           test: test?,
-          error_code: error_code_from(action, response)
+          error_code: error_code_from(success, response)
         )
       rescue ResponseError => e
         response = parse(e.response.body)
@@ -310,37 +316,43 @@ module ActiveMerchant #:nodoc:
           @options[:access_token] = ''
           @options[:new_credentials] = true
         end
-        Response.new(false, message_from(response), response, test: test?)
+        Response.new(false, message_from(response, false), response, test: test?)
       end
 
-      def success_from(action, response)
+      def success_from(action, response, options)
         case action
         when :store then response.dig(:transaction, :payment_method, :token).present?
         when :inquire then response[:id].present? && SUCCESS_MESSAGES.include?(response[:statusName])
         when :void then response.empty?
         else
-          response[:success] && SUCCESS_MESSAGES.include?(response[:status])
+          response[:success] && SUCCESS_MESSAGES.reject { |msg| msg == 'CHALLENGE' && options[:async] }.include?(response[:status])
         end
       end
 
-      def message_from(response)
+      def message_from(response, success_status)
+        return extract_error(response) unless success_status || response['TraceId'].nil?
+
         response[:title] || response[:responseMessage] || response[:statusName] || response[:status]
       end
 
       def authorization_from(action, response, options)
         if action == :store
           response.dig(:transaction, :payment_method, :token)
-        elsif success_from(action, response)
+        elsif success_from(action, response, options)
           [response[:orderId], options[:currency] || default_currency].compact.join('#')
         end
       end
 
-      def error_code_from(action, response)
-        (response[:statusName] || response[:status]) unless success_from(action, response)
+      def error_code_from(success, response)
+        (response[:statusName] || response[:status]) unless success
       end
 
       def cast_bool(value)
         ![false, 0, '', '0', 'f', 'F', 'false', 'FALSE'].include?(value)
+      end
+
+      def extract_error(response)
+        response.except(*NO_ERROR_KEYS).to_json
       end
     end
   end

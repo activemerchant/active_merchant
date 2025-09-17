@@ -62,6 +62,8 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/ccexp=#{sprintf("%.2i", @apple_pay.month)}#{@apple_pay.year.to_s[-2..-1]}/, data)
       assert_match(/cavv=EHuWW9PiBkWvqE5juRwDzAUFBAk%3D/, data)
       assert_match(/eci=05/, data)
+      assert_match(/decrypted_applepay_data/, data)
+      assert_nil data['decrypted_googlepay_data']
     end.respond_with(successful_purchase_response)
   end
 
@@ -74,6 +76,8 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/ccexp=#{sprintf("%.2i", @google_pay.month)}#{@google_pay.year.to_s[-2..-1]}/, data)
       assert_match(/cavv=EHuWW9PiBkWvqE5juRwDzAUFBAk%3D/, data)
       assert_match(/eci=05/, data)
+      assert_match(/decrypted_googlepay_data/, data)
+      assert_nil data['decrypted_applepay_data']
     end.respond_with(successful_purchase_response)
   end
 
@@ -186,7 +190,7 @@ class NmiTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_shipping_fields
-    options = @transaction_options.merge({ shipping_address: shipping_address })
+    options = @transaction_options.merge({ shipping_address: })
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
@@ -201,6 +205,23 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/shipping_state=ON/, data)
       assert_match(/shipping_country=CA/, data)
       assert_match(/shipping_zip=K2C3N7/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_customer_vault_options
+    options = {
+      description: 'Store purchase',
+      customer_vault: 'add_customer',
+      customer_vault_id: '12345abcde'
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/customer_vault=add_customer/, data)
+      assert_match(/customer_vault_id=12345abcde/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -222,7 +243,7 @@ class NmiTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_shipping_email
-    options = @transaction_options.merge({ shipping_address: shipping_address, shipping_email: 'test@example.com' })
+    options = @transaction_options.merge({ shipping_address:, shipping_email: 'test@example.com' })
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
@@ -287,11 +308,11 @@ class NmiTest < Test::Unit::TestCase
     xid = '00000000000000000501'
     options_with_3ds = @transaction_options.merge(
       three_d_secure: {
-        version: version,
-        authentication_response_status: authentication_response_status,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id,
-        xid: xid
+        version:,
+        authentication_response_status:,
+        cavv:,
+        ds_transaction_id:,
+        xid:
       }
     )
 
@@ -318,11 +339,11 @@ class NmiTest < Test::Unit::TestCase
     xid = '00000000000000000501'
     options_with_3ds = @transaction_options.merge(
       three_d_secure: {
-        version: version,
-        authentication_response_status: authentication_response_status,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id,
-        xid: xid
+        version:,
+        authentication_response_status:,
+        cavv:,
+        ds_transaction_id:,
+        xid:
       }
     )
 
@@ -614,6 +635,16 @@ class NmiTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r{cvv}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_includes_industry_field
+    @transaction_options[:industry_indicator] = 'ecommerce'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @transaction_options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{ecommerce}, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -920,7 +951,7 @@ class NmiTest < Test::Unit::TestCase
       tax: 5.25,
       shipping: 10.51,
       ponumber: 1002,
-      stored_credential: stored_credential(*args, id: id)
+      stored_credential: stored_credential(*args, id:)
     }
   end
 

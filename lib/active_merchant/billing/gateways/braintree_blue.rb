@@ -10,8 +10,8 @@ end
 
 raise 'Need braintree gem >= 2.0.0.' unless Braintree::Version::Major >= 2 && Braintree::Version::Minor >= 0
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on the Braintree Gateway please visit their
     # {Developer Portal}[https://www.braintreepayments.com/developers]
     #
@@ -42,6 +42,9 @@ module ActiveMerchant #:nodoc:
       include Empty
 
       self.display_name = 'Braintree (Blue Platform)'
+
+      version Braintree::Configuration::API_VERSION
+      version Braintree::Version::String, :gem
 
       ERROR_CODES = {
         cannot_refund_if_unsettled: 91506
@@ -160,7 +163,7 @@ module ActiveMerchant #:nodoc:
           end
 
           if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
-            payload[:options] = { merchant_account_id: merchant_account_id }
+            payload[:options] = { merchant_account_id: }
           end
 
           commit do
@@ -563,14 +566,17 @@ module ActiveMerchant #:nodoc:
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
         commit do
           result = @braintree_gateway.transaction.send(transaction_type, transaction_params)
-          make_default_payment_method_token(result) if options.dig(:paypal, :paypal_flow_type) == 'checkout_with_vault' && result.success?
+          make_default_payment_method_token(result, options)
           response = Response.new(result.success?, message_from_transaction_result(result), response_params(result), response_options(result))
           response.cvv_result['message'] = ''
           response
         end
       end
 
-      def make_default_payment_method_token(result)
+      def make_default_payment_method_token(result, options)
+        return if options[:prevent_default_payment_method]
+        return unless options.dig(:paypal, :paypal_flow_type) == 'checkout_with_vault' && result.success?
+
         @braintree_gateway.customer.update(
           result.transaction.customer_details.id,
           default_payment_method_token: result.transaction.paypal_details.implicitly_vaulted_payment_method_token
@@ -678,7 +684,8 @@ module ActiveMerchant #:nodoc:
 
         paypal_details = {
           'payer_id'            => transaction.paypal_details.payer_id,
-          'payer_email'         => transaction.paypal_details.payer_email
+          'payer_email'         => transaction.paypal_details.payer_email,
+          'paypal_payment_token' => transaction.paypal_details.implicitly_vaulted_payment_method_token || transaction.paypal_details.token
         }
 
         if transaction.risk_data
@@ -811,7 +818,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_channel(parameters, options)
-        channel = @options[:channel] || application_id
+        channel = options[:override_application_id] || @options[:channel] || application_id
         parameters[:channel] = channel if channel
       end
 
@@ -954,7 +961,7 @@ module ActiveMerchant #:nodoc:
           if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
             case credit_card_or_vault_id.source
             when :apple_pay
-              add_apple_pay(parameters, credit_card_or_vault_id)
+              add_apple_pay(parameters, credit_card_or_vault_id, options)
             when :google_pay
               add_google_pay(parameters, credit_card_or_vault_id)
             else
@@ -987,15 +994,25 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_apple_pay(parameters, payment_method)
-        parameters[:apple_pay_card] = {
-          number: payment_method.number,
-          expiration_month: payment_method.month.to_s.rjust(2, '0'),
-          expiration_year: payment_method.year.to_s,
-          cardholder_name: payment_method.name,
-          cryptogram: payment_method.payment_cryptogram,
-          eci_indicator: payment_method.eci
-        }
+      def add_apple_pay(parameters, payment_method, options)
+        if options.dig(:stored_credential, :initiator) == 'merchant'
+          parameters[:apple_pay_card] = {
+            number: payment_method.number,
+            expiration_month: payment_method.month.to_s.rjust(2, '0'),
+            expiration_year: payment_method.year.to_s,
+            cardholder_name: payment_method.name,
+            cryptogram: 'cryptogram'
+          }
+        else
+          parameters[:apple_pay_card] = {
+            number: payment_method.number,
+            expiration_month: payment_method.month.to_s.rjust(2, '0'),
+            expiration_year: payment_method.year.to_s,
+            cardholder_name: payment_method.name,
+            cryptogram: payment_method.payment_cryptogram,
+            eci_indicator: payment_method.eci
+          }
+        end
       end
 
       def add_google_pay(parameters, payment_method)
@@ -1047,26 +1064,33 @@ module ActiveMerchant #:nodoc:
           }
         )
 
-        verified = result.success? && result.payment_method&.verified
-        message = message_from_result(result)
-        message = not_verified_reason(result.payment_method) unless verified
-
+        success = bank_account_verified?(result)
+        resp_body = if result.respond_to?(:payment_method)
+                      {
+                        customer_vault_id: options[:customer],
+                        bank_account_token: result.payment_method&.token,
+                        verified: success
+                      }
+                    end
         Response.new(
-          verified,
-          message,
-          {
-            customer_vault_id: options[:customer],
-            bank_account_token: result.payment_method&.token,
-            verified: verified
-          },
-          authorization: result.payment_method&.token
+          success,
+          message_from_bank_account_result(success, result),
+          resp_body || {},
+          authorization: (result.payment_method&.token if result.respond_to?(:payment_method))
         )
       end
 
-      def not_verified_reason(bank_account)
-        return unless bank_account.verifications.present?
+      def bank_account_verified?(result)
+        return false unless result.respond_to?(:payment_method)
 
-        verification = bank_account.verifications.first
+        result.success? && result.payment_method&.verified
+      end
+
+      def message_from_bank_account_result(success, response)
+        return message_from_result(response) if !response.respond_to?(:payment_method) || success
+        return unless response.payment_method.verifications.present?
+
+        verification = response.payment_method.verifications.first
         "verification_status: [#{verification.status}], processor_response: [#{verification.processor_response_code}-#{verification.processor_response_text}]"
       end
 

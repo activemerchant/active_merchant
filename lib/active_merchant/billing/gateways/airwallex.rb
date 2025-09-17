@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class AirwallexGateway < Gateway
       self.test_url = 'https://api-demo.airwallex.com/api/v1'
       self.live_url = 'https://pci-api.airwallex.com/api/v1'
@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
       def build_request_url(action, id = nil)
         base_url = (test? ? test_url : live_url)
         endpoint = ENDPOINTS[action].to_s
-        endpoint = id.present? ? endpoint % { id: id } : endpoint
+        endpoint = id.present? ? endpoint % { id: } : endpoint
         base_url + endpoint
       end
 
@@ -235,16 +235,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order(post, options)
-        return unless shipping_address = options[:shipping_address]
+        return unless options[:shipping_address] || options[:products]
 
-        physical_address = build_shipping_address(shipping_address)
-        first_name, last_name = split_names(shipping_address[:name])
-        shipping = {}
-        shipping[:first_name] = first_name if first_name
-        shipping[:last_name] = last_name if last_name
-        shipping[:phone_number] = shipping_address[:phone_number] if shipping_address[:phone_number]
-        shipping[:address] = physical_address
-        post[:order] = { shipping: shipping }
+        if shipping_address = options[:shipping_address]
+          physical_address = build_shipping_address(shipping_address)
+          first_name, last_name = split_names(shipping_address[:name])
+          shipping = {}
+          shipping[:first_name] = first_name if first_name
+          shipping[:last_name] = last_name if last_name
+          shipping[:phone_number] = shipping_address[:phone_number] if shipping_address[:phone_number]
+          shipping[:address] = physical_address
+        end
+
+        order = {}
+        order[:shipping] = shipping if shipping
+        order[:products] = options[:products] if options[:products]
+
+        post[:order] = order
       end
 
       def build_shipping_address(shipping_address)
@@ -296,7 +303,7 @@ module ActiveMerchant #:nodoc:
           eci: three_d_secure[:eci]
         }.merge(three_ds_version_specific_fields(three_d_secure))
 
-        pm_options ? pm_options.merge!(external_three_ds: external_three_ds) : post['payment_method_options'] = { card: { external_three_ds: external_three_ds } }
+        pm_options ? pm_options.merge!(external_three_ds:) : post['payment_method_options'] = { card: { external_three_ds: } }
       end
 
       def format_three_ds_version(three_d_secure)
@@ -326,7 +333,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_descriptor(post, options)
-        post[:descriptor] = options[:description] if options[:description]
+        post[:descriptor] = truncate(options[:description], 32) if options[:description]
       end
 
       def parse(body)
@@ -373,7 +380,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response.dig('latest_payment_attempt', 'payment_intent_id')
+        response.dig('latest_payment_attempt', 'payment_intent_id') || response.dig('payment_intent_id')
       end
 
       def error_code_from(response)

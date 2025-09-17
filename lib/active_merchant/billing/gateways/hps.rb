@@ -1,10 +1,12 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class HpsGateway < Gateway
-      self.live_url = 'https://posgateway.secureexchange.net/Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl'
-      self.test_url = 'https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl'
+      version '1.0'
+
+      self.live_url = 'https://api2.heartlandportico.com/hps.exchange.posgateway/posgatewayservice.asmx'
+      self.test_url = 'https://cert.api2.heartlandportico.com/Hps.Exchange.PosGateway/PosGatewayService.asmx'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -17,11 +19,6 @@ module ActiveMerchant #:nodoc:
 
       PAYMENT_DATA_SOURCE_MAPPING = {
         apple_pay:        'ApplePay',
-        master:           'MasterCard 3DSecure',
-        visa:             'Visa 3DSecure',
-        american_express: 'AMEX 3DSecure',
-        discover:         'Discover 3DSecure',
-        android_pay:      'GooglePayApp',
         google_pay:       'GooglePayApp'
       }
 
@@ -30,15 +27,16 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, card_or_token, options = {})
+      def authorize(money, payment_method, options = {})
         commit('CreditAuth') do |xml|
           add_amount(xml, money)
           add_allow_dup(xml)
-          add_card_or_token_customer_data(xml, card_or_token, options)
+          add_card_or_token_customer_data(xml, payment_method, options)
           add_details(xml, options)
           add_descriptor_name(xml, options)
-          add_card_or_token_payment(xml, card_or_token, options)
-          add_three_d_secure(xml, card_or_token, options)
+          add_card_or_token_payment(xml, payment_method, options)
+          add_wallet_data(xml, payment_method, options)
+          add_three_d_secure(xml, payment_method, options)
           add_stored_credentials(xml, options)
         end
       end
@@ -110,7 +108,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<hps:SecretAPIKey>)[^<]*(<\/hps:SecretAPIKey>))i, '\1[FILTERED]\2').
           gsub(%r((<hps:PaymentData>)[^<]*(<\/hps:PaymentData>))i, '\1[FILTERED]\2').
           gsub(%r((<hps:RoutingNumber>)[^<]*(<\/hps:RoutingNumber>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:AccountNumber>)[^<]*(<\/hps:AccountNumber>))i, '\1[FILTERED]\2')
+          gsub(%r((<hps:AccountNumber>)[^<]*(<\/hps:AccountNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:Cryptogram>)[^<]*(<\/hps:Cryptogram>))i, '\1[FILTERED]\2')
       end
 
       private
@@ -125,28 +124,30 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit_credit_sale(money, card_or_token, options)
+      def commit_credit_sale(money, payment_method, options)
         commit('CreditSale') do |xml|
           add_amount(xml, money)
           add_allow_dup(xml)
-          add_card_or_token_customer_data(xml, card_or_token, options)
+          add_card_or_token_customer_data(xml, payment_method, options)
           add_details(xml, options)
           add_descriptor_name(xml, options)
-          add_card_or_token_payment(xml, card_or_token, options)
-          add_three_d_secure(xml, card_or_token, options)
+          add_card_or_token_payment(xml, payment_method, options)
+          add_wallet_data(xml, payment_method, options)
+          add_three_d_secure(xml, payment_method, options)
           add_stored_credentials(xml, options)
         end
       end
 
-      def commit_recurring_billing_sale(money, card_or_token, options)
+      def commit_recurring_billing_sale(money, payment_method, options)
         commit('RecurringBilling') do |xml|
           add_amount(xml, money)
           add_allow_dup(xml)
-          add_card_or_token_customer_data(xml, card_or_token, options)
+          add_card_or_token_customer_data(xml, payment_method, options)
           add_details(xml, options)
           add_descriptor_name(xml, options)
-          add_card_or_token_payment(xml, card_or_token, options)
-          add_three_d_secure(xml, card_or_token, options)
+          add_card_or_token_payment(xml, payment_method, options)
+          add_wallet_data(xml, payment_method, options)
+          add_three_d_secure(xml, payment_method, options)
           add_stored_credentials(xml, options)
           add_stored_credentials_for_recurring_billing(xml, options)
         end
@@ -254,32 +255,24 @@ module ActiveMerchant #:nodoc:
         xml.hps :TxnDescriptor, options[:descriptor_name] if options[:descriptor_name]
       end
 
-      def add_three_d_secure(xml, card_or_token, options)
-        if card_or_token.is_a?(NetworkTokenizationCreditCard)
-          build_three_d_secure(xml, {
-            source: card_or_token.source,
-            cavv: card_or_token.payment_cryptogram,
-            eci: card_or_token.eci,
-            xid: card_or_token.transaction_id
-          })
-        elsif options[:three_d_secure]
-          options[:three_d_secure][:source] ||= card_brand(card_or_token)
-          build_three_d_secure(xml, options[:three_d_secure])
+      def add_wallet_data(xml, payment_method, options)
+        return unless payment_method.is_a?(NetworkTokenizationCreditCard)
+
+        xml.hps :WalletData do
+          xml.hps :PaymentSource, PAYMENT_DATA_SOURCE_MAPPING[payment_method.source]
+          xml.hps :Cryptogram, payment_method.payment_cryptogram
+          xml.hps :ECI, strip_leading_zero(payment_method.eci) if payment_method.eci
         end
       end
 
-      def build_three_d_secure(xml, three_d_secure)
-        # PaymentDataSource is required when supplying the SecureECommerce data group,
-        # and the gateway currently only allows the values within the mapping
-        return unless PAYMENT_DATA_SOURCE_MAPPING[three_d_secure[:source].to_sym]
+      def add_three_d_secure(xml, card_or_token, options)
+        return unless (three_d_secure = options[:three_d_secure])
 
-        xml.hps :SecureECommerce do
-          xml.hps :PaymentDataSource, PAYMENT_DATA_SOURCE_MAPPING[three_d_secure[:source].to_sym]
-          xml.hps :TypeOfPaymentData, '3DSecure' # Only type currently supported
-          xml.hps :PaymentData, three_d_secure[:cavv] if three_d_secure[:cavv]
-          # the gateway only allows a single character for the ECI
-          xml.hps :ECommerceIndicator, strip_leading_zero(three_d_secure[:eci]) if three_d_secure[:eci]
-          xml.hps :XID, three_d_secure[:xid] if three_d_secure[:xid]
+        xml.hps :Secure3D do
+          xml.hps :Version, three_d_secure[:version]
+          xml.hps :AuthenticationValue, three_d_secure[:cavv] if three_d_secure[:cavv]
+          xml.hps :ECI, strip_leading_zero(three_d_secure[:eci]) if three_d_secure[:eci]
+          xml.hps :DirectoryServerTxnId, three_d_secure[:ds_transaction_id] if three_d_secure[:ds_transaction_id]
         end
       end
 
@@ -330,7 +323,7 @@ module ActiveMerchant #:nodoc:
         } do
           xml.SOAP :Body do
             xml.hps :PosRequest do
-              xml.hps :"Ver1.0" do
+              xml.hps :"Ver#{fetch_version}" do
                 xml.hps :Header do
                   xml.hps :SecretAPIKey, @options[:secret_api_key]
                   xml.hps :DeveloperID, @options[:developer_id] if @options[:developer_id]
@@ -383,8 +376,8 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, reference = nil, &request)
-        data = build_request(action, &request)
+      def commit(action, reference = nil, &)
+        data = build_request(action, &)
 
         response =
           begin

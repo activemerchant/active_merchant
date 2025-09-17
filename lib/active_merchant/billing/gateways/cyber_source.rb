@@ -1,5 +1,7 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+require 'nokogiri'
+
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Initial setup instructions can be found in
     # http://apps.cybersource.com/library/documentation/dev_guides/SOAP_Toolkits/SOAP_toolkits.pdf
     #
@@ -39,12 +41,23 @@ module ActiveMerchant #:nodoc:
         delegated_authentication: 'delegatedAuthenticationExemptionIndicator',
         low_risk: 'riskAnalysisExemptionIndicator',
         low_value: 'lowValueExemptionIndicator',
-        stored_credential: 'stored_credential',
         trusted_merchant: 'trustedMerchantExemptionIndicator'
       }
       DEFAULT_COLLECTION_INDICATOR = 2
 
-      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb dankort maestro elo]
+      NS_DS = 'http://www.w3.org/2000/09/xmldsig#'
+      NS_WSSE = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'
+      C14N_ALGORITHM = 'http://www.w3.org/2001/10/xml-exc-c14n#'
+      RSA_SHA256_ALGORITHM = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+      SHA256_ALGORITHM = 'http://www.w3.org/2001/04/xmlenc#sha256'
+      BINARY_SECURITY_TOKEN_PROFILE = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3'
+      BINARY_SECURITY_TOKEN_TYPE = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary'
+      BINARY_SECURITY_TOKEN_WSU = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd'
+      BINARY_SECURITY_TOKEN_ID = 'X509Token'
+      USERNAME_TOKEN_PROFILE = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText'
+      ENVELOPE = 'http://schemas.xmlsoap.org/soap/envelope/'
+
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb dankort maestro elo patagonia_365 tarjeta_sol]
       self.supported_countries = %w(US AE BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB PK)
 
       self.default_currency = 'USD'
@@ -63,7 +76,7 @@ module ActiveMerchant #:nodoc:
         dankort: '034',
         maestro: '042',
         elo: '054',
-        carnet: '058'
+        carnet: '002'
       }
 
       @@decision_codes = {
@@ -172,12 +185,17 @@ module ActiveMerchant #:nodoc:
       # :ignore_cvv => true   don't want to use CVV so continue processing even
       #                       if CVV would have failed
       def initialize(options = {})
-        requires!(options, :login, :password)
+        if options[:public_key]
+          requires!(options, :login, :public_key, :private_key)
+        else
+          requires!(options, :login, :password)
+        end
+
         super
       end
 
       def authorize(money, payment_method, options = {})
-        if valid_payment_method?(payment_method)
+        if valid_payment_method?(payment_method, options)
           setup_address_hash(options)
           commit(build_auth_request(money, payment_method, options), :authorize, money, options)
         else
@@ -193,7 +211,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options = {})
-        if valid_payment_method?(payment_method)
+        if valid_payment_method?(payment_method, options)
           setup_address_hash(options)
           commit(build_purchase_request(money, payment_method, options), :purchase, money, options)
         else
@@ -233,7 +251,7 @@ module ActiveMerchant #:nodoc:
       # To charge the card while creating a profile, pass
       # options[:setup_fee] => money
       def store(payment_method, options = {})
-        if valid_payment_method?(payment_method)
+        if valid_payment_method?(payment_method, options)
           setup_address_hash(options)
           commit(build_create_subscription_request(payment_method, options), :store, nil, options)
         else
@@ -301,6 +319,9 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((<wsse:Password [^>]*>)[^<]*(</wsse:Password>))i, '\1[FILTERED]\2').
+          gsub(%r((<wsse:BinarySecurityToken [^>]*>)[^<]*(</wsse:BinarySecurityToken>))i, '\1[FILTERED]\2').
+          gsub(%r((<ds:DigestValue>)[^<]*(</ds:DigestValue>))i, '\1[FILTERED]\2').
+          gsub(%r((<ds:SignatureValue [^>]*>)[^<]*(</ds:SignatureValue>))i, '\1[FILTERED]\2').
           gsub(%r((<accountNumber>)[^<]*(</accountNumber>))i, '\1[FILTERED]\2').
           gsub(%r((<cvNumber>)[^<]*(</cvNumber>))i, '\1[FILTERED]\2').
           gsub(%r((<cavv>)[^<]*(</cavv>))i, '\1[FILTERED]\2').
@@ -321,10 +342,12 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def valid_payment_method?(payment_method)
+      def valid_payment_method?(payment_method, options)
         return true unless payment_method.is_a?(NetworkTokenizationCreditCard)
 
-        %w(visa master american_express).include?(card_brand(payment_method))
+        brands = %w(visa master american_express)
+        brands << 'discover' if options[:enable_cybs_discover_apple_pay]
+        brands.include?(card_brand(payment_method))
       end
 
       # Create all required address hash key value pairs
@@ -368,6 +391,7 @@ module ActiveMerchant #:nodoc:
         add_threeds_services(xml, options)
         add_business_rules_data(xml, creditcard_or_reference, options)
         add_airline_data(xml, options)
+        add_merchant_category_code(xml, options)
         add_sales_slip_number(xml, options)
         add_payment_network_token(xml, creditcard_or_reference, options)
         add_payment_solution(xml, creditcard_or_reference)
@@ -403,7 +427,7 @@ module ActiveMerchant #:nodoc:
 
       def build_capture_request(money, authorization, options)
         order_id, request_id, request_token = authorization.split(';')
-        options[:order_id] = order_id
+        options[:order_id] = options[:merchant_reference_code] || order_id
 
         xml = Builder::XmlMarkup.new indent: 2
         add_purchase_data(xml, money, true, options)
@@ -411,6 +435,7 @@ module ActiveMerchant #:nodoc:
         add_mdd_fields(xml, options)
         add_capture_service(xml, request_id, request_token, options)
         add_business_rules_data(xml, authorization, options)
+        add_merchant_category_code(xml, options)
         add_tax_management_indicator(xml, options)
         add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
@@ -431,6 +456,7 @@ module ActiveMerchant #:nodoc:
         if (!payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check') || reference_is_a_check?(payment_method_or_reference)
           add_check_service(xml)
           add_airline_data(xml, options)
+          add_merchant_category_code(xml, options)
           add_sales_slip_number(xml, options)
           add_tax_management_indicator(xml, options)
           add_issuer_additional_data(xml, options)
@@ -441,6 +467,7 @@ module ActiveMerchant #:nodoc:
           add_threeds_services(xml, options)
           add_business_rules_data(xml, payment_method_or_reference, options)
           add_airline_data(xml, options)
+          add_merchant_category_code(xml, options)
           add_sales_slip_number(xml, options)
           add_payment_network_token(xml, payment_method_or_reference, options)
           add_payment_solution(xml, payment_method_or_reference)
@@ -462,8 +489,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_void_request(identification, options)
-        order_id, request_id, request_token, action, money, currency = identification.split(';')
+        order_id, request_id, request_token, action, money, currency = identification&.split(';')
         options[:order_id] = order_id
+
+        money ||= options[:amount]
+        currency ||= options[:currency]
 
         xml = Builder::XmlMarkup.new indent: 2
         case action
@@ -475,6 +505,7 @@ module ActiveMerchant #:nodoc:
           add_mdd_fields(xml, options)
           add_auth_reversal_service(xml, request_id, request_token)
         end
+        add_merchant_category_code(xml, options)
         add_issuer_additional_data(xml, options)
         add_partner_solution_id(xml)
 
@@ -487,9 +518,10 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new indent: 2
         add_purchase_data(xml, money, true, options)
-        add_credit_service(xml, request_id: request_id,
-                                request_token: request_token,
+        add_credit_service(xml, request_id:,
+                                request_token:,
                                 use_check_service: reference_is_a_check?(identification))
+        add_merchant_category_code(xml, options)
         add_partner_solution_id(xml)
 
         xml.target!
@@ -701,7 +733,21 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
           xml.tag! 'merchantTaxID',         bill_to_merchant_tax_id           unless bill_to_merchant_tax_id.blank?
+          add_browser_info(xml, options, shipTo)
         end
+      end
+
+      def add_browser_info(xml, options, shipTo)
+        return if shipTo
+        return unless browser_info = options.dig(:three_ds_2, :browser_info)
+
+        xml.tag! 'httpBrowserColorDepth', browser_info[:depth]&.to_s
+        xml.tag! 'httpBrowserJavaEnabled', browser_info[:java]
+        xml.tag! 'httpBrowserJavaScriptEnabled', browser_info[:javascript]
+        xml.tag! 'httpBrowserLanguage', browser_info[:language]&.to_s
+        xml.tag! 'httpBrowserScreenHeight', browser_info[:height]&.to_s
+        xml.tag! 'httpBrowserScreenWidth', browser_info[:width]&.to_s
+        xml.tag! 'httpBrowserTimeDifference', browser_info[:timezone]&.to_s
       end
 
       def address_names(address_name, payment_method)
@@ -736,13 +782,9 @@ module ActiveMerchant #:nodoc:
       def add_payment_solution(xml, payment_method)
         return unless network_tokenization?(payment_method)
 
-        case payment_method.source
-        when :network_token
-          payment_solution = NT_PAYMENT_SOLUTION[payment_method.brand]
-          xml.tag! 'paymentSolution', payment_solution if payment_solution
-        when :apple_pay, :google_pay
-          xml.tag! 'paymentSolution', @@wallet_payment_solution[payment_method.source]
-        end
+        payment_solution = payment_method.network_token? ? NT_PAYMENT_SOLUTION[payment_method.brand] : @@wallet_payment_solution[payment_method.source]
+
+        xml.tag! 'paymentSolution', payment_solution
       end
 
       def add_issuer_additional_data(xml, options)
@@ -792,38 +834,37 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_auth_service(xml, payment_method, options)
-        if network_tokenization?(payment_method)
-          if payment_method.source == :network_token
+        xml.tag! 'ccAuthService', { 'run' => 'true' } do
+          if network_tokenization?(payment_method)
             add_auth_network_tokenization(xml, payment_method, options)
-          else
-            add_auth_wallet(xml, payment_method, options)
+          elsif options[:three_d_secure]
+            add_normalized_threeds_2_data(xml, payment_method, options)
+            add_threeds_exemption_data(xml, options)
+          elsif (indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options))
+            xml.tag!('commerceIndicator', indicator)
           end
-        else
-          xml.tag! 'ccAuthService', { 'run' => 'true' } do
-            if options[:three_d_secure]
-              add_normalized_threeds_2_data(xml, payment_method, options)
-              add_threeds_exemption_data(xml, options) if options[:three_ds_exemption_type]
-            else
-              indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options)
-              xml.tag!('commerceIndicator', indicator) if indicator
-            end
-            xml.tag!('aggregatorID', options[:aggregator_id]) if options[:aggregator_id]
-            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
-            xml.tag!('firstRecurringPayment', options[:first_recurring_payment]) if options[:first_recurring_payment]
-            xml.tag!('mobileRemotePaymentType', options[:mobile_remote_payment_type]) if options[:mobile_remote_payment_type]
+
+          unless options[:three_d_secure]
+            add_reconciliation_and_aggregator_id(xml, options)
+            add_optional_fields(xml, options)
           end
         end
       end
 
+      def add_reconciliation_and_aggregator_id(xml, options)
+        xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+        xml.tag!('aggregatorID', options[:aggregator_id]) if options[:aggregator_id]
+      end
+
+      def add_optional_fields(xml, options)
+        xml.tag!('firstRecurringPayment', options[:first_recurring_payment]) if options[:first_recurring_payment]
+        xml.tag!('mobileRemotePaymentType', options[:mobile_remote_payment_type]) if options[:mobile_remote_payment_type]
+      end
+
       def add_threeds_exemption_data(xml, options)
-        return unless options[:three_ds_exemption_type]
+        return unless (exemption = THREEDS_EXEMPTIONS[options[:three_ds_exemption_type]&.to_sym])
 
-        exemption = options[:three_ds_exemption_type].to_sym
-
-        case exemption
-        when :authentication_outage, :corporate_card, :delegated_authentication, :low_risk, :low_value, :trusted_merchant
-          xml.tag!(THREEDS_EXEMPTIONS[exemption], '1')
-        end
+        xml.tag!(exemption, '1')
       end
 
       def add_incremental_auth_service(xml, authorization, options)
@@ -855,8 +896,10 @@ module ActiveMerchant #:nodoc:
           xml.tag!('xid', cavv) if cavv.present?
         end
 
+        add_reconciliation_and_aggregator_id(xml, options)
         xml.tag!('veresEnrolled', threeds_2_options[:enrolled]) if threeds_2_options[:enrolled]
         xml.tag!('paresStatus', threeds_2_options[:authentication_response_status]) if threeds_2_options[:authentication_response_status]
+        add_optional_fields(xml, options)
       end
 
       def infer_commerce_indicator?(options, cc_brand)
@@ -889,56 +932,64 @@ module ActiveMerchant #:nodoc:
         payment_method.is_a?(NetworkTokenizationCreditCard)
       end
 
-      def subsequent_nt_apple_pay_auth(source, options)
+      def subsequent_wallet_auth(payment_method, options)
         return unless options[:stored_credential] || options[:stored_credential_overrides]
-        return unless @@wallet_payment_solution[source]
+        return unless @@wallet_payment_solution[payment_method.source]
 
         options.dig(:stored_credential_overrides, :subsequent_auth) || options.dig(:stored_credential, :initiator) == 'merchant'
       end
 
       def add_auth_network_tokenization(xml, payment_method, options)
-        commerce_indicator = stored_credential_commerce_indicator(options) || 'internet'
-        xml.tag! 'ccAuthService', { 'run' => 'true' } do
+        brand = card_brand(payment_method)
+        return if payment_method.mobile_wallet? && brand == 'discover' && !options[:enable_cybs_discover_apple_pay]
+
+        if payment_method.network_token?
           xml.tag!('networkTokenCryptogram', payment_method.payment_cryptogram)
-          xml.tag!('commerceIndicator', commerce_indicator)
-          xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+          xml.tag!('commerceIndicator', stored_credential_commerce_indicator(options) || 'internet')
+        elsif send_only_commerce_indicator(payment_method, options)
+          commerce_indicator = if brand == 'discover'
+                                 'dipb'
+                               elsif subsequent_wallet_auth(payment_method, options)
+                                 'internet'
+                               else
+                                 ECI_BRAND_MAPPING[brand.to_sym]
+                               end
+
+          xml.commerceIndicator(commerce_indicator)
+        else
+          default_wallet_values(xml, payment_method)
         end
       end
 
-      def add_auth_wallet(xml, payment_method, options)
-        commerce_indicator = 'internet' if subsequent_nt_apple_pay_auth(payment_method.source, options)
+      def send_only_commerce_indicator(payment_method, options)
+        brand = card_brand(payment_method)
 
+        return false if brand == 'american_express'
+
+        brand == 'master' || subsequent_wallet_auth(payment_method, options)
+      end
+
+      def default_wallet_values(xml, payment_method)
         brand = card_brand(payment_method).to_sym
+        commerce_indicator = brand == :discover ? 'dipb' : ECI_BRAND_MAPPING[brand]
+        cryptogram = brand == :american_express ? Base64.decode64(payment_method.payment_cryptogram) : payment_method.payment_cryptogram
+        cavv = xid = cryptogram
 
-        case brand
-        when :visa
-          xml.tag! 'ccAuthService', { 'run' => 'true' } do
-            xml.tag!('cavv', payment_method.payment_cryptogram) unless commerce_indicator
-            xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
-            xml.tag!('xid', payment_method.payment_cryptogram) unless commerce_indicator
-            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
-          end
-        when :master
-          xml.tag! 'ccAuthService', { 'run' => 'true' } do
-            xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
-            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
-          end
-        when :american_express
-          cryptogram = Base64.decode64(payment_method.payment_cryptogram)
-          xml.tag! 'ccAuthService', { 'run' => 'true' } do
-            xml.tag!('cavv', Base64.encode64(cryptogram[0...20]))
-            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
-            xml.tag!('xid', Base64.encode64(cryptogram[20...40])) if cryptogram.bytes.count > 20
-            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
-          end
+        if brand == :american_express
+          cavv = Base64.encode64(cavv[0...20])
+          xid = xid.bytes.count > 20 ? Base64.encode64(xid[20...40]) : nil
         end
+
+        xml.tag! 'cavv', cavv
+        xml.tag! 'commerceIndicator', commerce_indicator
+        xml.tag! 'xid', xid if xid
       end
 
       def add_mastercard_network_tokenization_ucaf_data(xml, payment_method, options)
         return unless network_tokenization?(payment_method) && card_brand(payment_method).to_sym == :master
         return if payment_method.source == :network_token
 
-        commerce_indicator = 'internet' if subsequent_nt_apple_pay_auth(payment_method.source, options)
+        commerce_indicator = 'internet' if subsequent_wallet_auth(payment_method, options)
 
         xml.tag! 'ucaf' do
           xml.tag!('authenticationData', payment_method.payment_cryptogram) unless commerce_indicator
@@ -949,7 +1000,7 @@ module ActiveMerchant #:nodoc:
       def add_payment_network_token(xml, payment_method, options)
         return unless network_tokenization?(payment_method)
 
-        transaction_type = payment_method.source == :network_token ? '3' : '1'
+        transaction_type = payment_method.network_token? ? '3' : '1'
         xml.tag! 'paymentNetworkToken' do
           xml.tag!('requestorID', options[:trid]) if transaction_type == '3' && options[:trid]
           xml.tag!('transactionType', transaction_type)
@@ -959,9 +1010,9 @@ module ActiveMerchant #:nodoc:
       def add_capture_service(xml, request_id, request_token, options)
         xml.tag! 'ccCaptureService', { 'run' => 'true' } do
           xml.tag! 'authRequestID', request_id
+          xml.tag! 'reconciliationID', options[:reconciliation_id] if options[:reconciliation_id]
           xml.tag! 'authRequestToken', request_token
           xml.tag! 'gratuityAmount', options[:gratuity_amount] if options[:gratuity_amount]
-          xml.tag! 'reconciliationID', options[:reconciliation_id] if options[:reconciliation_id]
         end
       end
 
@@ -990,7 +1041,7 @@ module ActiveMerchant #:nodoc:
 
       def add_auth_reversal_service(xml, request_id, request_token)
         xml.tag! 'ccAuthReversalService', { 'run' => 'true' } do
-          xml.tag! 'authRequestID', request_id
+          xml.tag! 'authRequestID', request_id unless request_id.nil?
           xml.tag! 'authRequestToken', request_token
         end
       end
@@ -1024,6 +1075,11 @@ module ActiveMerchant #:nodoc:
 
       def add_subscription_retrieve_service(xml, options)
         xml.tag! 'paySubscriptionRetrieveService', { 'run' => 'true' }
+      end
+
+      def add_merchant_category_code(xml, options)
+        xml.tag! 'merchantTransactionIdentifier', options[:merchant_transaction_id] if options[:merchant_transaction_id]
+        xml.tag! 'merchantCategoryCode', options[:merchant_category_code] if options[:merchant_category_code]
       end
 
       def add_subscription(xml, options, reference = nil)
@@ -1094,10 +1150,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_threeds_services(xml, options)
-        xml.tag! 'payerAuthEnrollService', { 'run' => 'true' } if options[:payer_auth_enroll_service]
+        if options[:payer_auth_enroll_service]
+          xml.tag! 'payerAuthEnrollService', { 'run' => 'true' } do
+            browser_info = options.dig(:three_ds_2, :browser_info)
+            xml.tag! 'httpUserAgent', browser_info[:user_agent] if browser_info&.dig(:user_agent)
+            xml.tag! 'returnURL', options[:return_url] if options[:return_url]
+            xml.tag! 'httpUserAccept', browser_info[:accept_header] if browser_info&.dig(:accept_header)
+          end
+        end
+
         if options[:payer_auth_validate_service]
           xml.tag! 'payerAuthValidateService', { 'run' => 'true' } do
-            xml.tag! 'signedPARes', options[:pares]
+            xml.tag! 'authenticationTransactionID', options[:authentication_transaction_id]
           end
         end
       end
@@ -1146,7 +1210,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def threeds_stored_credential_exemption?(options)
-        options[:three_ds_exemption_type] == THREEDS_EXEMPTIONS[:stored_credential]
+        options[:three_ds_exemption_type] == 'stored_credential'
       end
 
       def add_partner_solution_id(xml)
@@ -1155,28 +1219,105 @@ module ActiveMerchant #:nodoc:
         xml.tag!('partnerSolutionID', application_id)
       end
 
-      # Where we actually build the full SOAP request using builder
-      def build_request(body, options)
-        xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+      def sign_info(body)
+        canonicalized = canonicalization(body)
+        digest_value = OpenSSL::Digest::SHA256.digest(canonicalized)
 
         xml = Builder::XmlMarkup.new indent: 2
-        xml.instruct!
-        xml.tag! 's:Envelope', { 'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
-          xml.tag! 's:Header' do
-            xml.tag! 'wsse:Security', { 's:mustUnderstand' => '1', 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd' } do
-              xml.tag! 'wsse:UsernameToken' do
-                xml.tag! 'wsse:Username', @options[:login]
-                xml.tag! 'wsse:Password', @options[:password], 'Type' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText'
-              end
+
+        xml.tag! 'ds:SignedInfo', { 'xmlns:ds' => NS_DS } do
+          xml.tag! 'ds:CanonicalizationMethod', { 'Algorithm' => C14N_ALGORITHM }
+          xml.tag! 'ds:SignatureMethod', { 'Algorithm' => RSA_SHA256_ALGORITHM }
+          xml.tag! 'ds:Reference', { 'URI' => '#Body' } do
+            xml.tag! 'ds:Transforms' do
+              xml.tag! 'ds:Transform', { 'Algorithm' => C14N_ALGORITHM }
             end
+            xml.tag! 'ds:DigestMethod', { 'Algorithm' => SHA256_ALGORITHM }
+            xml.tag! 'ds:DigestValue', Base64.encode64(digest_value).strip
           end
-          xml.tag! 's:Body', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' } do
-            xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
-              add_merchant_data(xml, options)
-              xml << body
+        end
+
+        canonicalization(xml.target!)
+      end
+
+      def signature_element(xml, body)
+        signed_info = sign_info(body)
+        rsa_private_key = OpenSSL::PKey::RSA.new(@options[:private_key])
+        signature = rsa_private_key.sign(OpenSSL::Digest.new('SHA256'), signed_info)
+
+        xml.tag! 'ds:Signature', { 'xmlns:ds' => NS_DS } do
+          xml << signed_info
+          xml.tag! 'ds:SignatureValue', { 'xmlns:ds' => NS_DS } do
+            xml.text! Base64.encode64(signature).strip
+          end
+          xml.tag! 'ds:KeyInfo', { 'xmlns:ds' => NS_DS } do
+            xml.tag! 'wsse:SecurityTokenReference', { 'xmlns:wsse' => NS_WSSE } do
+              xml.tag! 'wsse:Reference', { 'URI' => '#X509Token', 'xmlns:wsse' => NS_WSSE }
             end
           end
         end
+      end
+
+      def security_token_reference(xml)
+        xml.tag! 'wsse:BinarySecurityToken', { 'ValueType' => BINARY_SECURITY_TOKEN_PROFILE, 'EncodingType' => BINARY_SECURITY_TOKEN_TYPE, 'xmlns:wsu' => BINARY_SECURITY_TOKEN_WSU, 'wsu:Id' => BINARY_SECURITY_TOKEN_ID } do
+          xml.text! @options[:public_key]
+        end
+      end
+
+      def set_headers(xml, body)
+        xml.tag! 's:Header' do
+          xml.tag! 'wsse:Security', { 'xmlns:wsse' => NS_WSSE } do
+            if @options[:public_key]
+              security_token_reference(xml)
+              signature_element(xml, body)
+            else
+              xml.tag! 'wsse:UsernameToken' do
+                xml.tag! 'wsse:Username', @options[:login]
+                xml.tag! 'wsse:Password', @options[:password], 'Type' => USERNAME_TOKEN_PROFILE
+              end
+            end
+          end
+        end
+      end
+
+      def build_body(request, options, xsd_version)
+        xml = Builder::XmlMarkup.new indent: 2
+
+        arguments =
+          if @options[:public_key]
+            { 'xmlns:s' => ENVELOPE, 'xmlns:wsu' => BINARY_SECURITY_TOKEN_WSU, 'wsu:Id' => 'Body' }
+          else
+            { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' }
+          end
+
+        xml.tag! 's:Body', arguments do
+          xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
+            add_merchant_data(xml, options)
+            xml << request
+          end
+        end
+
+        xml.target!
+      end
+
+      def canonicalization(xml)
+        doc = Nokogiri::XML(xml)
+        doc.canonicalize(Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0)
+      end
+
+      # Where we actually build the full SOAP request using builder
+      def build_request(request, options)
+        xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+
+        body = build_body(request, options, xsd_version)
+        xml = Builder::XmlMarkup.new indent: 2
+
+        xml.instruct!
+        xml.tag! 's:Envelope', { 'xmlns:s' => ENVELOPE, 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
+          set_headers(xml, body)
+          xml << body
+        end
+
         xml.target!
       end
 
@@ -1206,7 +1347,7 @@ module ActiveMerchant #:nodoc:
           message,
           response,
           test: test?,
-          authorization: authorization,
+          authorization:,
           fraud_review: in_fraud_review?(response),
           avs_result: { code: response[:avsCode] },
           cvv_result: response[:cvCode]

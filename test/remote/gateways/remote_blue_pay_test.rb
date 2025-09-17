@@ -90,7 +90,7 @@ class BluePayTest < Test::Unit::TestCase
     assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
     assert_success response
     rebill_id = response.params['rebid']
-    assert response = @gateway.update_recurring(rebill_id: rebill_id, rebill_amount: @amount * 2)
+    assert response = @gateway.update_recurring(rebill_id:, rebill_amount: @amount * 2)
     assert_success response
 
     response_keys = response.params.keys.map(&:to_sym)
@@ -149,7 +149,7 @@ class BluePayTest < Test::Unit::TestCase
 
     rebill_id = response.params['rebid']
 
-    assert response = @gateway.update_recurring(rebill_id: rebill_id, rebill_amount: @amount * 2)
+    assert response = @gateway.update_recurring(rebill_id:, rebill_amount: @amount * 2)
     assert_success response
 
     assert response = @gateway.status_recurring(rebill_id)

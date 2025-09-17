@@ -12,6 +12,7 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
 
     @master_card = credit_card('2222420000001113', brand: 'master')
     @discover_card = credit_card('6011111111111117', brand: 'discover')
+    @carnet_card = credit_card('5062280000000002', brand: 'carnet')
 
     @visa_network_token = network_tokenization_credit_card(
       '4111111111111111',
@@ -153,6 +154,15 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_equal 'INVALID_ACCOUNT', response.error_code
   end
 
+  def test_successful_authorize_with_carnet_card
+    response = @gateway.authorize(@amount, @carnet_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_equal '002', response.params['paymentInformation']['card']['type']
+    refute_empty response.params['_links']['capture']
+  end
+
   def test_successful_capture
     authorize = @gateway.authorize(@amount, @visa_card, @options)
     response = @gateway.capture(@amount, authorize.authorization, @options)
@@ -232,6 +242,17 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert response.params['_links']['void'].present?
   end
 
+  def test_successful_refund_with_merchant_category_code
+    purchase = @gateway.purchase(@amount, @visa_card, @options)
+    response = @gateway.refund(@amount, purchase.authorization, @options.merge(merchant_category_code: '1111'))
+
+    assert_success response
+    assert response.test?
+    assert_equal 'PENDING', response.message
+    assert response.params['id'].present?
+    assert response.params['_links']['void'].present?
+  end
+
   def test_failure_refund
     purchase = @gateway.purchase(@amount, @card_without_funds, @options)
     response = @gateway.refund(@amount, purchase.authorization, @options)
@@ -283,6 +304,16 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_nil response.params['_links']['capture']
   end
 
+  def test_successful_credit_with_merchant_category_code
+    response = @gateway.credit(@amount, @visa_card, @options.merge(merchant_category_code: '1111'))
+
+    assert_success response
+    assert response.test?
+    assert_equal 'PENDING', response.message
+    assert response.params['id'].present?
+    assert_nil response.params['_links']['capture']
+  end
+
   def test_failure_credit
     response = @gateway.credit(@amount, @card_without_funds, @options)
 
@@ -295,6 +326,15 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
   def test_successful_void
     authorize = @gateway.authorize(@amount, @visa_card, @options)
     response = @gateway.void(authorize.authorization, @options)
+    assert_success response
+    assert response.params['id'].present?
+    assert_equal 'REVERSED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_successful_void_with_merchant_category_code
+    authorize = @gateway.authorize(@amount, @visa_card, @options)
+    response = @gateway.void(authorize.authorization, @options.merge(merchant_category_code: '1111'))
     assert_success response
     assert response.params['id'].present?
     assert_equal 'REVERSED', response.message
@@ -350,6 +390,15 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_apple_pay
     response = @gateway.authorize(@amount, @apple_pay, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+  end
+
+  def test_successful_authorize_with_apple_pay_recurring
+    auth = @gateway.authorize(@amount, @apple_pay, @options)
+    response = @gateway.authorize(@amount, @apple_pay, @options.merge(stored_credential: stored_credential_options(:merchant, :recurring, ntid: auth.network_transaction_id)))
 
     assert_success response
     assert_equal 'AUTHORIZED', response.message
@@ -574,6 +623,14 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_level_2_data
     response = @gateway.purchase(@amount, @visa_card, @options.merge({ purchase_order_number: '13829012412' }))
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_successful_purchase_with_merchant_catefory_code
+    response = @gateway.purchase(@amount, @visa_card, @options.merge(merchant_category_code: '1111'))
     assert_success response
     assert response.test?
     assert_equal 'AUTHORIZED', response.message

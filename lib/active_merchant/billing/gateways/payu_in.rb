@@ -1,7 +1,7 @@
 # encoding: utf-8
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayuInGateway < Gateway
       self.test_url = 'https://test.payu.in/_payment'
       self.live_url = 'https://secure.payu.in/_payment'

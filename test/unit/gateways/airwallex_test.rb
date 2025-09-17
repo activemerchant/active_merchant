@@ -41,6 +41,59 @@ class AirwallexTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_order_products
+    options = {
+      billing_address: address,
+      shipping_address: address,
+      products: [
+        {
+          'category' => 'test',
+          'code' => '12345',
+          'desc' => 'product description',
+          'effective_end_at' => '2025-02-01T10:30:00Z',
+          'effective_start_at' => '2025-01-01T10:30:00Z',
+          'image_url' => 'www.test.com',
+          'name' => 'test name',
+          'quantity' => '1',
+          'seller' => {
+            'identifier' => 'identity',
+            'name' => 'name'
+          },
+          'sku' => '12345test',
+          'type' => 'intangible_good',
+          'unit_price' => '2',
+          'url' => 'www.123test.com'
+        }
+      ]
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      if data.include?('_setup')
+        data = JSON.parse(data)['order']['products'][0]
+        assert_match(data['category'], 'test')
+        assert_match(data['code'], '12345')
+        assert_match(data['desc'], 'product description')
+        assert_match(data['effective_end_at'], '2025-02-01T10:30:00Z')
+        assert_match(data['effective_start_at'], '2025-01-01T10:30:00Z')
+        assert_match(data['image_url'], 'www.test.com')
+        assert_match(data['name'], 'test name')
+        assert_equal(data['quantity'], '1')
+        assert_match(data['seller']['identifier'], 'identity')
+        assert_match(data['seller']['name'], 'name')
+        assert_match(data['sku'], '12345test')
+        assert_match(data['type'], 'intangible_good')
+        assert_match(data['unit_price'], '2')
+        assert_match(data['url'], 'www.123test.com')
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+  end
+
   def test_failed_purchase_with_declined_card
     @gateway.expects(:ssl_post).times(2).returns(successful_payment_intent_response, failed_purchase_response)
 
@@ -73,7 +126,7 @@ class AirwallexTest < Test::Unit::TestCase
     return_url = 'https://example.com'
 
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(return_url: return_url))
+      @gateway.authorize(@amount, @credit_card, @options.merge(return_url:))
     end.check_request do |endpoint, data, _headers|
       assert_match(/\"return_url\":\"https:\/\/example.com\"/, data) unless endpoint == setup_endpoint
     end.respond_with(successful_authorize_response)
@@ -204,6 +257,7 @@ class AirwallexTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 'RECEIVED', response.message
+    assert_equal response.authorization, 'int_hkdmb6rw6g79o82v60s'
     assert response.test?
   end
 
@@ -259,7 +313,7 @@ class AirwallexTest < Test::Unit::TestCase
     merchant_order_id = "order_#{(Time.now.to_f.round(2) * 100).to_i}"
     stub_comms do
       # merchant_order_id is only passed directly on refunds
-      @gateway.refund(@amount, 'abc123', @options.merge(request_id: request_id, merchant_order_id: merchant_order_id))
+      @gateway.refund(@amount, 'abc123', @options.merge(request_id:, merchant_order_id:))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/request_/, data)
       assert_match(/order_/, data)
@@ -269,7 +323,7 @@ class AirwallexTest < Test::Unit::TestCase
   def test_purchase_passes_appropriate_request_id_per_call
     request_id = SecureRandom.uuid
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id))
+      @gateway.purchase(@amount, @credit_card, @options.merge(request_id:))
     end.check_request do |_endpoint, data, _headers|
       if data.include?('payment_method')
         # check for this on the purchase call
@@ -284,7 +338,7 @@ class AirwallexTest < Test::Unit::TestCase
   def test_purchase_passes_appropriate_merchant_order_id
     merchant_order_id = SecureRandom.uuid
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_order_id: merchant_order_id))
+      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_order_id:))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/\"merchant_order_id\":\"#{merchant_order_id}\"/, data)
     end.respond_with(successful_purchase_response)
@@ -313,6 +367,15 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(description: 'a simple test'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/a simple test/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_truncates_descriptor
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(description: 'This description is longer than 32 characters.'))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/This description is longer than 32 characters./, data)
+      assert_match(/This description is longer than /, data)
     end.respond_with(successful_purchase_response)
   end
 

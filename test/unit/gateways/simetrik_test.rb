@@ -127,6 +127,16 @@ class SimetrikTest < Test::Unit::TestCase
     }.to_json.to_s
   end
 
+  def test_endpoint
+    assert_equal 'https://payments.sta.simetrik.com/v1', @gateway.test_url
+    assert_equal 'https://payments.simetrik.com/v1', @gateway.live_url
+  end
+
+  def test_audience_endpoint
+    assert_equal 'https://tenant-payments-dev.us.auth0.com/api/v2/', @gateway.test_audience
+    assert_equal 'https://tenant-payments-prod.us.auth0.com/api/v2/', @gateway.live_audience
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_request).returns(successful_purchase_response_body)
 

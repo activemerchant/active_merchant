@@ -47,10 +47,11 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
       enrolled: 'Y',
       authentication_response_status: 'Y'
     }
+    @options.delete(:mit_expiry_date_utc)
 
-    response = @gateway.purchase(@amount, @credit_card_cit, @options)
+    response = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
     assert_success response
-    assert_match 'SUBMITTED', response.message
+    assert_match 'CHALLENGE', response.message
   end
 
   def test_setting_access_token_when_no_present
@@ -101,6 +102,14 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     assert_equal '', response.params['access_token']
   end
 
+  def test_successful_purchase_without_cvv
+    set_credentials!
+    @credit_card_cit.verification_value = nil
+    response = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
+    assert_success response
+    assert_equal 'CHALLENGE', response.message
+  end
+
   def test_successful_purchase_cit_challenge_purchase
     set_credentials!
     response = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
@@ -110,6 +119,7 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
 
   def test_successful_purchase_mit
     set_credentials!
+    @options.delete(:mit_expiry_date_utc)
     response = @gateway.purchase(@amount, @credit_card_mit, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
@@ -118,6 +128,8 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
   def test_successful_purchase_mit_with_billing_address
     set_credentials!
     @options[:billing_address] = address.merge(name: 'Jhon Doe', country: 'US')
+    @options.delete(:mit_expiry_date_utc)
+
     response = @gateway.purchase(@amount, @credit_card_mit, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
@@ -142,16 +154,36 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_failed_purchase
+  def test_failed_purchase_invalid_time
+    omit('This test case only works if gateway is configured to support Asyncronous transactions')
+    set_credentials!
+    response = @gateway.purchase(@amount, @credit_card_mit, @options.merge({ mit_expiry_date_utc: '' }))
+    assert_failure response
+    assert_equal nil, response.error_code
+    assert_not_nil response.params['TraceId']
+    assert_equal response.message, '{"ExpiryDateUtc":["The field ExpiryDateUtc is invalid."]}'
+  end
+
+  def test_failed_purchase_required_fields
     set_credentials!
     response = @gateway.purchase(@amount, @credit_card_cit, billing_address: address)
     assert_failure response
     assert_equal nil, response.error_code
     assert_not_nil response.params['TraceId']
+    error_list = JSON.parse response.message
+    assert_equal error_list.length, 7
+    assert_equal error_list['OrderId'], ["Merchant's orderId is required"]
+    assert_equal error_list['Transaction.Id'], ['The Id field is required.']
+    assert_equal error_list['Transaction.ResponseCode'], ['The ResponseCode field is required.']
+    assert_equal error_list['Transaction.AvsResultCode'], ['The AvsResultCode field is required.']
+    assert_equal error_list['Transaction.CvvResultCode'], ['The CvvResultCode field is required.']
+    assert_equal error_list['Transaction.CavvResultCode'], ['The CavvResultCode field is required.']
+    assert_equal error_list['Transaction.ResponseCodeSource'], ['The ResponseCodeSource field is required.']
   end
 
   def test_failed_cit_declined_purchase
     set_credentials!
+    @credit_card_cit.verification_value = nil
     response = @gateway.purchase(@amount, @credit_card_cit, @cit_options.except(:phone))
     assert_failure response
     assert_equal 'DECLINED', response.error_code
@@ -159,12 +191,13 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
 
   def test_successful_refund
     set_credentials!
+    @options.delete(:mit_expiry_date_utc)
     purchase = @gateway.purchase(@amount, @credit_card_mit, @options)
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
-    assert_equal 'DECLINED', refund.message
+    assert_equal 'APPROVED', refund.message
   end
 
   def test_successful_void
@@ -207,7 +240,8 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     store = @gateway.store(@credit_card_cit, {})
     assert_success store
 
-    response = @gateway.purchase(@amount, store.authorization, @options)
+    @options.delete(:mit_expiry_date_utc)
+    response = @gateway.purchase(@amount, store.authorization, @cit_options)
     assert_success response
   end
 

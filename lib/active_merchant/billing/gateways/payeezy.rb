@@ -3,9 +3,11 @@ module ActiveMerchant
     class PayeezyGateway < Gateway
       class_attribute :integration_url
 
-      self.test_url = 'https://api-cert.payeezy.com/v1'
-      self.integration_url = 'https://api-cat.payeezy.com/v1'
-      self.live_url = 'https://api.payeezy.com/v1'
+      version 'v1'
+
+      self.test_url = "https://api-cert.payeezy.com/#{fetch_version}"
+      self.integration_url = "https://api-cat.payeezy.com/#{fetch_version}"
+      self.live_url = "https://api.payeezy.com/#{fetch_version}"
 
       self.default_currency = 'USD'
       self.money_format = :cents
@@ -366,7 +368,7 @@ module ActiveMerchant
       def commit(params, options)
         url = base_url(options) + endpoint(params)
 
-        if transaction_id = params.delete(:transaction_id)
+        if transaction_id = params.delete(:transaction_id)&.delete(' ')
           url = "#{url}/#{transaction_id}"
         end
 
@@ -498,7 +500,7 @@ module ActiveMerchant
           end
         else
           [
-            response['transaction_id'],
+            response['transaction_id']&.delete(' '),
             response['transaction_tag'],
             params[:method],
             response['amount']&.to_i

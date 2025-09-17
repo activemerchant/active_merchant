@@ -20,7 +20,8 @@ class RapydTest < Test::Unit::TestCase
       statement_descriptor: 'Statement Descriptor',
       email: 'test@example.com',
       billing_address: address(name: 'Jim Reynolds'),
-      order_id: '987654321'
+      order_id: '987654321',
+      idempotency_key: '123'
     }
 
     @metadata = {
@@ -65,6 +66,19 @@ class RapydTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: address(name: 'Joe John-ston')))
     end.check_request do |_method, _endpoint, data, _headers|
       assert_equal JSON.parse(data)['address']['name'], 'Joe John-ston'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]
+  end
+
+  def test_successful_purchase_without_address
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: { phone_number: '12125559999' }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal JSON.parse(data)['phone_number'], '12125559999'
+      assert_nil JSON.parse(data)['address']
+      assert_nil JSON.parse(data)['customer']['addresses']
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -245,9 +259,12 @@ class RapydTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_equal '123', headers['idempotency']
+    end.respond_with(successful_authorize_response)
 
-    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -261,10 +278,13 @@ class RapydTest < Test::Unit::TestCase
   end
 
   def test_successful_capture
-    @gateway.expects(:ssl_request).returns(successful_capture_response)
     transaction_id = 'payment_e0979a1c6843e5d7bf0c18335794cccb'
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, transaction_id, @options)
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_equal '123', headers['idempotency']
+    end.respond_with(successful_capture_response)
 
-    response = @gateway.capture(@amount, transaction_id, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -312,9 +332,12 @@ class RapydTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_request).returns(successful_verify_response)
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_equal '123', headers['idempotency']
+    end.respond_with(successful_verify_response)
 
-    response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -328,16 +351,30 @@ class RapydTest < Test::Unit::TestCase
   end
 
   def test_successful_store_and_unstore
-    @gateway.expects(:ssl_request).twice.returns(successful_store_response, successful_unstore_response)
+    store = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_match '123', headers['idempotency']
+    end.respond_with(successful_store_response)
 
-    store = @gateway.store(@credit_card, @options)
     assert_success store
     assert customer_id = store.params.dig('data', 'id')
 
-    unstore = @gateway.unstore(store.authorization)
+    unstore = stub_comms(@gateway, :ssl_request) do
+      @gateway.unstore(store.authorization)
+    end.respond_with(successful_unstore_response)
+
     assert_success unstore
     assert_equal true, unstore.params.dig('data', 'deleted')
     assert_equal customer_id, unstore.params.dig('data', 'id')
+  end
+
+  def test_unstore
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.unstore('123456')
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_not_match '123', headers['idempotency']
+    end.respond_with(successful_unstore_response)
   end
 
   def test_send_receipt_email_and_customer_id_for_purchase
@@ -349,7 +386,7 @@ class RapydTest < Test::Unit::TestCase
     assert card_id = store.params.dig('data', 'default_payment_method')
 
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, store.authorization, @options.merge(customer_id: customer_id))
+      @gateway.purchase(@amount, store.authorization, @options.merge(customer_id:))
     end.check_request do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['receipt_email'], @options[:email]
@@ -629,6 +666,30 @@ class RapydTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'ERROR_PAYMENT_METHODS_GET', response.message
     assert_equal 'ERROR_PAYMENT_METHODS_GET', response.error_code
+  end
+
+  def test_version_functionality
+    # Test that version is set correctly
+    assert_equal 'v1', @gateway.fetch_version
+
+    # Test that URLs are built with correct version
+    assert_equal 'https://sandboxapi.rapyd.net/v1/', @gateway.test_url
+    assert_equal 'https://api.rapyd.net/v1/', @gateway.live_url
+    assert_equal 'https://sandboxpayment-redirect.rapyd.net/v1/', @gateway.payment_redirect_test
+    assert_equal 'https://payment-redirect.rapyd.net/v1/', @gateway.payment_redirect_live
+
+    # Test that commit method uses version in relative path
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, endpoint, _data, _headers|
+      # Verify the request was made to the correct versioned URL
+      assert_match %r{/v1/payments$}, endpoint
+    end.respond_with(successful_purchase_response)
+
+    # Test that headers method receives correct versioned relative path
+    rel_path = @gateway.send(:headers, 'post/v1/payments', '{}')
+    assert rel_path.has_key?('signature')
+    assert rel_path.has_key?('access_key')
   end
 
   private

@@ -89,7 +89,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal CyberSourceRestGateway.supported_cardtypes, %i[visa master american_express discover diners_club jcb maestro elo union_pay cartes_bancaires mada]
+    assert_equal CyberSourceRestGateway.supported_cardtypes, %i[visa master american_express discover diners_club jcb maestro elo union_pay cartes_bancaires mada patagonia_365 tarjeta_sol]
   end
 
   def test_properly_format_on_zero_decilmal
@@ -294,6 +294,23 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_authorize_apple_pay_recurring
+    auth = @gateway.authorize(@amount, @apple_pay, @options)
+    @options[:stored_credential] = stored_credential(:merchant, :recurring, ntid: auth.network_transaction_id)
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'recurring', request['processingInformation']['commerceIndicator']
+      assert_equal 'merchant', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
+      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'storedCredentialUsed')
+      assert_nil request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'originalAuthorizedAmount')
+      assert_nil request['paymentInformation']['tokenizedCard']['cryptogram']
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_authorize_google_pay_master_card
     stub_comms do
       @gateway.authorize(100, @google_pay_mc, @options.merge(merchant_id: 'MerchantId'))
@@ -326,6 +343,23 @@ class CyberSourceRestTest < Test::Unit::TestCase
 
   def test_url_building
     assert_equal "#{@gateway.class.test_url}/pts/v2/action", @gateway.send(:url, 'action')
+  end
+
+  def test_endpoint_with_version
+    version = 'v3'
+    @gateway.versions = { default_api: version }
+    assert_equal "#{@gateway.class.test_url}/pts/#{version}/payments", @gateway.send(:url, 'payments')
+  end
+
+  def test_http_signature_with_custom_version
+    version = 'v3'
+    @gateway.versions = { default_api: version }
+    signature = @gateway.send :get_http_signature, 'payments', @digest, 'post', @gmt_time
+
+    parsed = parse_signature(signature)
+    assert_equal 'def345', parsed['keyid']
+    assert_equal 'HmacSHA256', parsed['algorithm']
+    assert_equal 'host date request-target digest v-c-merchant-id', parsed['headers']
   end
 
   def test_stored_credential_cit_initial
@@ -446,6 +480,15 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
+  def test_successful_credit_with_merchant_category_code
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(merchant_category_code: '1111'))
+    end.check_request do |_endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_equal json_data['merchantInformation']['categoryCode'], '1111'
+    end.respond_with(successful_credit_response)
+  end
+
   def test_authorize_includes_reconciliation_id
     stub_comms do
       @gateway.authorize(100, @credit_card, order_id: '1', reconciliation_id: '181537')
@@ -470,6 +513,15 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       json_data = JSON.parse(data)
       assert_equal json_data['orderInformation']['invoiceDetails']['invoiceNumber'], '1234567'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_merchant_category_code
+    stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(merchant_category_code: '1111'))
+    end.check_request do |_endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_equal json_data['merchantInformation']['categoryCode'], '1111'
     end.respond_with(successful_purchase_response)
   end
 
@@ -592,8 +644,20 @@ class CyberSourceRestTest < Test::Unit::TestCase
       @gateway.purchase(100, @carnet_card, @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
-      assert_equal '058', request['paymentInformation']['card']['type']
+      assert_equal '002', request['paymentInformation']['card']['type']
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_failed_void
+    purchase = '1000|1842651133440156177166|AP4JY+Or4xRonEAOERAyMzQzOTEzMEM0MFZaNUZCBgDH3fgJ8AEGAMfd+AnwAwzRpAAA7RT/|purchase|100|USD|'
+
+    response = stub_comms do
+      @gateway.void(purchase, @options)
+    end.respond_with(successful_void_response)
+
+    assert_failure response
+    assert_equal nil, response.message
+    assert_equal nil, response.error_code
   end
 
   private
@@ -823,6 +887,98 @@ class CyberSourceRestTest < Test::Unit::TestCase
       "status": "PENDING",
       "submitTimeUtc": "2023-03-27T20:45:09Z"
     }
+    RESPONSE
+  end
+
+  def successful_void_response
+    <<-RESPONSE
+      {
+        "_links":{
+          "void":{
+            "method": "POST",
+            "href": "/pts/v2/payments/123/voids"
+          },
+          "self":{
+            "method": "GET",
+            "href": "/pts/v2/payments/123"
+          }
+        },
+        "clientReferenceInformation":{
+          "code": "abcdefg",
+          "partner":  {
+            "solutionId": "HIJKLMN"
+          }
+        },
+        "consumerAuthenticationInformation": {
+          "token":  "token123"
+        },
+        "id": "64234623421",
+        "orderInformation": {
+          "amountDetails": {
+            "totalAmount":  "6.400",
+            "authorizedAmount": "6.400",
+            "currency": "JOD"
+          }
+        },
+        "paymentAccountInformation":{
+          "card": {
+            "type": "001"
+          }
+        },
+        "paymentInformation": {
+          "accountFeatures":  {
+            "group": "0"
+          },
+          "tokenizedCard":{
+            "type": "001"
+          },
+          "scheme": "VISA DEBIT",
+          "bin": "411111",
+          "accountType": "Visa Classic",
+          "issuer": "CONOTOXIA SP. Z O.O",
+          "card": {
+            "type": "001"
+          },
+          "binCountry": "PL"
+        },
+        "processorInformation": {
+          "systemTraceAuditNumber": "77788844",
+          "approvalCode": "7883243",
+          "networkTransactionId": "0972342342342353",
+          "retrievalReferenceNumber":"785652341",
+          "transactionId": "00012321324232",
+          "responseCode": "00",
+          "avs": {
+            "code": "Z",
+            "codeRaw": "Z"
+          }
+        },
+        "promotionInformation":{
+          "code": "ABC12345",
+          "description":  "percent discount",
+          "receiptData": "You have received a Visa Offer and saved 20% off your total (max discount for this offer is $20.00).",
+          "type": "V1"
+        },
+        "reconciliationId": "987552323786342334",
+        "riskInformation":  {
+          "localTime": "11:24:09",
+          "score": {
+            "result":"55",
+            "factorCodes":["B"],
+            "modelUsed":"default_uk"
+          },
+          "infoCodes": {
+            "address":["TOR-TA","TM-TTN"],
+            "velocity":["TTEL-T6","TTEL-T7"]
+          },
+          "profile": {
+            "earlyDecision": "ACCEPT"
+          },
+          "casePriority":"3"
+        },
+        "status": "ACCEPTED",
+        "submitTimeUtc": "2024-09-10T10:24:10Z"
+      }
     RESPONSE
   end
 end

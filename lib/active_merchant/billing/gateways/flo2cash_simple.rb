@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Flo2cashSimpleGateway < Flo2cashGateway
       self.display_name = 'Flo2Cash Simple'
 

@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # See https://helpdesk.worldnettps.com/support/solutions/articles/1000167298-integrator-guide
     class WorldNetGateway < Gateway
       self.test_url = 'https://testpayments.worldnettps.com/merchant/xmlpayment'

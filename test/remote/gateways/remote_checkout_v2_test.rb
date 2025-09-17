@@ -4,10 +4,8 @@ require 'test_helper'
 class RemoteCheckoutV2Test < Test::Unit::TestCase
   def setup
     gateway_fixtures = fixtures(:checkout_v2)
-    gateway_token_fixtures = fixtures(:checkout_v2_token)
-    @gateway = CheckoutV2Gateway.new(secret_key: gateway_fixtures[:secret_key])
-    @gateway_oauth = CheckoutV2Gateway.new({ client_id: gateway_fixtures[:client_id], client_secret: gateway_fixtures[:client_secret] })
-    @gateway_token = CheckoutV2Gateway.new(secret_key: gateway_token_fixtures[:secret_key], public_key: gateway_token_fixtures[:public_key])
+    @gateway = CheckoutV2Gateway.new(fixtures(:checkout_v2_token))
+    @gateway_oauth = CheckoutV2Gateway.new(client_id: gateway_fixtures[:client_id], client_secret: gateway_fixtures[:client_secret])
 
     @amount = 200
     @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: Time.now.year + 1)
@@ -17,6 +15,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @amex_card = credit_card('341829238058580', brand: 'american_express', verification_value: '1234', month: '6', year: Time.now.year + 1)
     @threeds_card = credit_card('4485040371536584', verification_value: '100', month: '12', year: Time.now.year + 1)
     @mada_card = credit_card('5043000000000000', brand: 'mada')
+    @partial_auth_card = credit_card('5518207720770101', verification_value: '153', month: '12', year: Time.now.year + 1)
 
     @vts_network_token = network_tokenization_credit_card(
       '4242424242424242',
@@ -88,8 +87,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @additional_options = @options.merge(
       card_on_file: true,
       transaction_indicator: 2,
-      previous_charge_id: 'pay_123',
-      processing_channel_id: 'pc_123'
+      previous_charge_id: 'pay_123'
     )
     @additional_options_3ds = @options.merge(
       execute_threed: true,
@@ -160,6 +158,11 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
         }
       }
     )
+    @minimun_level2_options = @options.merge({
+      order_data: {
+        tax_amount: 130
+      }
+    })
   end
 
   def test_failed_access_token
@@ -215,7 +218,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_store_transcript_scrubbing
     response = nil
     transcript = capture_transcript(@gateway) do
-      response = @gateway_token.store(@credit_card, @options)
+      response = @gateway.store(@credit_card, @options)
     end
     token = response.responses.first.params['token']
     transcript = @gateway.scrub(transcript)
@@ -226,6 +229,22 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_inquire
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+
+    response = @gateway.inquire(response.authorization, {})
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_unsuccessful_inquire
+    response = @gateway.inquire('123EDSE', {})
+    assert_failure response
+    assert_equal '404: Not Found', response.message
   end
 
   def test_successful_purchase_via_oauth
@@ -368,7 +387,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'installment',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     response = @gateway.purchase(@amount, @credit_card, stored_options)
@@ -393,7 +412,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'installment',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     response = @gateway_oauth.purchase(@amount, @credit_card, stored_options)
@@ -436,8 +455,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'S', response.avs_result['code']
-    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result['message']
+    assert_equal 'G', response.avs_result['code']
+    assert_equal 'Non-U.S. issuing bank does not support AVS.', response.avs_result['message']
   end
 
   def test_successful_purchase_includes_avs_result_via_oauth
@@ -452,8 +471,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'S', response.avs_result['code']
-    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result['message']
+    assert_equal 'G', response.avs_result['code']
+    assert_equal 'Non-U.S. issuing bank does not support AVS.', response.avs_result['message']
   end
 
   def test_successful_purchase_includes_cvv_result
@@ -506,7 +525,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_processing_channel_id
-    response = @gateway.authorize(@amount, @credit_card, @options.merge({ processing_channel_id: 'pc_ovo75iz4hdyudnx6tu74mum3fq' }))
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -541,7 +560,6 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     options = @options.merge(
       processing: {
         aft: true,
-        preferred_scheme: 'cartes_bancaires',
         app_id: 'com.iap.linker_portal',
         airline_data: [
           {
@@ -627,7 +645,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     options = @options.merge(
       sender: {
         type: 'individual',
-        dob: '1985-05-15',
+        date_of_birth: '1985-05-15',
         first_name: 'Jane',
         last_name: 'Doe',
         address: {
@@ -696,19 +714,22 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_minimal_options
-    response = @gateway.purchase(@amount, @credit_card, billing_address: address)
+    min_options = { billing_address: address, processing_channel_id: 'pc_lxgl7aqahkzubkundd2l546hdm' }
+    response = @gateway.purchase(@amount, @credit_card, min_options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
 
   def test_successful_purchase_with_shipping_address
-    response = @gateway.purchase(@amount, @credit_card, shipping_address: address)
+    min_options = { shipping_address: address, processing_channel_id: 'pc_lxgl7aqahkzubkundd2l546hdm' }
+    response = @gateway.purchase(@amount, @credit_card, min_options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
 
   def test_successful_purchase_without_phone_number
-    response = @gateway.purchase(@amount, @credit_card, billing_address: address.update(phone: nil))
+    min_options = { billing_address: address.update(phone: nil), processing_channel_id: 'pc_lxgl7aqahkzubkundd2l546hdm' }
+    response = @gateway.purchase(@amount, @credit_card, min_options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -722,7 +743,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_ip
-    response = @gateway.purchase(@amount, @credit_card, ip: '96.125.185.52')
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(ip: '96.125.185.52'))
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -730,7 +751,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(100, @credit_card_dnh, @options)
     assert_failure response
-    assert_equal 'Invalid Card Number', response.message
+    assert_equal 'Declined - Do Not Honour', response.message
   end
 
   def test_failed_purchase_via_oauth
@@ -754,7 +775,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_invalid_shipping_address
     response = @gateway.authorize(@amount, @credit_card, shipping_address: address.update(country: 'Canada'))
     assert_failure response
-    assert_equal 'request_invalid: country_address_invalid', response.message
+    assert_equal 'request_invalid: address_country_invalid', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -795,6 +816,24 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
     assert capture = @gateway.capture(nil, auth.authorization)
     assert_success capture
+  end
+
+  def test_successful_authorize_with_partial_authorization
+    options = {
+      order_id: '1',
+      billing_address: address,
+      shipping_address: address,
+      description: 'Purchase',
+      email: 'longbob.longsen@example.com',
+      processing_channel_id: 'pc_aaco6s3z7jbepo7dzdpmdcnfcy',
+      partial_authorization: true
+    }
+    response = @gateway_oauth.authorize(10000, @partial_auth_card, options)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '10010', response.params['response_code']
+    assert_equal 'Partial Value Approved', response.params['response_summary']
   end
 
   def test_successful_authorize_and_capture_with_3ds
@@ -885,9 +924,22 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_successful_credit
     @credit_card.first_name = 'John'
     @credit_card.last_name = 'Doe'
-    response = @gateway_oauth.credit(@amount, @credit_card, @options.merge({ source_type: 'currency_account', source_id: 'ca_spwmped4qmqenai7hcghquqle4', account_holder_type: 'individual' }))
+    destination = {
+      account_holder: {
+        phone: {
+          number: '9108675309',
+          country_code: '1'
+        },
+        identification: {
+          type: 'passport',
+          number: '12345788848438'
+        }
+      }
+    }
+    response = @gateway_oauth.credit(@amount, @credit_card, @options.merge({ source_type: 'currency_account', source_id: 'ca_spwmped4qmqenai7hcghquqle4', account_holder_type: 'individual', payout: true, destination: }))
     assert_success response
     assert_equal 'Succeeded', response.message
+    assert_equal true, response.primary_response.pending
   end
 
   def test_successful_money_transfer_payout_via_credit_individual_account_holder_type
@@ -896,6 +948,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway_oauth.credit(@amount, @credit_card, @payout_options.merge(account_holder_type: 'individual', payout: true))
     assert_success response
     assert_equal 'Succeeded', response.message
+    assert_equal true, response.primary_response.pending
   end
 
   def test_successful_money_transfer_payout_via_credit_corporate_account_holder_type
@@ -905,33 +958,18 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
-  def test_money_transfer_payout_reverts_to_credit_if_payout_sent_as_nil
-    @credit_card.first_name = 'John'
-    @credit_card.last_name = 'Doe'
-    response = @gateway_oauth.credit(@amount, @credit_card, @payout_options.merge({ account_holder_type: 'individual', payout: nil }))
-    assert_success response
-    assert_equal 'Succeeded', response.message
-  end
-
-  def test_money_transfer_payout_handles_blank_destination_address
-    @payout_options[:billing_address] = nil
-    response = @gateway_oauth.credit(@amount, @credit_card, @payout_options.merge({ account_holder_type: 'individual', payout: true }))
-    assert_success response
-    assert_equal 'Succeeded', response.message
-  end
-
   def test_successful_store
-    response = @gateway_token.store(@credit_card, @options)
+    response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
 
   def test_successful_unstore_after_store
-    store = @gateway_token.store(@credit_card, @options)
+    store = @gateway.store(@credit_card, @options)
     assert_success store
     assert_equal 'Succeeded', store.message
     source_id = store.params['id']
-    response = @gateway_token.unstore(source_id, @options)
+    response = @gateway.unstore(source_id, @options)
     assert_success response
     assert_equal response.params['response_code'], '204'
   end
@@ -947,7 +985,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_successful_purchase_after_purchase_with_google_pay
     purchase = @gateway.purchase(@amount, @google_pay_master_cryptogram_3ds_network_token, @options)
     source_id = purchase.params['source']['id']
-    response = @gateway.purchase(@amount, source_id, @options.merge(source_id: source_id, source_type: 'id'))
+    response = @gateway.purchase(@amount, source_id, @options.merge(source_id:, source_type: 'id'))
     assert_success response
   end
 
@@ -975,7 +1013,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_oauth_after_store_credit_card
-    store = @gateway_token.store(@credit_card, @options)
+    store = @gateway.store(@credit_card, @options)
     assert_success store
     token = store.params['id']
     response = @gateway_oauth.purchase(@amount, token, @options)
@@ -1075,7 +1113,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     verify = @gateway.verify(@apple_pay_network_token, @options)
     assert_success verify
     source_id = verify.params['source']['id']
-    response = @gateway.purchase(@amount, source_id, @options.merge(source_id: source_id, source_type: 'id'))
+    response = @gateway.purchase(@amount, source_id, @options.merge(source_id:, source_type: 'id'))
     assert_success response
     assert_success verify
   end
@@ -1127,6 +1165,21 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_not_nil response.responses.first.params['expires']
   end
 
+  def test_successful_verify_with_account_name_inquiry
+    options = @options.merge(
+      account_name_inquiry: true,
+      account_holder: {
+        first_name: 'John',
+        middle_name: 'Joe',
+        last_name: 'Doe',
+        type: 'individual'
+      }
+    )
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
@@ -1136,8 +1189,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_expired_card_returns_error_code
     response = @gateway.purchase(@amount, @expired_card, @options)
     assert_failure response
-    assert_equal 'request_invalid: card_expired', response.message
-    assert_equal 'request_invalid: card_expired', response.error_code
+    assert_equal 'processing_error: card_expired', response.message
+    assert_equal 'processing_error: card_expired', response.error_code
   end
 
   def test_successful_purchase_with_idempotency_key
@@ -1167,5 +1220,72 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal '1111111111111111111111111111112', response.params['reference']
     assert_equal 31, response.params['reference'].length
     assert_equal 'Visa', response.params['source']['scheme']
+  end
+
+  def test_successful_purchase_with_minimun_level_2_data
+    response = @gateway.purchase(@amount, @credit_card, @minimun_level2_options)
+    assert_success response
+  end
+
+  def test_successful_authorize_and_capture_with_minimun_level_2_data
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+
+    response = @gateway.capture(@amount, authorize.authorization, @minimun_level2_options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_minimun_level_2_data_for_amex
+    amex_options = {
+      currency: 'USD',
+      line_items: [{ item_name: 'Paint', quantity: '1', unit_cost: '1270' }]
+    }
+    amex_card = credit_card('345678901234564', brand: 'american_express', verification_value: '1000', month: '12', year: Time.now.year)
+
+    response = @gateway.purchase(1500, amex_card, @minimun_level2_options.merge(amex_options))
+    assert_success response
+  end
+
+  def test_successful_purchase_with_minimun_level_3_data
+    order_data = {
+      processing: { order_id: '01234' },
+      tax_number: '123456',
+      from_address_zip: '000123456',
+      tax_amount: 30,
+      discount_amount: 0,
+      shipping_amount: 200,
+      duty_amount: 0
+    }
+    line_items = {
+      line_items: [
+        {
+          commodity_code: '123',
+          name: 'Paint',
+          quantity: 1,
+          unit_price: 1270,
+          tax_amount: 30,
+          discount_amount: 0,
+          total_amount: 1270,
+          reference: 'Paint123',
+          unit_of_measure: 'Liters'
+        }
+      ]
+    }
+    options = @options.merge({ currency: 'USD' }).merge(order_data).merge(line_items)
+
+    response = @gateway.purchase(1500, @credit_card, options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_payment_type_as_unscheduled_and_initiator_as_cardholder
+    stored_options = @options.merge(
+      stored_credential: {
+        initiator: 'cardholder',
+        reason_type: 'unscheduled'
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, stored_options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 end

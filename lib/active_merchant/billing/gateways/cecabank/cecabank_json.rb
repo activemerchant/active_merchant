@@ -29,6 +29,11 @@ module ActiveMerchant
         transaction_risk_analysis_exemption: :TRA
       }.freeze
 
+      WALLET_PAYMENT_METHODS = {
+        apple_pay: 'A',
+        google_pay: 'G'
+      }
+
       self.test_url = 'https://tpv.ceca.es/tpvweb/rest/procesos/'
       self.live_url = 'https://pgw.ceca.es/tpvweb/rest/procesos/'
 
@@ -113,7 +118,7 @@ module ActiveMerchant
         post = { parametros: { accion: CECA_ACTIONS_DICTIONARY[action] } }
 
         add_invoice(post, money, options)
-        add_creditcard(post, creditcard)
+        add_payment_method(post, creditcard, options)
         add_stored_credentials(post, creditcard, options)
         add_three_d_secure(post, options)
 
@@ -159,20 +164,31 @@ module ActiveMerchant
         post[:parametros][:exponente] = 2.to_s
       end
 
-      def add_creditcard(post, creditcard)
+      def add_payment_method(post, payment_method, options)
         params = post[:parametros] ||= {}
+        three_d_secure = options.fetch(:three_d_secure, {})
 
-        payment_method = {
-          pan: creditcard.number,
-          caducidad: strftime_yyyymm(creditcard)
+        pm = {
+          pan: payment_method.number,
+          caducidad: strftime_yyyymm(payment_method)
         }
-        if CreditCard.brand?(creditcard.number) == 'american_express'
-          payment_method[:csc] = creditcard.verification_value
-        else
-          payment_method[:cvv2] = creditcard.verification_value
-        end
 
-        @options[:encryption_key] ? params[:encryptedData] = payment_method : params.merge!(payment_method)
+        if payment_method.is_a?(NetworkTokenizationCreditCard) && WALLET_PAYMENT_METHODS[payment_method.source.to_sym]
+          eci_to_format = payment_method.eci || three_d_secure[:eci]
+          eci_value = eci_to_format.to_s.rjust(2, '0') unless eci_to_format.nil?
+
+          pm[:wallet] = {
+
+            # the authentication value should come nil (for recurring cases) or should I remove it?
+            authentication_value: (payment_method.payment_cryptogram unless options.dig(:stored_credential, :network_transaction_id)),
+            xid:  three_d_secure[:xid] || three_d_secure[:ds_transaction_id] || options[:xid],
+            walletType: WALLET_PAYMENT_METHODS[payment_method.source.to_sym],
+            eci: eci_value
+          }.compact.to_json
+        else
+          pm[CreditCard.brand?(payment_method.number) == 'american_express' ? :csc : :cvv2] = payment_method.verification_value
+        end
+        @options[:encryption_key] ? params[:encryptedData] = pm : params.merge!(pm)
       end
 
       def add_stored_credentials(post, creditcard, options)
@@ -190,7 +206,7 @@ module ActiveMerchant
         params[:inicioRec] = initiator
         if initiator == :S
           requires!(options, :recurring_frequency)
-          params[:finRec] = options[:recurring_end_date] || strftime_yyyymm(creditcard)
+          params[:finRec] = options[:recurring_end_date] || strftime_yyyymmdd_last_day(creditcard)
           params[:frecRec] = options[:recurring_frequency]
         end
 
@@ -233,7 +249,6 @@ module ActiveMerchant
 
         add_encryption(post)
         add_merchant_data(post)
-
         params_encoded = encode_post_parameters(post)
         add_signature(post, params_encoded, options)
 

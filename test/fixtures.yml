@@ -273,6 +273,11 @@ cyber_source:
   login: X
   password: Y
 
+cyber_source_certificate:
+  merchant_id: merchant_id,
+  public_key: SOMECREDENTIAL,
+  private_key: SOMECREDENTIAL
+
 cyber_source_latam_pe:
   login: merchant_id
   password: soap_key
@@ -452,6 +457,12 @@ forte:
   api_key: "f087a90f00f0ae57050c937ed3815c9f"
   secret: "d793d64064e3113a74fa72035cfc3a1d"
 
+fortis:
+  user_id: 'USER_ID'
+  user_api_key: 'USER_API_KEY'
+  developer_id: 'DEVELOPER_ID'
+  location_id: 'LOCATION_ID'
+
 garanti:
   login: "PROVAUT"
   terminal_id: 30691300
@@ -568,6 +579,11 @@ litle:
   password: MERCHANT
   merchant_id: 101
 
+loan_payment_pro:
+  transaction_key: SOMECREDENTIAL
+  login: demo
+  password: demo
+
 # Working test credentials, no need to replace
 maxipago:
   login: "100"
@@ -609,7 +625,7 @@ merchant_warrior:
 
 # Working credentials, no need to replace
 mercury:
-  login: '089716741701445'
+  login: '62589006=TEST'
   password: 'xyz'
 
 mercury_no_tokenization:
@@ -661,6 +677,13 @@ moneris:
 money_movers:
   login: demo
   password: password
+
+multi_pay:
+  company: 'company_id'
+  branch: 'branch_id'
+  pos: 'pos_id'
+  user: 'username'
+  password: 'password'
 
 mundipagg:
   api_key: api_key
@@ -715,6 +738,11 @@ nmi:
 
 nmi_secure:
   security_key: '6457Thfj624V5r7WUwc5v6a68Zsd6YEm'
+
+nuvei:
+  merchant_id: 'merchantId'
+  merchant_site_id: 'siteId'
+  secret_key: 'secretKey'
 
 ogone:
   login: LOGIN
@@ -1453,6 +1481,10 @@ vanco:
 verify:
   login: 'demo'
   password: 'password'
+
+versa_pay:
+  api_token: API_TOKEN
+  api_key: API_KEY
 
 viaklix:
   login: LOGIN

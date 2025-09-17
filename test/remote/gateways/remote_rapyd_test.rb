@@ -9,7 +9,7 @@ class RemoteRapydTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111105')
     @check = check
     @options = {
-      pm_type: 'us_debit_visa_card',
+      pm_type: 'GI_visa_card',
       currency: 'USD',
       complete_payment_url: 'www.google.com',
       error_payment_url: 'www.google.com',
@@ -66,6 +66,12 @@ class RemoteRapydTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_without_address
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: { phone_number: '12125559999' }))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -156,7 +162,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   def test_successful_purchase_with_address
     billing_address = address(name: 'Henry Winkler', address1: '123 Happy Days Lane')
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: billing_address))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address:))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -190,7 +196,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'The request attempted an operation that requires a card number, but the number was not recognized. The request was rejected. Corrective action: Use the card number of a valid card.', response.message
+    assert_equal 'Do Not Honor', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -205,7 +211,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'The request attempted an operation that requires a card number, but the number was not recognized. The request was rejected. Corrective action: Use the card number of a valid card.', response.message
+    assert_equal 'Do Not Honor', response.message
   end
 
   def test_partial_capture
@@ -303,7 +309,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'The request attempted an operation that requires a card number, but the number was not recognized. The request was rejected. Corrective action: Use the card number of a valid card.', response.message
+    assert_equal 'Do Not Honor', response.message
   end
 
   def test_successful_store_and_purchase
@@ -521,5 +527,18 @@ class RemoteRapydTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
+  end
+
+  def test_api_version_in_request_path
+    # Make a simple API call that will show the version in the response
+    response = @gateway.verify(@credit_card, @options)
+
+    # Verify the response is successful
+    assert_success response
+
+    # Check that the base URLs contain the correct version
+    assert_equal 'v1', @gateway.fetch_version
+    assert_match %r{/v1/$}, @gateway.test_url
+    assert_match %r{/v1/$}, @gateway.payment_redirect_test
   end
 end

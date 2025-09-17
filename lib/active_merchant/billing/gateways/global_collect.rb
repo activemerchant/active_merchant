@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class GlobalCollectGateway < Gateway
       class_attribute :preproduction_url
       class_attribute :ogone_direct_test
@@ -17,7 +17,10 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w[AD AE AG AI AL AM AO AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BW BY BZ CA CC CD CF CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HN HR HT HU ID IE IL IM IN IS IT JM JO JP KE KG KH KI KM KN KR KW KY KZ LA LB LC LI LK LR LS LT LU LV MA MC MD ME MF MG MH MK MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PL PN PS PT PW QA RE RO RS RU RW SA SB SC SE SG SH SI SJ SK SL SM SN SR ST SV SZ TC TD TG TH TJ TL TM TN TO TR TT TV TW TZ UA UG US UY UZ VC VE VG VI VN WF WS ZA ZM ZW]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master american_express discover naranja cabal tuya]
+      self.supported_cardtypes = %i[visa master american_express discover naranja cabal tuya patagonia_365 tarjeta_sol]
+
+      version 'v1'
+      version 'v2', :ogone_direct
 
       def initialize(options = {})
         requires!(options, :merchant_id, :api_key_id, :secret_api_key)
@@ -41,7 +44,9 @@ module ActiveMerchant #:nodoc:
         add_fraud_fields(post, options)
         add_external_cardholder_authentication_data(post, options)
         add_threeds_exemption_data(post, options)
-        commit(:post, :authorize, post, options: options)
+        action = options[:action] || :authorize
+
+        commit(:post, action, post, options:)
       end
 
       def capture(money, authorization, options = {})
@@ -49,7 +54,7 @@ module ActiveMerchant #:nodoc:
         add_order(post, money, options, capture: true)
         add_customer_data(post, options)
         add_creator_info(post, options)
-        commit(:post, :capture, post, authorization: authorization)
+        commit(:post, :capture, post, authorization:)
       end
 
       def refund(money, authorization, options = {})
@@ -57,24 +62,28 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_refund_customer_data(post, options)
         add_creator_info(post, options)
-        commit(:post, :refund, post, authorization: authorization)
+        commit(:post, :refund, post, authorization:)
       end
 
       def void(authorization, options = {})
         post = nestable_hash
         add_creator_info(post, options)
-        commit(:post, :void, post, authorization: authorization)
+        commit(:post, :void, post, authorization:)
       end
 
       def verify(payment, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, payment, options) }
-          r.process { void(r.authorization, options) }
+        if ogone_direct?
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { authorize(100, payment, options) }
+            r.process { void(r.authorization, options) }
+          end
+        else
+          authorize(0, payment, options.merge(action: :verify))
         end
       end
 
       def inquire(authorization, options = {})
-        commit(:get, :inquire, nil, authorization: authorization)
+        commit(:get, :inquire, nil, authorization:)
       end
 
       def supports_scrubbing?
@@ -297,7 +306,7 @@ module ActiveMerchant #:nodoc:
         post['mobilePaymentMethodSpecificInput'] = specifics_inputs
 
         if options[:use_encrypted_payment_data]
-          post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'] = payment.payment_data
+          post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'] = payment.payment_data.to_s&.gsub('=>', ':')
         else
           add_decrypted_payment_data(post, payment, options, expirydate)
         end
@@ -315,7 +324,7 @@ module ActiveMerchant #:nodoc:
                    'dpan' => payment.number
                  }
                when :google_pay
-                 payment.payment_data
+                 payment.payment_data.to_s&.gsub('=>', ':')
                end
 
         post['mobilePaymentMethodSpecificInput']["#{data_type}PaymentData"] = data if data
@@ -329,7 +338,7 @@ module ActiveMerchant #:nodoc:
         post['order']['customer']['merchantCustomerId'] = options[:customer] if options[:customer]
         post['order']['customer']['companyInformation']['name'] = options[:company] if options[:company]
         post['order']['customer']['contactDetails']['emailAddress'] = options[:email] if options[:email]
-        if address = options[:billing_address] || options[:address] && (address[:phone])
+        if address = options[:billing_address] || (options[:address] && (address[:phone]))
           post['order']['customer']['contactDetails']['phoneNumber'] = address[:phone]
         end
       end
@@ -340,7 +349,7 @@ module ActiveMerchant #:nodoc:
             'countryCode' => address[:country]
           }
           post['customer']['contactDetails']['emailAddress'] = options[:email] if options[:email]
-          if address = options[:billing_address] || options[:address] && (address[:phone])
+          if address = options[:billing_address] || (options[:address] && (address[:phone]))
             post['customer']['contactDetails']['phoneNumber'] = address[:phone]
           end
         end
@@ -437,10 +446,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def uri(action, authorization)
-        version = ogone_direct? ? 'v2' : 'v1'
+        version = ogone_direct? ? fetch_version(:ogone_direct) : fetch_version
         uri = "/#{version}/#{@options[:merchant_id]}/"
         case action
-        when :authorize
+        when :authorize, :verify
           uri + 'payments'
         when :capture
           capture_name = ogone_direct? ? 'capture' : 'approve'
@@ -482,7 +491,7 @@ module ActiveMerchant #:nodoc:
       def json_error(raw_response)
         {
           'error_message' => 'Invalid response received from the Ingenico ePayments (formerly GlobalCollect) API.  Please contact Ingenico ePayments if you continue to receive this message.' \
-            "  (The raw response returned by the API was #{raw_response.inspect})"
+                             "  (The raw response returned by the API was #{raw_response.inspect})"
         }
       end
 
@@ -534,6 +543,8 @@ module ActiveMerchant #:nodoc:
         when :refund
           refund_status = response.dig('status') || response.dig('payment', 'status')
           %w(REFUNDED REFUND_REQUESTED).include?(refund_status)
+        when :verify
+          response.dig('payment', 'statusOutput', 'statusCategory') == 'ACCOUNT_VERIFIED'
         else
           response['status'] != 'REJECTED'
         end

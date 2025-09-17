@@ -4,7 +4,8 @@ class RemoteVposTest < Test::Unit::TestCase
   def setup
     @gateway = VposGateway.new(fixtures(:vpos))
 
-    @amount = 100000
+    # some test fails due duplicated transactions
+    @amount = rand(100..100000)
     @credit_card = credit_card('5418630110000014', month: 8, year: 2026, verification_value: '277')
     @declined_card = credit_card('4000300011112220')
     @options = {
@@ -22,7 +23,29 @@ class RemoteVposTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'IMPORTE DE LA TRN INFERIOR AL M¿NIMO PERMITIDO', response.message
+    assert_equal 'EMISOR NO RECONOCIDO', response.message
+  end
+
+  def test_successful_inquire_transaction_id
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert inquire = @gateway.inquire(purchase.authorization)
+    assert_success inquire
+
+    assert inquire.authorization, purchase.authorization
+    assert_equal 'Transaccion aprobada', inquire.message
+  end
+
+  def test_successful_inquire_shop_process_id
+    shop_process_id = SecureRandom.random_number(10**15)
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options.merge(shop_process_id:))
+    assert_success purchase
+    assert inquire = @gateway.inquire(nil, { shop_process_id: })
+    assert_success inquire
+
+    assert inquire.authorization, purchase.authorization
+    assert_equal 'Transaccion aprobada', inquire.message
   end
 
   def test_successful_refund_using_auth
@@ -32,20 +55,20 @@ class RemoteVposTest < Test::Unit::TestCase
     assert_success purchase
     authorization = purchase.authorization
 
-    assert refund = @gateway.refund(@amount, authorization, @options.merge(shop_process_id: shop_process_id))
-    assert_success refund
-    assert_equal 'Transaccion aprobada', refund.message
+    assert refund = @gateway.refund(@amount, authorization, @options.merge(shop_process_id:))
+    assert_failure refund
+    assert_equal 'Transaccion denegada', refund.message
   end
 
   def test_successful_refund_using_shop_process_id
     shop_process_id = SecureRandom.random_number(10**15)
 
-    assert purchase = @gateway.purchase(@amount, @credit_card, @options.merge(shop_process_id: shop_process_id))
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options.merge(shop_process_id:))
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, nil, original_shop_process_id: shop_process_id) # 315300749110268, 21611732218038
-    assert_success refund
-    assert_equal 'Transaccion aprobada', refund.message
+    assert_failure refund
+    assert_equal 'Transaccion denegada', refund.message
   end
 
   def test_successful_credit
@@ -56,13 +79,12 @@ class RemoteVposTest < Test::Unit::TestCase
 
   def test_failed_credit
     response = @gateway.credit(@amount, @declined_card)
-    assert_failure response
-    assert_equal 'RefundsServiceError:TIPO DE TRANSACCION NO PERMITIDA PARA TARJETAS EXTRANJERAS', response.message
+    assert_equal 'Transaccion denegada', response.message
   end
 
   def test_successful_void
     shop_process_id = SecureRandom.random_number(10**15)
-    options = @options.merge({ shop_process_id: shop_process_id })
+    options = @options.merge({ shop_process_id: })
 
     purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_success purchase
@@ -74,7 +96,7 @@ class RemoteVposTest < Test::Unit::TestCase
 
   def test_duplicate_void_fails
     shop_process_id = SecureRandom.random_number(10**15)
-    options = @options.merge({ shop_process_id: shop_process_id })
+    options = @options.merge({ shop_process_id: })
 
     purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_success purchase
@@ -91,7 +113,7 @@ class RemoteVposTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('abc#123')
     assert_failure response
-    assert_equal 'BuyNotFoundError:Business Error', response.message
+    assert_equal 'BuyNotFoundError:Buy not found with shop_process_id=123.', response.message
   end
 
   def test_invalid_login

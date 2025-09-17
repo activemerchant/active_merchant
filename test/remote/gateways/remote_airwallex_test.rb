@@ -25,12 +25,69 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'AUTHORIZED', response.message
+    assert_not_nil response.authorization
   end
 
   def test_successful_purchase_with_shipping_address
     response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: address))
     assert_success response
     assert_equal 'AUTHORIZED', response.message
+  end
+
+  def test_successful_purchase_with_order_products_and_shipping_address
+    products = [
+      {
+        'category' => 'test',
+        'code' => '12345',
+        'desc' => 'product description',
+        'effective_end_at' => '2025-02-01T10:30:00Z',
+        'effective_start_at' => '2025-01-01T10:30:00Z',
+        'image_url' => 'www.test.com',
+        'name' => 'test name',
+        'quantity' => 1,
+        'seller' => {
+          'identifier' => 'identity',
+          'name' => 'name'
+        },
+        'sku' => '12345test',
+        'type' => 'intangible_good',
+        'unit_price' => 2,
+        'url' => 'www.123test.com'
+      }
+    ]
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: address, products:))
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    assert_not_nil response.params['order']['products']
+    assert_not_nil response.authorization
+  end
+
+  def test_successful_purchase_with_order_products_without_shipping_address
+    products = [
+      {
+        'category' => 'test',
+        'code' => '12345',
+        'desc' => 'product description',
+        'effective_end_at' => '2025-02-01T10:30:00Z',
+        'effective_start_at' => '2025-01-01T10:30:00Z',
+        'image_url' => 'www.test.com',
+        'name' => 'test name',
+        'quantity' => 1,
+        'seller' => {
+          'identifier' => 'identity',
+          'name' => 'name'
+        },
+        'sku' => '12345test',
+        'type' => 'intangible_good',
+        'unit_price' => 2,
+        'url' => 'www.123test.com'
+      }
+    ]
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(products:))
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    assert_not_nil response.params['order']['products']
+    assert_not_nil response.authorization
   end
 
   def test_successful_purchase_with_address
@@ -42,7 +99,7 @@ class RemoteAirwallexTest < Test::Unit::TestCase
   def test_successful_purchase_with_specified_ids
     request_id = SecureRandom.uuid
     merchant_order_id = SecureRandom.uuid
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id, merchant_order_id: merchant_order_id))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(request_id:, merchant_order_id:))
     assert_success response
     assert_match(request_id, response.params.dig('request_id'))
     assert_match(merchant_order_id, response.params.dig('merchant_order_id'))
@@ -103,6 +160,7 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization, @options)
     assert_success refund
     assert_equal 'RECEIVED', refund.message
+    assert_not_nil refund.authorization
   end
 
   def test_partial_refund
@@ -144,6 +202,12 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     response = @gateway.verify(credit_card('1111111111111111'), @options)
     assert_failure response
     assert_match %r{Invalid card number}, response.message
+  end
+
+  def test_descriptor_is_truncated_to_max_length
+    response = @gateway.verify(@credit_card, @options.merge(description: 'This description is longer than 32 characters.'))
+    assert_success response
+    assert_match %r{AUTHORIZED}, response.message
   end
 
   def test_successful_cit_with_recurring_stored_credential

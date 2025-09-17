@@ -1,18 +1,11 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This module is included in both PaypalGateway and PaypalExpressGateway
     module PaypalCommonAPI
       include Empty
 
       API_VERSION = '124'
       API_VERSION_3DS2 = '214.0'
-
-      URLS = {
-        :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
-                   :signature   => 'https://api-3t.sandbox.paypal.com/2.0/' },
-        :live => { :certificate => 'https://api.paypal.com/2.0/',
-                   :signature   => 'https://api-3t.paypal.com/2.0/' }
-      }
 
       PAYPAL_NAMESPACE = 'urn:ebay:api:PayPalAPI'
       EBAY_NAMESPACE = 'urn:ebay:apis:eBLBaseComponents'
@@ -59,8 +52,6 @@ module ActiveMerchant #:nodoc:
         base.default_currency = 'USD'
         base.cattr_accessor :pem_file
         base.cattr_accessor :signature
-        base.live_url = URLS[:live][:signature]
-        base.test_url = URLS[:test][:signature]
       end
 
       # The gateway must be configured with either your PayPal PEM file
@@ -94,6 +85,15 @@ module ActiveMerchant #:nodoc:
         end
 
         super(options)
+      end
+
+      def urls
+        {
+          :test => { :certificate => "https://api.sandbox.paypal.com/#{fetch_version}/",
+                    :signature   => "https://api-3t.sandbox.paypal.com/#{fetch_version}/" },
+          :live => { :certificate => "https://api.paypal.com/#{fetch_version}/",
+                    :signature   => "https://api-3t.paypal.com/#{fetch_version}/" }
+        }
       end
 
       def reauthorize(money, authorization, options = {})
@@ -179,6 +179,11 @@ module ActiveMerchant #:nodoc:
       #     . (period)
       #     {space}
       #
+
+      def inquire(authorization, options = {})
+        transaction_details(authorization)
+      end
+
       def reference_transaction(money, options = {})
         requires!(options, :reference_id)
         commit 'DoReferenceTransaction', build_reference_transaction_request(money, options)
@@ -656,7 +661,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def endpoint_url
-        URLS[test? ? :test : :live][@options[:signature].blank? ? :certificate : :signature]
+        urls[test? ? :test : :live][@options[:signature].blank? ? :certificate : :signature]
       end
 
       def commit(action, request)

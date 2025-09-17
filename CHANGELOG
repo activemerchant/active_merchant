@@ -2,9 +2,208 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Mercury, TransFirst: Repair gateways following updates to `rexml` [aenand] #5206
+* NMI: Fix Decrypted indicator for Google/Apple pay [javierpedrozaing] #5196
+* FlexCharge: add more descriptives error messages [gasb150] #5199
+* Braintree: Updates to Paypal Integration [almalee24] #5190
+* Stripe and Stripe PI: Add metadata and order_id for refund and void [yunnydang] #5204
+* CommerceHub: Update test url [DustinHaefele] #5211
+* Adyen: Fix billing address empty string error [yunnydang] #5208
+* Elavon: Update sending CVV for MIT transactions  [almalee24] #5210
+* Adyen: Fix NT integration [jherreraa] #5155
+* HPS: Update NetworkTokenizationCreditCard flow [almalee24] #5178
+* Braintree: Support override_application_id [aenand] #5194
+* Decidir: Pass CVV for NT [almalee24] #5205
+* NMI: Add customer vault fields [yunnydang] #5215
+* CheckoutV2: Add inquire method [almalee24] #5209
+* Decidir & Braintree: Scrub cryptogram and card number [almalee24] #5220
+* Naranja: Update valid number check to include luhn10 [DustinHaefele] #5217
+* Cybersource: Add apple_pay with discover. [DustinHaefele] #5213
+* MercadoPago: Add idempotency key field [yunnydang] #5229
+* Adyen: Update split refund method [yunnydang] #5218
+* Adyen: Remove raw_error_message [almalee24] #5202
+* Elavon: Remove old Stored Credential method [almalee24] #5219
+* PayTrace: Update MultiResponse for Capture [almalee24] #5203
+* Adyen: Add support for Pan Only GooglePay [almalee24] #5221
+* Decidir: Send extra fields for tokenized NT transactions [sinourain] #5224
+* StripePI: Skip add_network_token_cryptogram_and_eci method to accept ApplePay recurring payments [sinourain] #5212
+* Decidir: Fix scrub method after update NT fields [sinourain] #5241
+* Cybersource and Cybersource Rest: Update card type code for Carnet cards [rachelkirk] #5235
+* Stripe PI: Add challenge as valid value for request_three_d_secure [jcreiff] #5238
+* StripePI: Add metadata for GooglePay FPAN [almalee24] #5242
+* Paypal: Add inquire method [almalee24] #5231
+* Adyen: Enable multiple legs within airline data [jcreiff] #5249
+* SafeCharge: Add card holder verification fields [yunnydang] #5252
+* Iveri: Add AuthorisationReversal for Auth Void [almalee24] #5233
+* Stripe PI: Update Stored Credentials [almalee24] #5236
+* Checkout V2: Update stored credential options function [jherreraa] #5239
+* Ebanx: Add support for Stored Credentials [almalee24] #5243
+* Shift4: Update response parsing to account for hostresponse [jcreiff] #5261
+* NMI: Add `industry_indicator` field [naashton] #5264
+* Nuvei: Add 3DS GS [gasb150] #5247
+* Rapyd: Add idempotency for all endpoints [almalee24] #5255
+* Decidir: Map error code -1 to processing_error [Buitragox] #5257
+* SumUp: Append partner_id to checkout_reference [naashton] #5272
+* Adyen: Update shopperInteraction [almalee24] #5273
+* CenPOS: Add test_url [jcreiff] #5274
+* Worldpay: Fix stored credentials issue [jherreraa] #5267
+* StripePI: Update authorization for failed Payment Intents [almalee24] #5260
+* Worldpay: Add support for recurring Apple Pay [kenderbolivart] #5628
+* Cybersource Rest: Add support for recurring Apple Pay [bdcano] #5270
+* Cybersource Rest: Update message and error_code [almalee24] #5276
+* Paysafe: Add support for `external_initial_transaction_id` [rachelkirk] #5291
+* Worldpay: Add customStringFields [jcreiff] #5284
+* Airwallex: truncate descriptor field to 32 characters [jcreiff] #5292
+* DLocal: Add the description field for refund [yunnydang] #5296
+* Worldpay: Add support for Worldpay decrypted apple pay and google pay [dustinhaefele] #5271
+* Orbital: Update alternate_ucaf_flow [almalee24] #5282
+* Adyen: Remove cryptogram flag [almalee24] #5300
+* Cecabank: Include Apple Pay and Google Pay for recurring payments [gasb150] #5295
+* DLocal: Add X-Dlocal-Payment-Source to header [almalee24] #5281
+* StripePI: Update to retrieve_setup_intent and headers [almalee24] #5283
+* Upgrade rexml to 3.3.8 [raymzag] #5245
+* Nuvei: Add partial approval feature [javierpedrozaing] #5250
+* Nuvei: Add ACH support [javierpedrozaing] #5269
+* Nuvei: Add GSF for verify method [javierpedrozaing] #5278
+* Nuvei: Add Google and Apple pay [javierpedrozaing] #5289
+* Cybersource and Cybersource Rest: Add the MCC field [yunnydang] #5301
+* Adyen: Add the manual_capture field [yunnydang] #5310
+* Versapay: First Implementation [gasb150] #5288
+* Adyen: Enable GSF recurring_detail_reference on other transactions [rubenmarindev] #5285
+* Adyen: Update skip_mpi_data [almalee24] #5306
+* Paysafe: Update fields in standalonecredits [almalee24] #5293
+* GlobalCollect: Add support for $0 Auth [almalee24] #5303
+* Versapay: Store and Unstore transactions [gasb150] #5315
+* Nuvei: Add 3DS Global [javierpedrozaing] #5308
+* StripePI: Store the three_d_secure_usage field [yunnydang] #5321
+* StripePI: Last4 From Payment Method [naashton] #5322
+* New Card Type: Patagonia365 [gasb150] #5265
+* Decidir: Patagonia365 Card Type Mapping [naashton] #5324
+* Ebanx: Add network token support [Buitragox] #5263
+* DLocal: Add the optional country field override [yunnydang] #5326
+* Nuvei: Adding account founding transaction  [javierpedrozaing] #5307
+* Nuvei: Add card holder name verification params [javierpedrozaing] #5312
+* Stripe: Remove StripePaymenToken & ApplePayPaymentToken [almalee24] #5304
+* HPS: Update API urls [jherreraa] #5313
+* MIT: Change test URL [Buitragox] #5335
+* Nuvei: Fix NTID stored credentials [javierpedrozaing] #5334
+* StripePI: Fix the store three_d_secure_usage field [yunnydang] #5338
+* Litle: Success codes added to valid responses [jherreraa] #5339
+* CommerceHub: Update Production URL [almalee24] #5340
+* CommerceHub: Add Network Token support [almalee24] #5331
+* Worldpay: Update Stored Credentials [almalee24] #5330
+* Update Rubocop 1.26.0 [almalee24] #5325
+* RedsysREST: Add Network Tokens [gasb150] #5333
+* DLocal: Update the success_from for Void [almalee24] #5337
+* Braintree: Add support for stored credentials with Apple Pay [bdcano] #5336
+* FlexCharge: Update homePage url [javierpedrozaing] #5351
+* Nuvei: Fix send savePM in false by default [javierpedrozaing] #5353
+* Decidir and DecicirPlus: Add the wallet_id field [yunnydang] #5354
+* Worldpay: Update where to pass shopperIPAddress [almalee24] #5348
+* Braintree: Account for BraintreeError [almalee24] #5346
+* Worldpay: Fix stored credentials unscheduled reason type [Buitragox] #5352
+* Worldpay: Worldpay: Idempotency key fix [jherreraa] #5359
+* Hi Pay: Don't add 3ds when :three_ds_2 is missing [Buitragox] #5355
+* SecurePayAU: Send order ID for payments with stored card [dacook] #3979
+* Orbital: Add XSD version testing to unit test [almalee24] #5375
+* Priority: fix for bin lookup [Buitragox] #5366
+* CommerceHub: Update merchantInvoiceNumber & merchantTransactionId [almalee24] #5374
+* VersaPay: refactor authorization from structure [gasb150] #5363
+* VersaPay: Improve Message Error and Error Mapping [gasb150] #5357
+* CheckoutV2: Add metadata to Credit [almalee24] #5328
+* Normalize API versions for Adyen, Braintree & GlobalCollect [Buitragox] #5371
+* SafeCharge: Add Australia & Canada as supported countries [almalee24] #5377
+* RedsysRest: Improve authorization from in Redsys [gasb150] #5372
+* Ebanx: Add the notification_url field [yunnydang] #5388
+* Ebanx: Add optional payment_type_code override [jcreiff] #5370
+* Ebanx: Update list of supported countries [jcreiff] #5387
+* Add alternate spelling for Vietnam [jcreiff] #5386
+* Checkout v2: add l2/l3 [gasb150] #5385
+* Worldpay: Update passing 3DS data for NT [almalee24] #5389
+* Ebanx: Add the merchant_payment_code override [yunnydang] #5394
+* Credorax: Add AFT fields [yunnydang] #5390
+* Cashnet: Update max_retries to 1 [almalee24] #5393
+* Cybersource: Update 3DS fields [almalee24] #5396
+* Airwallex: Update authorization_from method to include payment intent ID on refunds [yunnydang] #5400
+* New Credit Card Sol: Add new bin set for Sol credit card [javierpedrozaing] #5380
+* Credit Card Sol: Update card name to `tarjeta_sol` instead of `sol` [javierpedrozaing] #5404
+* Credit Card Sol: Update tarjeta sol support for Decidir and Decidir plus gateways [javierpedrozaing] #5405
+* Routex Bin: Update routex bin range to include 18 digits [yunnydang] #5410
+* Nuvei: Fix isRebilling flag for Stored credentials [javierpedrozaing] #5408
+* Shift4: Add interface_name field [almalee24] #5395
+* Stripe: Update tokenization method for google pay [yunnydang] #5414
+* StripePI: Add AFT fields [yunnydang] #5418
+* CheckoutV2: Improve payout handling with blank sender data [jcreiff] #5423
+* StripePI: Add the request_extended_authorization field [yunnydang] #5417
+* Plexo: Add Transaction sync support for Plexo Gateway [javierpedrozaing] #5416
+* CheckoutV2: Add account name inquiry [jcreiff] #5427
+* Adyen: Update shopperInteraction [almalee24] #5430
+* Nuvei: Add addtional oct and aft user detail fields [yunnydang] #5433
+* CheckoutV2: Add support for partial authorization [yunnydang] #5441
+* Datatrans: Update the authorization for Capture responses [almalee24] #5437
+* CyberSource: Void Acepts nil values [gasb150] #5442
+* Ebanx: Handle special characters in email [ankurspreedly] #5444
+* Orbital: Add support for more currencies [ankurspreedly] #5438
+* Datatrans: Include additional scrub on store call [naashton] #5447
+* Decidir and DecicirPlus: Add the discover payment method ID [yunnydang] #5448
+* CyberSource: Add the optional merchant reference code on capture [yunnydang] #5453
+* Orbital: Update authorization string [almalee24] #5458
+* Braintree: Update gem to 4.26.0 [almalee24] #5440
+* CheckoutV2: Update Authorization from Basic to Bearer [sinourain] #5381
+* Payeezy: Update authorization when extra space [almalee24] #5446
+* Worldpay: Update inquire success_criteria [almalee24] #5445
+* Credorax: Support zero dollar verify [yunnydang] #5457
+* Credorax: Add optional crypto currency type field [yunnydang] #5460
+* CommerceHub: Map ecommerce_indicator value based on three_d_secure.eci [mjdonga] #5461
+* StripePI: Add the optional kana and kanji descriptor suffix fields [yunnydang] #5466
+* Credorax: Add sender birth date for AFT [adarsh-spreedly] #5469
+* StripePaymentIntents: Add inquire capability [adarsh-spreedly] #5456
+* Payflow: Send ds_trans_id as xid if xid is not present [adarsh-spreedly] #5465
+* Normalize the use of API_VERSION for some gateways (iVeri, JetypayV2 and Kushki) [ritesh-kapoor-spreedly] #5454
+* Normalize API versions for Payeezy, Paymentez, and Paymill [mjdonga] #5451
+* Pin Payments: Add support for Apple and Google payment method types [naashton] #5462
+* Pin Payments: Scrub sensitive data from transcript [naashton] #5473
+* CheckoutV2: Send payment type as Regular instead of unscheduled if initiator is cardholder [adarsh-spreedly] #5471
+* CommerceHub: Pass order_id for Verify [almalee24] #5475
+* Orbital: Pass override_exp_date if provided [almalee24] #5476
+* Normalize API Version for StripePaymentIntents, Simetrik, SecurePayAu [adarsh-spreedly] #5450
+* StripePI: validate capture reference [jherrera] #5479
+* Cenpos: Add purchase_order_number field [yunnydang] #5481
+* Rapyd: Fix error on billing address [jherrera] #5472
+* Nuvei: Map order_id to clientUniqueId field on refund/credit [jherrera] #5477
+* Update clean_emoji_emoticons_and_accent method [almalee24] #5485
+* Payflow: Send CAVV as xid if xid is not present [adarsh-spreedly] #5496
+* Credorax: Fixed request signature [mjdonga] #5486
+* Nuvei/Reach/Shift4: Normalize API_VERSION usage [sumit-sharmas] #5493
+* Xpay/Sumup/Quickbooks: Normalize API_VERSION usage [aaqibrashidmir] #5495
+* Ebanx: Fix NoMethodError for address [almalee24] #5500
+* Vpos: Check for response under refund.response_code [almalee24] #5501
+* Ebanx: Fix field nesting cof_info, device_id, and notification_url [yunnydang] #5494
+* MultiPay: Add Base Gateway adapter [Heavblade] #5497
+* Cecabank: Fix finRec field formatting for Cecabank Gateway [aaqibrashidmir] #5506
+* Nuvei: Map order_id to clientUniqueId field on capture transactions [aaqibrashidmir] #5498
+* Ebanx: Added new GSF payment.taxes.iva_co [ritesh-spreedly] #5509
+* Litle: Remove 141 & 142 [almalee24] #5505
+* Normalize API Version for CyberSourceRest, Datatrans, and FlexCharge [aaqibrashidmir] #5489
+* Wepay/Wompi/CommerceHub: Normalize API_VERSION usage [sumit-sharmas] #5490
+* CheckoutV2: Pass udf5 field in metadata [mjdonga] #5507
+* DLocal: Add issuer_identification_number as bin in Card object [adarsh-spreedly] #5499
+* Normalize API Versions for litle, mercado_pago and mundipagg [mjdonga] #5518
+* Normalize API Versions for Barclay card Smart pay, Fat Zebra and Forte gateways [mjdonga] #5519
+* Worldpay: Add refund reference field [yunnydang] #5531
+* Paysafe: Save cards to exisiting profiles [almalee24] #5504
+* Credorax: Spec fix for updated processor name [adarsh-spreedly] #5492
+* Normalize API for Rapyd, SafeCharge and SecureNet [ritesh-kapoor-spreedly] #5514
+* Normalize API Version for Orbital, OptimalPayment, NabTransact [adarsh-spreedly] #5523
+* PayArc/PayConex/HPS: Normalize API_VERSION usage [sumit-sharmas] #5521
+* VantivExpress: Add support of level 2 and 3 data [adarsh-spreedly] #5487
+* Normalize API versions for paypal, paysafe, and payu_latam [mjdonga] #5515
+* StripePI: Add support for multicapture [mjdonga] #5491
+* Normalize API Version for Plexo, Pin, Priority [adarsh-spreedly] #5517
+* Stripe PI: Update API version [almalee24] #5360
+* Airwallex: Add optional products array field [yunnydang] #5530
 
-= Version 1.137.0 (August 2, 2024)
-
+== Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
 * Bump Ruby version to 3.1 [dustinhaefele] #5104
 * FlexCharge: Update inquire method to use the new orders end-point
@@ -34,6 +233,9 @@
 * Elavon: Add updated stored credential version [almalee24] #5170
 * Adyen: Add header fields to response body [yunnydang] #5184
 * Stripe and Stripe PI: Add header fields to response body [yunnydang] #5185
+* Nuvei: Add support for Stored Credentials [javierpedrozaing] #5186
+* Addition of shopper ip address when a network token transaction occurs [rubenmarindev] #5262
+* LoanPaymentPro: Add new gateway adapter for the Loanpaymentpro gateway [heavyblade] #5470
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
@@ -691,6 +893,8 @@
 * CyberSource: Add `line_items` for purchase [ajawadmirza] #4282
 * Payflow Pro: Add `stored_credential` fields [ajawadmirza] #4277
 * Decidir Plus: Add `fraud_detection` fields [naashton] #4289
+* Elavon: Pass through ssl_email for verify transactions [ankurspreedly] #5502
+* Nuvei: Add address compoenents for all transactions [ankurspreedly] #5511
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

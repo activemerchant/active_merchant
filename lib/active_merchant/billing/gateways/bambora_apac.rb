@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BamboraApacGateway < Gateway
       self.live_url = 'https://www.bambora.co.nz/interface/api'
       self.test_url = 'https://demo.bambora.co.nz/interface/api'

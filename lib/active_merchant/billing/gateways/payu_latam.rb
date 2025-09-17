@@ -1,13 +1,15 @@
 require 'digest/md5'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayuLatamGateway < Gateway
+      version '4.0'
+
       self.display_name = 'PayU Latam'
       self.homepage_url = 'http://www.payulatam.com'
 
-      self.test_url = 'https://sandbox.api.payulatam.com/payments-api/4.0/service.cgi'
-      self.live_url = 'https://api.payulatam.com/payments-api/4.0/service.cgi'
+      self.test_url = "https://sandbox.api.payulatam.com/payments-api/#{fetch_version}/service.cgi"
+      self.live_url = "https://api.payulatam.com/payments-api/#{fetch_version}/service.cgi"
 
       self.supported_countries = %w[AR BR CL CO MX PA PE]
       self.default_currency = 'USD'
@@ -167,7 +169,7 @@ module ActiveMerchant #:nodoc:
         order[:accountId] = @options[:account_id]
         order[:partnerId] = options[:partner_id] if options[:partner_id]
         order[:referenceCode] = options[:order_id] || generate_unique_id
-        order[:description] = options[:description] || 'Compra en ' + @options[:merchant_id]
+        order[:description] = options[:description] || ('Compra en ' + @options[:merchant_id])
         order[:language] = options[:language] || 'en'
         order[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         post[:transaction][:order] = order

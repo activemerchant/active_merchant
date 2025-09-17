@@ -1,6 +1,8 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaysafeGateway < Gateway
+      version 'v1'
+
       self.test_url = 'https://api.test.paysafe.com'
       self.live_url = 'https://api.paysafe.com'
 
@@ -58,6 +60,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
+        add_customer_data(post, payment, options) unless payment.is_a?(String)
+        add_merchant_details(post, options)
+        add_billing_address(post, options)
 
         commit(:post, 'standalonecredits', post, options)
       end
@@ -74,12 +79,28 @@ module ActiveMerchant #:nodoc:
 
       def store(payment, options = {})
         post = {}
-        add_payment(post, payment)
-        add_address_for_vaulting(post, options)
-        add_profile_data(post, payment, options)
-        add_store_data(post, payment, options)
 
-        commit(:post, 'profiles', post, options)
+        if options[:profile_id]
+          post[:cardNum] = payment.number
+          post[:cardExpiry] = {
+            month: payment.month,
+            year: payment.year
+          }
+          post[:accountId] = options[:account_id] if options[:account_id]
+          post[:nickName] = options[:nickname] if options[:nickname]
+          post[:holderName] = payment.name
+          post[:billingAddressId] = options[:billing_address_id] if options[:billing_address_id]
+          post[:defaultCardIndicator] = normalize(options[:default_card_indicator]) if options[:default_card_indicator]
+        else
+          add_payment(post, payment)
+          add_address_for_vaulting(post, options)
+          add_profile_data(post, payment, options)
+          add_store_data(post, payment, options)
+        end
+
+        endpoint = options[:profile_id] ? "profiles/#{options[:profile_id]}/cards" : 'profiles'
+
+        commit(:post, endpoint, post, options)
       end
 
       def unstore(pm_profile_id)
@@ -117,6 +138,7 @@ module ActiveMerchant #:nodoc:
         post[:profile][:firstName] = creditcard.first_name
         post[:profile][:lastName] = creditcard.last_name
         post[:profile][:email] = options[:email] if options[:email]
+        post[:profile][:merchantCustomerId] = options[:customer_id] if options[:customer_id]
         post[:customerIp] = options[:ip] if options[:ip]
       end
 
@@ -152,9 +174,9 @@ module ActiveMerchant #:nodoc:
         post[:firstName] = payment.first_name
         post[:lastName] = payment.last_name
         post[:dateOfBirth] = {}
-        post[:dateOfBirth][:year] = options[:date_of_birth][:year]
-        post[:dateOfBirth][:month] = options[:date_of_birth][:month]
-        post[:dateOfBirth][:day] = options[:date_of_birth][:day]
+        post[:dateOfBirth][:year] = options.dig(:date_of_birth, :year)
+        post[:dateOfBirth][:month] = options.dig(:date_of_birth, :month)
+        post[:dateOfBirth][:day] = options.dig(:date_of_birth, :day)
         post[:email] = options[:email] if options[:email]
         post[:ip] = options[:ip] if options[:ip]
 
@@ -321,6 +343,7 @@ module ActiveMerchant #:nodoc:
         end
 
         post[:storedCredential][:initialTransactionId] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+        post[:storedCredential][:externalInitialTransactionId] = options[:external_initial_transaction_id] if options[:external_initial_transaction_id]
       end
 
       def mastercard?(payment)
@@ -364,9 +387,9 @@ module ActiveMerchant #:nodoc:
         base_url = (test? ? test_url : live_url)
 
         if action.include? 'profiles'
-          "#{base_url}/customervault/v1/#{action}"
+          "#{base_url}/customervault/#{fetch_version}/#{action}"
         else
-          "#{base_url}/cardpayments/v1/accounts/#{@options[:account_id]}/#{action}"
+          "#{base_url}/cardpayments/#{fetch_version}/accounts/#{@options[:account_id]}/#{action}"
         end
       end
 
@@ -384,7 +407,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, response)
         if action == 'profiles'
-          pm = response['cards'].first['paymentToken']
+          pm = response['cards']&.first&.dig('paymentToken')
           "#{pm}|#{response['id']}"
         else
           response['id']

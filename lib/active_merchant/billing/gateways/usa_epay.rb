@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     ##
     # Delegates to the appropriate gateway, either the Transaction or Advanced
     # depending on options passed to new.

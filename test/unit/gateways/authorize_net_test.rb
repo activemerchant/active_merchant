@@ -1361,7 +1361,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     options = {
       order_id: 'a' * 21,
       billing_address: address(name: 'billing name'),
-      shipping_address: shipping_address
+      shipping_address:
     }
 
     stub_comms do

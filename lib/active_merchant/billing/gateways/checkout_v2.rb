@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CheckoutV2Gateway < Gateway
       self.display_name = 'Checkout.com Unified Payments'
       self.homepage_url = 'https://www.checkout.com/'
@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w[AD AE AR AT AU BE BG BH BR CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU IE IS IT JO JP KW LI LT LU LV MC MT MX MY NL NO NZ OM PE PL PT QA RO SA SE SG SI SK SM TR US]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master american_express diners_club maestro discover jcb mada bp_plus]
+      self.supported_cardtypes = %i[visa master american_express diners_club maestro discover jcb mada bp_plus patagonia_365 tarjeta_sol]
       self.currencies_without_fractions = %w(BIF DJF GNF ISK KMF XAF CLF XPF JPY PYG RWF KRW VUV VND XOF)
       self.currencies_with_three_decimal_places = %w(BHD LYD JOD KWD OMR TND)
 
@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_shipping_address(post, options)
         add_metadata(post, options)
+        add_level_two_three_data(post, options)
 
         commit(:capture, post, options, authorization)
       end
@@ -57,11 +58,12 @@ module ActiveMerchant #:nodoc:
         add_instruction_data(post, options)
         add_payout_sender_data(post, options)
         add_payout_destination_data(post, options)
+        add_metadata(post, options)
 
         commit(:credit, post, options)
       end
 
-      def void(authorization, _options = {})
+      def void(authorization, options = {})
         post = {}
         add_metadata(post, options)
 
@@ -79,6 +81,10 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options = {})
         authorize(0, credit_card, options)
+      end
+
+      def inquire(authorization, options = {})
+        verify_payment(authorization, {})
       end
 
       def verify_payment(authorization, options = {})
@@ -118,6 +124,7 @@ module ActiveMerchant #:nodoc:
             post.merge!(post.delete(:source))
             add_customer_data(post, options)
             add_shipping_address(post, options)
+            add_metadata(post, options)
             r.process { commit(:store, post, options) }
           end
         end
@@ -142,11 +149,14 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options, payment_method)
         add_processing_channel(post, options)
         add_marketplace_data(post, options)
+        add_account_name_inquiry(post, options)
         add_recipient_data(post, options)
         add_processing_data(post, options)
         add_payment_sender_data(post, options)
         add_risk_data(post, options)
+        add_level_two_three_data(post, options)
         truncate_amex_reference_id(post, options, payment_method)
+        add_partial_authorization(post, options)
       end
 
       def add_invoice(post, money, options)
@@ -158,12 +168,22 @@ module ActiveMerchant #:nodoc:
           post[:billing_descriptor][:name] = options[:descriptor_name] if options[:descriptor_name]
           post[:billing_descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
         end
-        post[:metadata] = {}
-        post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
       def truncate_amex_reference_id(post, options, payment_method)
         post[:reference] = truncate(options[:order_id], 30) if payment_method.respond_to?(:brand) && payment_method.brand == 'american_express'
+      end
+
+      def add_account_name_inquiry(post, options)
+        return unless options[:account_name_inquiry] && options[:account_holder]&.is_a?(Hash)
+
+        account_holder = options[:account_holder]
+
+        post[:source][:account_holder] = {}
+        %i[first_name middle_name last_name type company_name].each do |key|
+          post[:source][:account_holder][key] = account_holder[key] if account_holder[key]
+        end
+        post[:source][:account_holder][:account_name_inquiry] = true
       end
 
       def add_recipient_data(post, options)
@@ -198,6 +218,13 @@ module ActiveMerchant #:nodoc:
         post[:processing] = options[:processing]
       end
 
+      def add_partial_authorization(post, options)
+        return unless options[:partial_authorization]
+
+        post[:partial_authorization] = {}
+        post[:partial_authorization][:enabled] = options[:partial_authorization] if options[:partial_authorization]
+      end
+
       def add_risk_data(post, options)
         return unless options[:risk].is_a?(Hash)
 
@@ -217,11 +244,13 @@ module ActiveMerchant #:nodoc:
 
         sender = options[:sender]
 
+        birthdate = sender[:dob] || sender[:date_of_birth]
+
         post[:sender] = {}
         post[:sender][:type] = sender[:type] if sender[:type]
         post[:sender][:first_name] = sender[:first_name] if sender[:first_name]
         post[:sender][:last_name] = sender[:last_name] if sender[:last_name]
-        post[:sender][:dob] = sender[:dob] if sender[:dob]
+        post[:sender][:date_of_birth] = birthdate if birthdate
         post[:sender][:reference] = sender[:reference] if sender[:reference]
         post[:sender][:company_name] = sender[:company_name] if sender[:company_name]
 
@@ -254,6 +283,7 @@ module ActiveMerchant #:nodoc:
         post[:metadata] = {} unless post[:metadata]
         post[:metadata].merge!(options[:metadata]) if options[:metadata]
         post[:metadata][:udf1] = 'mada' if payment_method.try(:brand) == 'mada'
+        post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
       def add_payment_method(post, payment_method, options, key = :source)
@@ -365,6 +395,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def merchant_initiated_override(post, options)
+        post[:payment_type] ||= 'Regular'
         post[:merchant_initiated] = true
         post[:source][:stored] = true
         post[:previous_payment_id] = options[:merchant_initiated_transaction_id]
@@ -383,7 +414,8 @@ module ActiveMerchant #:nodoc:
       def add_stored_credential_options(post, options = {})
         return unless options[:stored_credential]
 
-        post[:payment_type] = 'Recurring' if %w(recurring installment).include? options[:stored_credential][:reason_type]
+        post[:payment_type] = options[:stored_credential][:reason_type]&.capitalize
+        post[:payment_type] = 'Regular' if options[:stored_credential][:initiator] == 'cardholder' && post[:payment_type] == 'Unscheduled'
 
         if options[:merchant_initiated_transaction_id]
           merchant_initiated_override(post, options)
@@ -423,7 +455,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payout_sender_data(post, options)
-        return unless options[:payout] == true
+        return unless options[:payout] == true && options[:sender].is_a?(Hash)
 
         post[:sender] = {
           # options for type are individual, corporate, or government
@@ -463,7 +495,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payout_destination_data(post, options)
-        return unless options[:payout] == true
+        return unless options[:payout] == true && options[:destination].is_a?(Hash)
 
         post[:destination] ||= {}
         post[:destination][:account_holder] ||= {}
@@ -496,6 +528,67 @@ module ActiveMerchant #:nodoc:
         if options[:marketplace]
           post[:marketplace] = {}
           post[:marketplace][:sub_entity_id] = options[:marketplace][:sub_entity_id] if options[:marketplace][:sub_entity_id]
+        end
+      end
+
+      def add_level_two_three_data(post, options)
+        post[:processing] ||= {}
+        post[:customer] ||= {}
+
+        # American Express only supports Level 2 data.
+        # Only is required add items info in lvl2 data for amex
+        add_items(post, options)
+        add_level_two_data(post, options)
+        add_level_three_data(post, options)
+        add_shipping_data(post, options)
+      end
+
+      def add_items(post, options)
+        items = build_items(options[:line_items] || [])
+        post[:items] = items unless items.empty?
+      end
+
+      def add_level_two_data(post, options)
+        post[:customer][:tax_number] = options[:tax_number] # field no require for amex
+
+        post[:processing].merge!(
+          {
+            order_id: options[:invoice_id],
+            tax_amount: options[:tax_amount]
+          }.compact
+        )
+      end
+
+      def add_level_three_data(post, options)
+        post[:processing].merge!(
+          {
+            discount_amount: options[:discount_amount],
+            shipping_amount: options[:shipping_amount],
+            duty_amount: options[:duty_amount]
+          }.compact
+        )
+      end
+
+      def add_shipping_data(post, options)
+        post[:shipping] ||= {}
+        post[:shipping][:from_address_zip] = options[:from_address_zip]
+      end
+
+      def build_items(line_items = [])
+        line_items.map do |item|
+          {
+            # for lvl 2 amex and lvl 3 visa/master
+            name: item[:name],
+            quantity: item[:quantity],
+            unit_price: item[:unit_price],
+            # for lvl3 visa/master
+            reference: item[:reference],
+            tax_amount: item[:tax_amount],
+            discount_amount: item[:discount_amount],
+            total_amount: item[:total_amount],
+            commodity_code: item[:commodity_code],
+            unit_of_measure: item[:unit_of_measure]
+          }.compact
         end
       end
 
@@ -571,23 +664,36 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, response, options),
           body,
-          authorization: authorization,
+          authorization:,
           error_code: error_code_from(succeeded, body, options),
           test: test?,
           avs_result: avs_result(response),
-          cvv_result: cvv_result(response)
+          cvv_result: cvv_result(response),
+          pending: pending_result(response, action)
         )
       end
 
+      def pending_result(response, action)
+        return unless action == :credit
+
+        response['status'] == 'Pending'
+      end
+
       def headers(action, options)
-        auth_token = @options[:access_token] ? "Bearer #{@options[:access_token]}" : @options[:secret_key]
-        auth_token = @options[:public_key] if action == :tokens
-        headers = {
-          'Authorization' => auth_token,
-          'Content-Type' => 'application/json;charset=UTF-8'
-        }
+        headers = { 'Authorization' => auth_token(action), 'Content-Type' => 'application/json;charset=UTF-8' }
         headers['Cko-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
+
         headers
+      end
+
+      def auth_token(action)
+        return @options[:public_key] if action == :tokens
+
+        token = @options[:access_token] || @options[:secret_key]
+
+        return token if token.include?('Bearer')
+
+        "Bearer #{token}"
       end
 
       def tokenize(payment_method, options = {})
@@ -652,14 +758,16 @@ module ActiveMerchant #:nodoc:
         store_response = response['token'] || response['id']
         return true if store_response && ((action == :tokens && store_response.match(/tok/)) || (action == :store && store_response.match(/src_/)))
 
-        response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
+        response['response_summary'] == 'Approved' || response['approved'] == true || (!response.key?('response_summary') && response.key?('action_id'))
       end
 
       def message_from(succeeded, response, options)
         if succeeded
           'Succeeded'
         elsif response['error_type']
-          response['error_type'] + ': ' + response['error_codes'].first
+          return response['error_type'] unless response['error_codes']
+
+          "#{response['error_type']}: #{response['error_codes'].first}"
         else
           response_summary = response['response_summary'] || response.dig('actions', 0, 'response_summary')
           response_summary || response['response_code'] || response['status'] || response['message'] || 'Unable to read error message'

@@ -1,6 +1,6 @@
 require 'nokogiri'
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     module PayflowCommonAPI
       def self.included(base)
         base.default_currency = 'USD'

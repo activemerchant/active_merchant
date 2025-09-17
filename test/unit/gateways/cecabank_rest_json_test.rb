@@ -3,6 +3,8 @@ require 'test_helper'
 class CecabankJsonTest < Test::Unit::TestCase
   include CommStub
 
+  XID = 'some_xid'
+
   def setup
     @gateway = CecabankJsonGateway.new(
       merchant_id: '12345678',
@@ -11,6 +13,13 @@ class CecabankJsonTest < Test::Unit::TestCase
       cypher_key: 'enc_key',
       encryption_key: '00112233445566778899AABBCCDDEEFF00001133445566778899AABBCCDDEEAA',
       initiator_vector: '0000000000000000'
+    )
+
+    @no_encrypted_gateway = CecabankJsonGateway.new(
+      merchant_id: '12345678',
+      acquirer_bin: '12345678',
+      terminal_id: '00000003',
+      cypher_key: 'enc_key'
     )
 
     @credit_card = credit_card
@@ -31,6 +40,26 @@ class CecabankJsonTest < Test::Unit::TestCase
       authentication_response_status: 'Y',
       three_ds_server_trans_id: '9bd9aa9c-3beb-4012-8e52-214cccb25ec5'
     }
+
+    @apple_pay_network_token = network_tokenization_credit_card(
+      '4507670001000009',
+      eci: '05',
+      payment_cryptogram: 'xgQAAAAAAAAAAAAAAAAAAAAAAAAA',
+      month: '12',
+      year: Time.now.year,
+      source: :apple_pay,
+      verification_value: '989'
+    )
+
+    @google_pay_network_token = network_tokenization_credit_card(
+      '4507670001000009',
+      eci: '05',
+      payment_cryptogram: 'xgQAAAAAAAAAAAAAAAAAAAAAAAAA',
+      month: '12',
+      year: Time.now.year,
+      source: :google_pay,
+      verification_value: '989'
+    )
   end
 
   def test_successful_authorize
@@ -149,6 +178,89 @@ class CecabankJsonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_apple_pay
+    stub_comms(@no_encrypted_gateway, :ssl_post) do
+      @no_encrypted_gateway.purchase(@amount, @apple_pay_network_token, @options.merge(xid: XID))
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(data['parametros']))
+      common_ap_gp_assertions(
+        params,
+        payment_method: @apple_pay_network_token,
+        wallet_type: 'A',
+        eci: @apple_pay_network_token.eci
+      )
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_eci_in_three_ds_and_not_apple_pay
+    apple_pay_no_eci = @apple_pay_network_token.dup
+    apple_pay_no_eci.eci = nil
+    stub_comms(@no_encrypted_gateway, :ssl_post) do
+      # Will use eci from three_d_secure instead of payment_method
+      @no_encrypted_gateway.purchase(@amount, apple_pay_no_eci, @options.merge(three_d_secure: @three_d_secure))
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(data['parametros']))
+      common_ap_gp_assertions(
+        params,
+        payment_method: @apple_pay_network_token,
+        xid: @three_d_secure[:ds_transaction_id],
+        wallet_type: 'A',
+        eci:  @three_d_secure[:eci]
+      )
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_apple_pay_and_no_eci
+    apple_pay_no_eci = @apple_pay_network_token.dup
+    apple_pay_no_eci.eci = nil
+    stub_comms(@no_encrypted_gateway, :ssl_post) do
+      @no_encrypted_gateway.purchase(@amount, apple_pay_no_eci, @options.merge(xid: XID))
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(data['parametros']))
+      common_ap_gp_assertions(
+        params,
+        payment_method: @apple_pay_network_token,
+        wallet_type: 'A',
+        eci: nil
+      )
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_google_pay
+    stub_comms(@no_encrypted_gateway, :ssl_post) do
+      @no_encrypted_gateway.purchase(@amount, @google_pay_network_token, @options.merge(xid: XID))
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(data['parametros']))
+      common_ap_gp_assertions(
+        params,
+        payment_method: @google_pay_network_token,
+        wallet_type: 'G',
+        eci: @google_pay_network_token.eci
+      )
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_apple_pay_encrypted_gateway
+    stub_comms do
+      @gateway.purchase(@amount, @apple_pay_network_token, @options.merge(xid: XID))
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      encryoted_params = JSON.parse(Base64.decode64(data['parametros']))
+      sensitive_json = decrypt_sensitive_fields(@gateway.options, encryoted_params['encryptedData'])
+      sensitive_params = JSON.parse(sensitive_json)
+      common_ap_gp_assertions(
+        sensitive_params,
+        payment_method: @apple_pay_network_token,
+        wallet_type: 'A',
+        eci: @apple_pay_network_token.eci
+      )
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_purchase_with_low_value_exemption
     @options[:exemption_type] = 'low_value_exemption'
     @options[:three_d_secure] = @three_d_secure
@@ -208,6 +320,51 @@ class CecabankJsonTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_finrec_formatting_with_and_without_recurring_end_date_json
+    amount = 100
+    credit_card = credit_card('4507670001000009', { month: 12, year: 2025, verification_value: '989' })
+    options = {
+      order_id: '1',
+      recurring_end_date: '20251231',
+      recurring_frequency: '1',
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(amount, credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      json = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(json['parametros']))
+      assert_equal '20251231', params['finRec'], 'finRec should match provided yyyymmdd recurring_end_date'
+    end.respond_with(successful_json_purchase_response)
+
+    card = credit_card('4507670001000009', { month: 2, year: 2024, verification_value: '989' })
+    expected_finrec = '20240229'
+    options = {
+      order_id: '1',
+      recurring_frequency: '1',
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(amount, card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      json = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(json['parametros']))
+      assert_equal expected_finrec, params['finRec'], 'finRec should be card expiry as yyyymmdd last day'
+    end.respond_with(successful_json_purchase_response)
+  end
+
+  def successful_json_purchase_response
+    {
+      'parametros' => Base64.strict_encode64({ codAut: '123', numAut: '456', referencia: '789' }.to_json)
+    }.to_json
+  end
+
   private
 
   def decrypt_sensitive_fields(options, data)
@@ -215,6 +372,16 @@ class CecabankJsonTest < Test::Unit::TestCase
     cipher.key = [options[:encryption_key]].pack('H*')
     cipher.iv = options[:initiator_vector]&.split('')&.map(&:to_i)&.pack('c*')
     cipher.update([data].pack('H*')) + cipher.final
+  end
+
+  def common_ap_gp_assertions(params, payment_method:, wallet_type:, eci:, xid: 'some_xid')
+    assert_include params, 'wallet'
+    assert_equal params['pan'], payment_method.number
+    wallet = JSON.parse(params['wallet'])
+    assert_equal wallet['authentication_value'], payment_method.payment_cryptogram
+    assert_equal wallet['xid'], xid
+    assert_equal wallet['walletType'], wallet_type
+    assert_equal wallet['eci'], eci
   end
 
   def transcript

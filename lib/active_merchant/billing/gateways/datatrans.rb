@@ -1,8 +1,10 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DatatransGateway < Gateway
-      self.test_url = 'https://api.sandbox.datatrans.com/v1/'
-      self.live_url = 'https://api.datatrans.com/v1/'
+      version 'v1'
+
+      self.test_url = "https://api.sandbox.datatrans.com/#{fetch_version}/"
+      self.live_url = "https://api.datatrans.com/#{fetch_version}/"
 
       self.supported_countries = %w(CH GR US) # to confirm the countries supported.
       self.default_currency = 'CHF'
@@ -56,20 +58,20 @@ module ActiveMerchant #:nodoc:
         post = { refno: options.fetch(:order_id, '') }
         transaction_id = authorization.split('|').first
         add_currency_amount(post, money, options)
-        commit('settle', post, { transaction_id: transaction_id })
+        commit('settle', post, { transaction_id: })
       end
 
       def refund(money, authorization, options = {})
         post = { refno: options.fetch(:order_id, '') }
         transaction_id = authorization.split('|').first
         add_currency_amount(post, money, options)
-        commit('credit', post, { transaction_id: transaction_id })
+        commit('credit', post, { transaction_id: })
       end
 
       def void(authorization, options = {})
         post = {}
         transaction_id = authorization.split('|').first
-        commit('cancel', post, { transaction_id: transaction_id })
+        commit('cancel', post, { transaction_id: })
       end
 
       def store(payment_method, options = {})
@@ -102,7 +104,8 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )[\w =]+), '\1[FILTERED]').
           gsub(%r((\"number\\":\\")\d+), '\1[FILTERED]\2').
-          gsub(%r((\"cvv\\":\\")\d+), '\1[FILTERED]\2')
+          gsub(%r((\"cvv\\":\\")\d+), '\1[FILTERED]\2').
+          gsub(%r((\"pan\\":\\")\d+), '\1[FILTERED]\2')
       end
 
       private
@@ -142,11 +145,11 @@ module ActiveMerchant #:nodoc:
 
         three_ds =
           {
-            "3D":
+            '3D':
               {
                 eci: three_d_secure[:eci],
-                xid: three_d_secure[:xid],
-                threeDSTransactionId: three_d_secure[:ds_transaction_id],
+                xid: three_d_secure[:ds_transaction_id],
+                threeDSTransactionId: three_d_secure[:three_ds_server_trans_id],
                 cavv: three_d_secure[:cavv],
                 threeDSVersion: three_d_secure[:version],
                 cavvAlgorithm: three_d_secure[:cavv_algorithm],
@@ -253,6 +256,8 @@ module ActiveMerchant #:nodoc:
         token_array = [response.dig('responses', 0, 'alias'), options[:expiry_month], options[:expiry_year]].join('|') if action == 'tokenize'
 
         auth = [response['transactionId'], response['acquirerAuthorizationCode'], token_array].join('|')
+        auth = options[:transaction_id] if action == 'settle'
+
         return auth unless auth == '||'
       end
 

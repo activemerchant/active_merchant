@@ -188,9 +188,9 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
         @amount,
         @credit_card,
         @options.merge(
-          shopper_interaction: shopper_interaction,
-          device_fingerprint: device_fingerprint,
-          shopper_statement: shopper_statement
+          shopper_interaction:,
+          device_fingerprint:,
+          shopper_statement:
         )
       )
     end.check_request do |_endpoint, data, _headers|
@@ -483,6 +483,21 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
     message2 = "#{response2.params['errorCode']}: #{response2.params['message']}"
     assert_equal('702: Internal error', message2)
+  end
+
+  def test_api_version
+    assert_equal 'v40', @gateway.fetch_version
+  end
+
+  def test_urls_for_test_and_live_mode
+    assert_equal 'https://pal-test.barclaycardsmartpay.com/pal/servlet/Recurring/v40/storeToken', @gateway.send(:build_url, 'store')
+    assert_equal 'https://pal-test.barclaycardsmartpay.com/pal/servlet/Payment/v40/authorise', @gateway.send(:build_url, 'authorise')
+    assert_equal 'https://pal-test.barclaycardsmartpay.com/pal/servlet/Payment/v40/capture', @gateway.send(:build_url, 'capture')
+
+    @gateway.expects(:test?).returns(false).times(3)
+    assert_equal 'https://pal-live.barclaycardsmartpay.com/pal/servlet/Recurring/v40/storeToken', @gateway.send(:build_url, 'store')
+    assert_equal 'https://pal-live.barclaycardsmartpay.com/pal/servlet/Payment/v40/authorise', @gateway.send(:build_url, 'authorise')
+    assert_equal 'https://pal-live.barclaycardsmartpay.com/pal/servlet/Payment/v40/capture', @gateway.send(:build_url, 'capture')
   end
 
   private

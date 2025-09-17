@@ -6,11 +6,14 @@ class RemoteCecabankTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4507670001000009', { month: 12, year: Time.now.year, verification_value: '989' })
+    # for some reason purchase with previous card is not working
+    @credit_card_purchase = credit_card('5540500001000004', { month: 12, year: Time.now.year, verification_value: '989' })
     @declined_card = credit_card('5540500001000004', { month: 11, year: Time.now.year + 1, verification_value: '001' })
 
     @options = {
       order_id: generate_unique_id,
-      three_d_secure: three_d_secure
+      three_d_secure:,
+      exemption_type: 'transaction_risk_analysis_exemption'
     }
 
     @cit_options = @options.merge({
@@ -21,6 +24,26 @@ class RemoteCecabankTest < Test::Unit::TestCase
         initiator: 'cardholder'
       }
     })
+
+    @apple_pay_network_token = network_tokenization_credit_card(
+      '4507670001000009',
+      eci: '05',
+      payment_cryptogram: 'xgQAAAAAAAAAAAAAAAAAAAAAAAAA',
+      month: '12',
+      year: Time.now.year,
+      source: :apple_pay,
+      verification_value: '989'
+    )
+
+    @google_pay_network_token = network_tokenization_credit_card(
+      '4507670001000009',
+      eci: '05',
+      payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+      month: '10',
+      year: Time.now.year + 1,
+      source: :google_pay,
+      verification_value: nil
+    )
   end
 
   def test_successful_authorize
@@ -52,9 +75,27 @@ class RemoteCecabankTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    assert response = @gateway.purchase(@amount, @credit_card, order_id: generate_unique_id)
+    assert response = @gateway.purchase(@amount, @credit_card_purchase, order_id: generate_unique_id)
     assert_success response
     assert_equal %i[codAut numAut referencia], JSON.parse(response.message).symbolize_keys.keys.sort
+  end
+
+  def test_successful_purchase_with_apple_pay
+    assert response = @gateway.purchase(@amount, @apple_pay_network_token, { order_id: generate_unique_id })
+    assert_success response
+    assert_equal %i[codAut numAut referencia], JSON.parse(response.message).symbolize_keys.keys.sort
+  end
+
+  def test_successful_purchase_with_google_pay
+    assert response = @gateway.purchase(@amount, @apple_pay_network_token, { order_id: generate_unique_id })
+    assert_success response
+    assert_equal %i[codAut numAut referencia], JSON.parse(response.message).symbolize_keys.keys.sort
+  end
+
+  def test_failed_purchase_with_apple_pay_sending_three_ds_data
+    assert response = @gateway.purchase(@amount, @apple_pay_network_token, @options)
+    assert_failure response
+    assert_equal response.error_code, '1061'
   end
 
   def test_unsuccessful_purchase
@@ -111,7 +152,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
 
   def test_purchase_stored_credential_with_network_transaction_id
     @cit_options.merge!({ network_transaction_id: '999999999999999' })
-    assert purchase = @gateway.purchase(@amount, @credit_card, @cit_options)
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
   end
 
@@ -124,6 +165,21 @@ class RemoteCecabankTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_purchase_with_apple_pay_using_stored_credential_recurring_mit
+    @cit_options[:stored_credential][:reason_type] = 'installment'
+    assert purchase = @gateway.purchase(@amount, @apple_pay_network_token, @cit_options.except(:three_d_secure))
+    assert_success purchase
+
+    options = @cit_options.except(:three_d_secure, :extra_options_for_three_d_secure)
+    options[:stored_credential][:reason_type] = 'recurring'
+    options[:stored_credential][:initiator] = 'merchant'
+    options[:stored_credential][:network_transaction_id] = purchase.network_transaction_id
+    options[:order_id] = generate_unique_id
+
+    assert purchase2 = @gateway.purchase(@amount, @apple_pay_network_token, options)
+    assert_success purchase2
+  end
+
   def test_purchase_using_stored_credential_recurring_mit
     @cit_options[:stored_credential][:reason_type] = 'installment'
     assert purchase = @gateway.purchase(@amount, @credit_card, @cit_options)
@@ -133,6 +189,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
     options[:stored_credential][:reason_type] = 'recurring'
     options[:stored_credential][:initiator] = 'merchant'
     options[:stored_credential][:network_transaction_id] = purchase.network_transaction_id
+    options[:order_id] = generate_unique_id
 
     assert purchase2 = @gateway.purchase(@amount, @credit_card, options)
     assert_success purchase2
@@ -160,6 +217,32 @@ class RemoteCecabankTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
   end
 
+  def test_finrec_formatting_with_and_without_recurring_end_date
+    next_year = Time.now.year + 1
+    options_with_date = @options.merge(
+      recurring_end_date: "#{next_year}1231",
+      recurring_frequency: '1',
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card_purchase, options_with_date)
+    assert_success response
+    assert_equal 'OK', response.message
+
+    options_without_date = @options.merge(
+      recurring_frequency: '1',
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card_purchase, options_without_date)
+    assert_success response
+    assert_equal 'OK', response.message
+  end
+
   private
 
   def get_response_params(transcript)
@@ -170,12 +253,14 @@ class RemoteCecabankTest < Test::Unit::TestCase
   def three_d_secure
     {
       version: '2.2.0',
-      eci: '02',
-      cavv: '4F80DF50ADB0F9502B91618E9B704790EABA35FDFC972DDDD0BF498C6A75E492',
+      eci: '07',
       ds_transaction_id: 'a2bf089f-cefc-4d2c-850f-9153827fe070',
       acs_transaction_id: '18c353b0-76e3-4a4c-8033-f14fe9ce39dc',
-      authentication_response_status: 'Y',
-      three_ds_server_trans_id: '9bd9aa9c-3beb-4012-8e52-214cccb25ec5'
+      authentication_response_status: 'I',
+      three_ds_server_trans_id: '9bd9aa9c-3beb-4012-8e52-214cccb25ec5',
+      enrolled: 'true',
+      cavv: 'AJkCC1111111111122222222AAAA',
+      xid: '22222'
     }
   end
 end

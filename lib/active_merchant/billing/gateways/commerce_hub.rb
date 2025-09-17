@@ -1,8 +1,10 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CommerceHubGateway < Gateway
-      self.test_url = 'https://cert.api.fiservapps.com/ch'
-      self.live_url = 'https://prod.api.fiservapps.com/ch'
+      version 'v1'
+
+      self.test_url = 'https://connect-cert.fiservapps.com/ch'
+      self.live_url = 'https://connect.fiservapis.com/ch'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -15,11 +17,11 @@ module ActiveMerchant #:nodoc:
 
       SCHEDULED_REASON_TYPES = %w(recurring installment)
       ENDPOINTS = {
-        'sale' => '/payments/v1/charges',
-        'void' => '/payments/v1/cancels',
-        'refund' => '/payments/v1/refunds',
-        'vault' => '/payments-vas/v1/tokens',
-        'verify' => '/payments-vas/v1/accounts/verification'
+        'sale' => "/payments/#{fetch_version}/charges",
+        'void' => "/payments/#{fetch_version}/cancels",
+        'refund' => "/payments/#{fetch_version}/refunds",
+        'vault' => "/payments-vas/#{fetch_version}/tokens",
+        'verify' => "/payments-vas/#{fetch_version}/accounts/verification"
       }
 
       def initialize(options = {})
@@ -72,6 +74,7 @@ module ActiveMerchant #:nodoc:
       def credit(money, payment_method, options = {})
         post = {}
         add_invoice(post, money, options)
+        add_transaction_details(post, options)
         add_transaction_interaction(post, options)
         add_payment(post, payment_method, options)
 
@@ -100,6 +103,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_payment(post, credit_card, options)
         add_billing_address(post, credit_card, options)
+        add_transaction_details(post, options, 'verify')
 
         commit('verify', post, options)
       end
@@ -120,13 +124,13 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_three_d_secure(post, payment, options)
+      def add_three_d_secure(post, options)
         return unless three_d_secure = options[:three_d_secure]
 
         post[:additionalData3DS] = {
           dsTransactionId: three_d_secure[:ds_transaction_id],
           authenticationStatus: three_d_secure[:authentication_response_status],
-          serviceProviderTransactionId: three_d_secure[:three_ds_server_trans_id],
+          serverTransactionId: three_d_secure[:three_ds_server_trans_id],
           acsTransactionId: three_d_secure[:acs_transaction_id],
           mpiData: {
             cavv: three_d_secure[:cavv],
@@ -140,7 +144,7 @@ module ActiveMerchant #:nodoc:
       def add_transaction_interaction(post, options)
         post[:transactionInteraction] = {}
         post[:transactionInteraction][:origin] = options[:origin] || 'ECOM'
-        post[:transactionInteraction][:eciIndicator] = options[:eci_indicator] || 'CHANNEL_ENCRYPTED'
+        post[:transactionInteraction][:eciIndicator] = map_ecommerce_indicator(options)
         post[:transactionInteraction][:posConditionCode] = options[:pos_condition_code] || 'CARD_NOT_PRESENT_ECOM'
         post[:transactionInteraction][:posEntryMode] = (options[:pos_entry_mode] || 'MANUAL') unless options[:encryption_data].present?
         post[:transactionInteraction][:additionalPosInformation] = {}
@@ -154,16 +158,12 @@ module ActiveMerchant #:nodoc:
           physicalGoodsIndicator: [true, 'true'].include?(options[:physical_goods_indicator])
         }
 
-        if options[:order_id].present? && action == 'sale'
+        if %w(sale verify).include?(action)
           details[:merchantOrderId] = options[:order_id]
-          details[:merchantTransactionId] = options[:order_id]
+          details[:merchantTransactionId] = rand.to_s[2..13]
         end
 
-        if action != 'capture'
-          details[:merchantInvoiceNumber] = options[:merchant_invoice_number] || rand.to_s[2..13]
-          details[:primaryTransactionType] = options[:primary_transaction_type]
-          details[:accountVerification] = options[:account_verification]
-        end
+        details[:merchantInvoiceNumber] = options[:order_id] if action != 'capture'
 
         post[:transactionDetails] = details.compact
       end
@@ -228,7 +228,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_purchase_and_auth_request(post, money, payment, options)
-        add_three_d_secure(post, payment, options)
+        add_three_d_secure(post, options)
         add_invoice(post, money, options)
         add_payment(post, payment, options)
         add_stored_credentials(post, options)
@@ -311,20 +311,31 @@ module ActiveMerchant #:nodoc:
         source[:walletType] = payment.source.to_s.upcase
       end
 
+      def add_network_token(source, payment, options)
+        source[:sourceType] = 'PaymentToken'
+        source[:tokenData] = payment.number
+        source[:tokenSource] = 'NETWORK_TOKEN'
+        source[:cryptogram] = payment.payment_cryptogram
+        source[:card] = {
+          expirationMonth: format(payment.month, :two_digits),
+          expirationYear: format(payment.year, :four_digits)
+        }
+      end
+
       def add_payment(post, payment, options = {})
         source = {}
-        case payment
-        when NetworkTokenizationCreditCard
-          add_decrypted_wallet(source, payment, options)
-        when CreditCard
-          if options[:encryption_data].present?
-            source[:sourceType] = 'PaymentCard'
-            source[:encryptionData] = options[:encryption_data]
-          else
-            add_credit_card(source, payment, options)
-          end
-        when String
+
+        if payment.is_a?(String)
           add_payment_token(source, payment, options)
+        elsif payment.mobile_wallet?
+          add_decrypted_wallet(source, payment, options)
+        elsif payment.network_token?
+          add_network_token(source, payment, options)
+        elsif options[:encryption_data].present?
+          source[:sourceType] = 'PaymentCard'
+          source[:encryptionData] = options[:encryption_data]
+        elsif payment.is_a?(CreditCard)
+          add_credit_card(source, payment, options)
         end
         post[:source] = source
       end
@@ -335,7 +346,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(request, options)
         time = DateTime.now.strftime('%Q').to_s
-        client_request_id = options[:client_request_id] || rand.to_s[2..8]
+        client_request_id = options[:client_request_id] || SecureRandom.uuid
         raw_signature = @options[:api_key] + client_request_id.to_s + time + request
         hmac = OpenSSL::HMAC.digest('sha256', @options[:api_secret], raw_signature)
         signature = Base64.strict_encode64(hmac.to_s).to_s
@@ -421,6 +432,20 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response, action)
         response.dig('error', 0, 'code') unless success_from(response, action)
+      end
+
+      def map_ecommerce_indicator(options)
+        return options[:eci_indicator] if options[:eci_indicator]
+        return 'CHANNEL_ENCRYPTED'     unless options[:three_d_secure]
+
+        case options[:three_d_secure][:eci]
+        when '2', '02', '5', '05'
+          'SECURE_ECOM'
+        when '01', '1', '06', '6'
+          'NON_AUTH_ECOM'
+        else
+          'CHANNEL_ENCRYPTED'
+        end
       end
     end
   end

@@ -1,12 +1,12 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DLocalGateway < Gateway
       self.test_url = 'https://sandbox.dlocal.com'
       self.live_url = 'https://api.dlocal.com'
 
       self.supported_countries = %w[AR BD BO BR CL CM CN CO CR DO EC EG GH GT IN ID JP KE MY MX MA NG PA PY PE PH SN SV TH TR TZ UG UY VN ZA]
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro naranja cabal elo alia carnet]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro naranja cabal elo alia carnet patagonia_365 tarjeta_sol]
 
       self.homepage_url = 'https://dlocal.com/'
       self.display_name = 'dLocal'
@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         post = {}
+        add_description(post, options)
         post[:payment_id] = authorization
         post[:notification_url] = options[:notification_url]
         add_invoice(post, money, options) if money
@@ -90,9 +91,9 @@ module ActiveMerchant #:nodoc:
         add_payer(post, card, options)
         add_card(post, card, action, options)
         add_additional_data(post, options)
+        add_description(post, options)
         post[:order_id] = options[:order_id] || generate_unique_id
         post[:original_order_id] = options[:original_order_id] if options[:original_order_id]
-        post[:description] = options[:description] if options[:description]
       end
 
       def add_invoice(post, money, options)
@@ -100,14 +101,19 @@ module ActiveMerchant #:nodoc:
         post[:currency] = (options[:currency] || currency(money))
       end
 
+      def add_description(post, options)
+        post[:description] = options[:description] if options[:description]
+      end
+
       def add_additional_data(post, options)
         post[:additional_risk_data] = options[:additional_data]
       end
 
       def add_country(post, card, options)
-        return unless address = options[:billing_address] || options[:address]
+        return unless (address = options[:billing_address] || options[:address]) || options[:country]
 
-        post[:country] = lookup_country_code(address[:country])
+        country = options[:country] ? lookup_country_code(options[:country]) : lookup_country_code(address[:country])
+        post[:country] = country
       end
 
       def lookup_country_code(country_field)
@@ -165,6 +171,7 @@ module ActiveMerchant #:nodoc:
           post[:card][:network_token] = card.number
           post[:card][:cryptogram] = card.payment_cryptogram
           post[:card][:eci] = card.eci
+          post[:card][:bin] = options[:issuer_identification_number] if options[:issuer_identification_number]
         else
           post[:card][:number] = card.number
           post[:card][:cvv] = card.verification_value
@@ -238,7 +245,11 @@ module ActiveMerchant #:nodoc:
       def success_from(action, response)
         return false unless response['status_code']
 
-        %w[100 200 400 600 700].include? response['status_code'].to_s
+        if action == 'void'
+          response['status_code'].to_s == '400' && response['status'] == 'CANCELLED'
+        else
+          %w[100 200 400 600 700].include? response['status_code'].to_s
+        end
       end
 
       def message_from(action, response)
@@ -294,6 +305,7 @@ module ActiveMerchant #:nodoc:
           'Authorization' => signature(post, timestamp)
         }
         headers['X-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
+        headers['X-Dlocal-Payment-Source'] = application_id if application_id
         headers
       end
 

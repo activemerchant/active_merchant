@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/authorize_net'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SecurePayGateway < Gateway
       API_VERSION = '3.1'
 

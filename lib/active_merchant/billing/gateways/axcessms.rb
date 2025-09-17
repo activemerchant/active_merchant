@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class AxcessmsGateway < Gateway
       self.test_url = 'https://test.ctpe.io/payment/ctpe'
       self.live_url = 'https://ctpe.io/payment/ctpe'
@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
           success,
           message,
           response,
-          authorization: authorization,
+          authorization:,
           test: (response[:mode] != 'LIVE')
         )
       end

@@ -1,19 +1,20 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SafeChargeGateway < Gateway
       self.test_url = 'https://process.sandbox.safecharge.com/service.asmx/Process'
       self.live_url = 'https://process.safecharge.com/service.asmx/Process'
 
-      self.supported_countries = %w[AT BE BG CY CZ DE DK EE GR ES FI FR GI HK HR HU IE IS IT LI LT LU LV MT MX NL NO PL PT RO SE SG SI SK GB US]
+      self.supported_countries = %w[AT AU BE BG CA CY CZ DE DK EE GR ES FI FR GI HK HR HU IE IS IT LI LT LU LV MT MX NL NO PL PT RO SE SG SI SK GB US]
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master]
 
       self.homepage_url = 'https://www.safecharge.com'
       self.display_name = 'SafeCharge'
 
-      VERSION = '4.1.0'
+      # Define the API version using the Versionable module
+      version '4.1.0'
 
       def initialize(options = {})
         requires!(options, :client_login_id, :client_password)
@@ -133,7 +134,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_ClientLoginID] = @options[:client_login_id]
         post[:sg_ClientPassword] = @options[:client_password]
         post[:sg_ResponseFormat] = '4'
-        post[:sg_Version] = VERSION
+        post[:sg_Version] = fetch_version
         post[:sg_ClientUniqueID] = options[:order_id] if options[:order_id]
         post[:sg_UserID] = options[:user_id] if options[:user_id]
         post[:sg_AuthType] = options[:auth_type] if options[:auth_type]
@@ -180,7 +181,7 @@ module ActiveMerchant #:nodoc:
 
       def add_network_token(post, payment, options)
         post[:sg_CAVV] = payment.payment_cryptogram
-        post[:sg_ECI] = options[:three_d_secure] && options[:three_d_secure][:eci] || '05'
+        post[:sg_ECI] = (options[:three_d_secure] && options[:three_d_secure][:eci]) || '05'
         post[:sg_IsExternalMPI] = 1
         post[:sg_ExternalTokenProvider] = 5
       end
@@ -195,6 +196,8 @@ module ActiveMerchant #:nodoc:
           post[:sg_Zip] = address[:zip] if address[:zip]
           post[:sg_Country] = address[:country] if address[:country]
           post[:sg_Phone] = address[:phone] if address[:phone]
+          post[:sg_middleName] = options[:middle_name] if options[:middle_name]
+          post[:sg_doCardHolderNameVerification] = options[:card_holder_verification] if options[:card_holder_verification]
         end
 
         post[:sg_Email] = options[:email]
@@ -284,9 +287,9 @@ module ActiveMerchant #:nodoc:
         auth_code, transaction_id, token, month, year, original_amount = authorization.split('|')
 
         {
-          auth_code: auth_code,
-          transaction_id: transaction_id,
-          token: token,
+          auth_code:,
+          transaction_id:,
+          token:,
           exp_month: month,
           exp_year: year,
           original_amount: amount(original_amount.to_f * 100)

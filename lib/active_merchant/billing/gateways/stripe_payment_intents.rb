@@ -1,20 +1,21 @@
 require 'active_support/core_ext/hash/slice'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This gateway uses the current Stripe {Payment Intents API}[https://stripe.com/docs/api/payment_intents].
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
+      version '2022-11-15'
+
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
       CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email save_payment_method]
       CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session]
       UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email setup_future_usage]
-      DEFAULT_API_VERSION = '2020-08-27'
+      ALLOWED_MULTICAPTURE_OPTIONS = %w[if_available never].freeze
       DIGITAL_WALLETS = {
         apple_pay: 'apple_pay',
-        google_pay: 'google_pay_dpan',
-        untokenized_google_pay: 'google_pay_ecommerce_token'
+        google_pay: 'google_pay_dpan'
       }
 
       def create_intent(money, payment_method, options = {})
@@ -38,7 +39,7 @@ module ActiveMerchant #:nodoc:
               return result if result.is_a?(ActiveMerchant::Billing::Response)
             end
 
-            add_network_token_cryptogram_and_eci(post, payment_method)
+            add_network_token_info(post, payment_method, options)
             add_external_three_d_secure_auth_data(post, options)
             add_metadata(post, options)
             add_return_url(post, options)
@@ -55,7 +56,11 @@ module ActiveMerchant #:nodoc:
             request_three_d_secure(post, options)
             add_level_three(post, options)
             add_card_brand(post, options)
-            post[:expand] = ['charges.data.balance_transaction']
+            add_aft_recipient_details(post, options)
+            add_aft_sender_details(post, options)
+            add_request_extended_authorization(post, options)
+            add_statement_descriptor_suffix_kanji_kana(post, options)
+            add_request_multicapture(post, options)
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
               add_whitelisted_attribute(post, options, attribute)
@@ -66,7 +71,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def show_intent(intent_id, options)
-        commit(:get, "payment_intents/#{intent_id}", nil, options)
+        commit(:get, "payment_intents/#{intent_id}?expand[]=latest_charge.balance_transaction", nil, options)
       end
 
       def create_test_customer
@@ -83,6 +88,7 @@ module ActiveMerchant #:nodoc:
           return result if result.is_a?(ActiveMerchant::Billing::Response)
         end
 
+        add_network_token_info(post, payment_method, options)
         add_payment_method_types(post, options)
         CONFIRM_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -117,6 +123,11 @@ module ActiveMerchant #:nodoc:
           post[:billing_details] = add_address(billing, options)
         end
 
+        # wallet_type is only passed for non-tokenized GooglePay which acts as a CreditCard
+        if options[:wallet_type]
+          post[:metadata] ||= {}
+          post[:metadata][:input_method] = 'GooglePay'
+        end
         add_name_only(post, payment_method) if post[:billing_details].nil?
         add_network_token_data(post, payment_method, options)
         post
@@ -140,12 +151,14 @@ module ActiveMerchant #:nodoc:
           return result if result.is_a?(ActiveMerchant::Billing::Response)
         end
 
+        add_network_token_info(post, payment_method, options)
         add_payment_method_types(post, options)
         add_customer(post, options)
         add_metadata(post, options)
         add_shipping_address(post, options)
         add_connected_account(post, options)
         add_fulfillment_date(post, options)
+        add_statement_descriptor_suffix_kanji_kana(post, options)
 
         UPDATE_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -167,6 +180,7 @@ module ActiveMerchant #:nodoc:
               return result if result.is_a?(ActiveMerchant::Billing::Response)
             end
 
+            add_network_token_info(post, payment_method, options)
             add_metadata(post, options)
             add_return_url(post, options)
             add_fulfillment_date(post, options)
@@ -176,7 +190,6 @@ module ActiveMerchant #:nodoc:
             post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
             post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
             post[:description] = options[:description] if options[:description]
-            post[:expand] = ['latest_attempt']
 
             commit(:post, 'setup_intents', post, options)
           end
@@ -184,14 +197,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def retrieve_setup_intent(setup_intent_id, options = {})
-        # Retrieving a setup_intent passing 'expand[]=latest_attempt' allows the caller to
-        # check for a network_transaction_id and ds_transaction_id
-        # eg (latest_attempt -> payment_method_details -> card -> network_transaction_id)
-        #
-        # Being able to retrieve these fields enables payment flows that rely on MIT exemptions, e.g: off_session
-        commit(:post, "setup_intents/#{setup_intent_id}", {
-          'expand[]': 'latest_attempt'
-        }, options)
+        commit(:get, "setup_intents/#{setup_intent_id}?expand[]=latest_attempt", nil, options)
       end
 
       def authorize(money, payment_method, options = {})
@@ -203,6 +209,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, intent_id, options = {})
+        return Response.new(false, 'Only Authorizations performed via the Payment Intent API are capturable') unless intent_id.include?('pi_')
+
         post = {}
         currency = options[:currency] || currency(money)
         post[:amount_to_capture] = localized_amount(money, currency)
@@ -211,6 +219,7 @@ module ActiveMerchant #:nodoc:
           post[:transfer_data][:amount] = options[:transfer_amount]
         end
         post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
+        post[:final_capture] = normalize(options[:final_capture]) unless options[:final_capture].nil?
         options = format_idempotency_key(options, 'capture')
         commit(:post, "payment_intents/#{intent_id}/capture", post, options)
       end
@@ -223,11 +232,11 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, intent_id, options = {})
         if intent_id.include?('pi_')
-          intent = api_request(:get, "payment_intents/#{intent_id}", nil, options)
+          intent = api_request(:get, "payment_intents/#{intent_id}?expand[]=latest_charge.balance_transaction", nil, options)
 
           return Response.new(false, intent['error']['message'], intent) if intent['error']
 
-          charge_id = intent.try(:[], 'charges').try(:[], 'data').try(:[], 0).try(:[], 'id')
+          charge_id = intent.try(:[], 'latest_charge').try(:[], 'id')
 
           if charge_id.nil?
             error_message = "No associated charge for #{intent['id']}"
@@ -251,7 +260,7 @@ module ActiveMerchant #:nodoc:
         if new_apple_google_pay_flow(payment_method, options)
           options[:customer] = customer(payment_method, options).params['id'] unless options[:customer]
           verify(payment_method, options.merge!(action: :store))
-        elsif payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
+        elsif payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
           result = add_payment_method_token(params, payment_method, options)
           return result if result.is_a?(ActiveMerchant::Billing::Response)
 
@@ -306,11 +315,57 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'payment_intents', post, options)
       end
 
+      def inquire(authorization, options = {})
+        options.merge!({ request_type: :inquire })
+        if authorization&.start_with?('pi_')
+          show_intent(authorization, options)
+        else
+          retrieve_setup_intent(authorization, options)
+        end
+      end
+
       def supports_network_tokenization?
         true
       end
 
       private
+
+      def card_from_response(response)
+        extract_payment_intent_details(response) || extract_setup_intent_details(response) || super
+      end
+
+      def extract_payment_intent_details(response)
+        return nil if response['latest_charge'].nil? || response['latest_charge']&.is_a?(String)
+
+        response.dig('latest_charge', 'payment_method_details', 'card', 'checks')
+      end
+
+      def extract_setup_intent_details(response)
+        return nil if response['latest_attempt'].nil? || response['latest_attempt']&.is_a?(String)
+
+        response.dig('latest_attempt', 'payment_method_details', 'card', 'checks')
+      end
+
+      def add_expand_parameters(post, options, method, url)
+        post[:expand] ||= []
+        post[:expand].concat(Array.wrap(options[:expand]).map(&:to_sym)).uniq!
+
+        return if method == :get
+
+        if url.include?('payment_intents')
+          post[:expand].concat(['latest_charge', 'latest_charge.balance_transaction'])
+        elsif url.include?('setup_intents')
+          post[:expand] << 'latest_attempt'
+        end
+      end
+
+      def error_id(response, url)
+        if url.end_with?('payment_intents')
+          response.dig('error', 'payment_intent', 'id') || super
+        else
+          super
+        end
+      end
 
       def digital_wallet_payment_method?(payment_method)
         payment_method.source == :google_pay || payment_method.source == :apple_pay
@@ -368,6 +423,32 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options][:card][:network] = options[:card_brand] if options[:card_brand]
       end
 
+      def add_request_extended_authorization(post, options)
+        return unless options[:request_extended_authorization]
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:request_extended_authorization] = options[:request_extended_authorization] if options[:request_extended_authorization]
+      end
+
+      def add_statement_descriptor_suffix_kanji_kana(post, options)
+        return unless options[:statement_descriptor_suffix_kanji] || options[:statement_descriptor_suffix_kana]
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:statement_descriptor_suffix_kanji] = options[:statement_descriptor_suffix_kanji] if options[:statement_descriptor_suffix_kanji]
+        post[:payment_method_options][:card][:statement_descriptor_suffix_kana] = options[:statement_descriptor_suffix_kana] if options[:statement_descriptor_suffix_kana]
+      end
+
+      def add_request_multicapture(post, options)
+        request_multicapture = options[:request_multicapture]
+        return unless ALLOWED_MULTICAPTURE_OPTIONS.include?(request_multicapture)
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:request_multicapture] = request_multicapture
+      end
+
       def add_level_three(post, options = {})
         level_three = {}
 
@@ -381,6 +462,82 @@ module ActiveMerchant #:nodoc:
         post[:level3] = level_three unless level_three.empty?
       end
 
+      def add_aft_recipient_details(post, options)
+        return unless options[:recipient_details]&.is_a?(Hash)
+
+        recipient_details = options[:recipient_details]
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:recipient_details] = {}
+        post[:payment_method_options][:card][:recipient_details][:first_name] = recipient_details[:first_name] if recipient_details[:first_name]
+        post[:payment_method_options][:card][:recipient_details][:last_name] = recipient_details[:last_name] if recipient_details[:last_name]
+        post[:payment_method_options][:card][:recipient_details][:email] = recipient_details[:email] if recipient_details[:email]
+        post[:payment_method_options][:card][:recipient_details][:phone] = recipient_details[:phone] if recipient_details[:phone]
+
+        if recipient_details[:address].is_a?(Hash)
+          address = recipient_details[:address]
+          post[:payment_method_options][:card][:recipient_details][:address] = {}
+          post[:payment_method_options][:card][:recipient_details][:address][:country] = address[:country] if address[:country]
+          post[:payment_method_options][:card][:recipient_details][:address][:line1] = address[:line1] if address[:line1]
+          post[:payment_method_options][:card][:recipient_details][:address][:line2] = address[:line2] if address[:line2]
+          post[:payment_method_options][:card][:recipient_details][:address][:postal_code] = address[:postal_code] if address[:postal_code]
+          post[:payment_method_options][:card][:recipient_details][:address][:state] = address[:state] if address[:state]
+          post[:payment_method_options][:card][:recipient_details][:address][:city] = address[:city] if address[:city]
+        end
+
+        if recipient_details[:account_details].is_a?(Hash)
+          account_details = recipient_details[:account_details]
+          post[:payment_method_options][:card][:recipient_details][:account_details] = {}
+
+          if account_details[:card].is_a?(Hash)
+            card = account_details[:card]
+            post[:payment_method_options][:card][:recipient_details][:account_details][:card] = {}
+            post[:payment_method_options][:card][:recipient_details][:account_details][:card][:first6] = card[:first6] if card[:first6]
+            post[:payment_method_options][:card][:recipient_details][:account_details][:card][:last4] = card[:last4] if card[:last4]
+          end
+
+          if account_details[:unique_identifier].is_a?(Hash)
+            unique_identifier = account_details[:unique_identifier]
+            post[:payment_method_options][:card][:recipient_details][:account_details][:unique_identifier] = {}
+            post[:payment_method_options][:card][:recipient_details][:account_details][:unique_identifier][:identifier] = unique_identifier[:identifier] if unique_identifier[:identifier]
+          end
+        end
+      end
+
+      def add_aft_sender_details(post, options)
+        return unless options[:sender_details]&.is_a?(Hash)
+
+        sender_details = options[:sender_details]
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:sender_details] = {}
+        post[:payment_method_options][:card][:sender_details][:first_name] = sender_details[:first_name] if sender_details[:first_name]
+        post[:payment_method_options][:card][:sender_details][:last_name] = sender_details[:last_name] if sender_details[:last_name]
+        post[:payment_method_options][:card][:sender_details][:email] = sender_details[:email] if sender_details[:email]
+        post[:payment_method_options][:card][:sender_details][:occupation] = sender_details[:occupation] if sender_details[:occupation]
+        post[:payment_method_options][:card][:sender_details][:nationality] = sender_details[:nationality] if sender_details[:nationality]
+        post[:payment_method_options][:card][:sender_details][:birth_country] = sender_details[:birth_country] if sender_details[:birth_country]
+
+        if sender_details[:address].is_a?(Hash)
+          address = sender_details[:address]
+          post[:payment_method_options][:card][:sender_details][:address] = {}
+          post[:payment_method_options][:card][:sender_details][:address][:country] = address[:country] if address[:country]
+          post[:payment_method_options][:card][:sender_details][:address][:line1] = address[:line1] if address[:line1]
+          post[:payment_method_options][:card][:sender_details][:address][:line2] = address[:line2] if address[:line2]
+          post[:payment_method_options][:card][:sender_details][:address][:postal_code] = address[:postal_code] if address[:postal_code]
+          post[:payment_method_options][:card][:sender_details][:address][:state] = address[:state] if address[:state]
+          post[:payment_method_options][:card][:sender_details][:address][:city] = address[:city] if address[:city]
+        end
+
+        if sender_details[:dob].is_a?(Hash)
+          dob = sender_details[:dob]
+          post[:payment_method_options][:card][:sender_details][:dob] = {}
+          post[:payment_method_options][:card][:sender_details][:dob][:day] = dob[:day] if dob[:day]
+          post[:payment_method_options][:card][:sender_details][:dob][:month] = dob[:month] if dob[:month]
+          post[:payment_method_options][:card][:sender_details][:dob][:year] = dob[:year] if dob[:year]
+        end
+      end
+
       def add_return_url(post, options)
         return unless options[:confirm]
 
@@ -390,14 +547,6 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method_token(post, payment_method, options, responses = [])
         case payment_method
-        when StripePaymentToken
-          post[:payment_method_data] = {
-            type: 'card',
-            card: {
-              token: payment_method.payment_data['id'] || payment_method.payment_data
-            }
-          }
-          post[:payment_method] = payment_method.payment_data['id'] || payment_method.payment_data
         when String
           extract_token_from_string_and_maybe_add_customer_id(post, payment_method)
         when ActiveMerchant::Billing::CreditCard
@@ -413,7 +562,7 @@ module ActiveMerchant #:nodoc:
         return unless adding_network_token_card_data?(payment_method)
 
         post_data[:card] ||= {}
-        post_data[:card][:last4] = options[:last_4]
+        post_data[:card][:last4] = options[:last_4] || payment_method.number[-4..]
         post_data[:card][:network_token] = {}
         post_data[:card][:network_token][:number] = payment_method.number
         post_data[:card][:network_token][:exp_month] = payment_method.month
@@ -423,14 +572,23 @@ module ActiveMerchant #:nodoc:
         post_data
       end
 
-      def add_network_token_cryptogram_and_eci(post, payment_method)
-        return unless adding_network_token_card_data?(payment_method)
+      def add_network_token_info(post, payment_method, options)
+        # wallet_type is only passed for non-tokenized GooglePay which acts as a CreditCard
+        if options[:wallet_type]
+          post[:metadata] ||= {}
+          post[:metadata][:input_method] = 'GooglePay'
+        end
+
+        return unless payment_method.is_a?(NetworkTokenizationCreditCard) && options.dig(:stored_credential, :initiator) != 'merchant'
+        return if digital_wallet_payment_method?(payment_method) && options[:new_ap_gp_route] != true
 
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:network_token] ||= {}
-        post[:payment_method_options][:card][:network_token][:cryptogram] = payment_method.payment_cryptogram if payment_method.payment_cryptogram
-        post[:payment_method_options][:card][:network_token][:electronic_commerce_indicator] = payment_method.eci if payment_method.eci
+        post[:payment_method_options][:card][:network_token].merge!({
+          cryptogram: payment_method.respond_to?(:payment_cryptogram) ? payment_method.payment_cryptogram : options[:cryptogram],
+          electronic_commerce_indicator: format_eci(payment_method, options)
+        }.compact)
       end
 
       def add_digital_wallet(post, payment_method, options)
@@ -443,24 +601,11 @@ module ActiveMerchant #:nodoc:
             network_token: {
               number: payment_method.number,
               exp_month: payment_method.month,
-              exp_year: payment_method.year
+              exp_year: payment_method.year,
+              tokenization_method: DIGITAL_WALLETS[payment_method.source]
             }
           }
         }
-
-        add_cryptogram_and_eci(post, payment_method, options) unless options[:wallet_type]
-        source = payment_method.respond_to?(:source) ? payment_method.source : options[:wallet_type]
-        post[:payment_method_data][:card][:network_token][:tokenization_method] = DIGITAL_WALLETS[source]
-      end
-
-      def add_cryptogram_and_eci(post, payment_method, options)
-        post[:payment_method_options] ||= {}
-        post[:payment_method_options][:card] ||= {}
-        post[:payment_method_options][:card][:network_token] ||= {}
-        post[:payment_method_options][:card][:network_token] = {
-          cryptogram: payment_method.respond_to?(:payment_cryptogram) ? payment_method.payment_cryptogram : options[:cryptogram],
-          electronic_commerce_indicator: format_eci(payment_method, options)
-        }.compact
       end
 
       def format_eci(payment_method, options)
@@ -493,7 +638,7 @@ module ActiveMerchant #:nodoc:
             number: payment.number,
             exp_month: payment.month,
             exp_year: payment.year,
-            tokenization_method: tokenization_method,
+            tokenization_method:,
             eci: payment.eci,
             cryptogram: payment.payment_cryptogram
           }
@@ -519,6 +664,8 @@ module ActiveMerchant #:nodoc:
       def create_payment_method_and_extract_token(post, payment_method, options, responses)
         payment_method_response = create_payment_method(payment_method, options)
         return payment_method_response if payment_method_response.failure?
+
+        add_card_3d_secure_usage_supported(payment_method_response)
 
         responses << payment_method_response
         add_payment_method_token(post, payment_method_response.params['id'], options)
@@ -583,7 +730,7 @@ module ActiveMerchant #:nodoc:
 
         card_options = post[:payment_method_options][:card]
         card_options[:stored_credential_transaction_type] = stored_credential_type
-        card_options[:mit_exemption].delete(:network_transaction_id) if stored_credential_type == 'setup_on_session'
+        card_options[:mit_exemption].delete(:network_transaction_id) if %w(setup_on_session stored_on_session).include?(stored_credential_type)
       end
 
       def initial_transaction_stored_credential(post, stored_credential)
@@ -653,7 +800,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_three_d_secure(post, options = {})
-        return unless options[:request_three_d_secure] && %w(any automatic).include?(options[:request_three_d_secure])
+        return unless options[:request_three_d_secure] && %w(any automatic challenge).include?(options[:request_three_d_secure])
 
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
@@ -680,7 +827,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(post, payment_method, options = {})
-        return if payment_method.nil? || payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(String)
+        return if payment_method.nil? || payment_method.is_a?(String)
 
         post[:payment_method_data] ||= {}
         if billing = options[:billing_address] || options[:address]
@@ -689,7 +836,7 @@ module ActiveMerchant #:nodoc:
 
         unless post[:payment_method_data][:billing_details]
           name = [payment_method.first_name, payment_method.last_name].compact.join(' ')
-          post[:payment_method_data][:billing_details] = { name: name }
+          post[:payment_method_data][:billing_details] = { name: }
         end
       end
 
@@ -724,6 +871,13 @@ module ActiveMerchant #:nodoc:
         post[:billing_details][:name] = name
       end
 
+      # This surfaces the three_d_secure_usage.supported field and saves it as an instance variable so that we can access it later on in the response
+      def add_card_3d_secure_usage_supported(response)
+        return unless response.params['card'] && response.params['card']['three_d_secure_usage']
+
+        @card_3d_supported = response.params['card']['three_d_secure_usage']['supported']
+      end
+
       def format_idempotency_key(options, suffix)
         return options unless options[:idempotency_key]
 
@@ -731,9 +885,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response, options)
-        if response['status'] == 'requires_action' && !options[:execute_threed]
-          response['error'] = {}
-          response['error']['message'] = 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.'
+        if options[:request_type] != :inquire && response['status'] == 'requires_action' && !options[:execute_threed]
+          response['error'] = { 'message' => 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.' }
+          return false
+        end
+
+        if options[:request_type] == :inquire && (error = response['last_setup_error'] || response['last_payment_error'])
+          response['error'] = error
           return false
         end
 
@@ -742,6 +900,10 @@ module ActiveMerchant #:nodoc:
 
       def add_currency(post, options, money)
         post[:currency] = options[:currency] || currency(money)
+      end
+
+      def api_version(options)
+        options[:version] || @options[:version] || fetch_version
       end
     end
   end

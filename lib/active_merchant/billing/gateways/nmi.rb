@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class NmiGateway < Gateway
       include Empty
 
@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
+        add_customer_vault_data(post, options)
         add_payment_method(post, payment_method, options)
         add_stored_credential(post, options)
         add_customer_data(post, options)
@@ -48,6 +49,7 @@ module ActiveMerchant #:nodoc:
       def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
+        add_customer_vault_data(post, options)
         add_payment_method(post, payment_method, options)
         add_stored_credential(post, options)
         add_customer_data(post, options)
@@ -97,6 +99,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(payment_method, options = {})
         post = {}
+        add_customer_vault_data(post, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_vendor_data(post, options)
@@ -155,6 +158,7 @@ module ActiveMerchant #:nodoc:
         post[:orderdescription] = options[:description]
         post[:currency] = options[:currency] || currency(money)
         post[:billing_method] = 'recurring' if options[:recurring]
+        post[:industry] = options[:industry_indicator] if options[:industry_indicator]
         if (dup_seconds = (options[:dup_seconds] || self.class.duplicate_window))
           post[:dup_seconds] = dup_seconds
         end
@@ -192,8 +196,8 @@ module ActiveMerchant #:nodoc:
         if payment_method.source == :apple_pay || payment_method.source == :google_pay
           post[:cavv] = payment_method.payment_cryptogram
           post[:eci] = payment_method.eci
-          post[:decrypted_applepay_data] = 1
-          post[:decrypted_googlepay_data] = 1
+          post[:decrypted_applepay_data] = 1 if payment_method.source == :apple_pay
+          post[:decrypted_googlepay_data] = 1 if payment_method.source == :google_pay
         else
           post[:token_cryptogram] = payment_method.payment_cryptogram
         end
@@ -277,6 +281,11 @@ module ActiveMerchant #:nodoc:
       def add_vendor_data(post, options)
         post[:vendor_id] = options[:vendor_id] if options[:vendor_id]
         post[:processor_id] = options[:processor_id] if options[:processor_id]
+      end
+
+      def add_customer_vault_data(post, options)
+        post[:customer_vault] = options[:customer_vault] if options[:customer_vault]
+        post[:customer_vault_id] = options[:customer_vault_id] if options[:customer_vault_id]
       end
 
       def add_merchant_defined_fields(post, options)

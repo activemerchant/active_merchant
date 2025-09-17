@@ -1,9 +1,11 @@
 require 'active_merchant/billing/gateways/cyber_source/cyber_source_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CyberSourceRestGateway < Gateway
       include ActiveMerchant::Billing::CyberSourceCommon
+
+      version 'v2'
 
       self.test_url = 'https://apitest.cybersource.com'
       self.live_url = 'https://api.cybersource.com'
@@ -12,7 +14,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.currencies_without_fractions = ActiveMerchant::Billing::CyberSourceGateway.currencies_without_fractions
 
-      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb maestro elo union_pay cartes_bancaires mada]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb maestro elo union_pay cartes_bancaires mada patagonia_365 tarjeta_sol]
 
       self.homepage_url = 'http://www.cybersource.com'
       self.display_name = 'Cybersource REST'
@@ -29,7 +31,7 @@ module ActiveMerchant #:nodoc:
         master: '002',
         unionpay: '062',
         visa: '001',
-        carnet: '058'
+        carnet: '002'
       }
 
       WALLET_PAYMENT_SOLUTION = {
@@ -78,7 +80,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         payment, amount = authorization.split('|')
-        post = build_void_request(amount)
+        post = build_void_request(options, amount)
         commit("payments/#{payment}/reversals", post)
       end
 
@@ -148,9 +150,10 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def build_void_request(amount = nil)
+      def build_void_request(options, amount = nil)
         { reversalInformation: { amountDetails: { totalAmount: nil } } }.tap do |post|
           add_reversal_amount(post, amount.to_i) if amount.present?
+          add_merchant_category_code(post, options)
         end.compact
       end
 
@@ -164,6 +167,7 @@ module ActiveMerchant #:nodoc:
           add_address(post, payment, options[:billing_address], options, :billTo)
           add_address(post, payment, options[:shipping_address], options, :shipTo)
           add_business_rules_data(post, payment, options)
+          add_merchant_category_code(post, options)
           add_partner_solution_id(post)
           add_stored_credentials(post, payment, options)
           add_three_ds(post, payment, options)
@@ -177,6 +181,7 @@ module ActiveMerchant #:nodoc:
           add_code(post, options)
           add_mdd_fields(post, options)
           add_amount(post, amount, options)
+          add_merchant_category_code(post, options)
           add_partner_solution_id(post)
         end.compact
       end
@@ -187,6 +192,7 @@ module ActiveMerchant #:nodoc:
           add_credit_card(post, payment)
           add_mdd_fields(post, options)
           add_amount(post, amount, options)
+          add_merchant_category_code(post, options)
           add_address(post, payment, options[:billing_address], options, :billTo)
           add_merchant_description(post, options)
         end.compact
@@ -216,7 +222,7 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(amount)
         post[:orderInformation][:amountDetails] = {
           totalAmount: localized_amount(amount, currency),
-          currency: currency
+          currency:
         }
       end
 
@@ -242,30 +248,47 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_tokenization_card(post, payment, options)
+        if options.dig(:stored_credential, :initiator) == 'merchant'
+          post[:paymentInformation][:tokenizedCard] = {
+            number: payment.number,
+            expirationMonth: payment.month,
+            expirationYear: payment.year,
+            type:  CREDIT_CARD_CODES[card_brand(payment).to_sym],
+            transactionType: payment.source == :network_token ? '3' : '1'
+          }
+        else
+          post[:paymentInformation][:tokenizedCard] = {
+            number: payment.number,
+            expirationMonth: payment.month,
+            expirationYear: payment.year,
+            cryptogram: payment.payment_cryptogram,
+            type:  CREDIT_CARD_CODES[card_brand(payment).to_sym],
+            transactionType: payment.source == :network_token ? '3' : '1'
+          }
+          add_apple_pay_google_pay_cryptogram(post, payment) unless payment.source == :network_token
+        end
+
         post[:processingInformation][:commerceIndicator] = 'internet' unless options[:stored_credential] || card_brand(payment) == 'jcb'
 
-        post[:paymentInformation][:tokenizedCard] = {
-          number: payment.number,
-          expirationMonth: payment.month,
-          expirationYear: payment.year,
-          cryptogram: payment.payment_cryptogram,
-          type:  CREDIT_CARD_CODES[card_brand(payment).to_sym],
-          transactionType: payment.source == :network_token ? '3' : '1'
-        }
+        add_payment_solution(post, payment)
+      end
 
+      def add_payment_solution(post, payment)
         if payment.source == :network_token && NT_PAYMENT_SOLUTION[payment.brand]
           post[:processingInformation][:paymentSolution] = NT_PAYMENT_SOLUTION[payment.brand]
         else
-          # Apple Pay / Google Pay
           post[:processingInformation][:paymentSolution] = WALLET_PAYMENT_SOLUTION[payment.source]
-          if card_brand(payment) == 'master'
-            post[:consumerAuthenticationInformation] = {
-              ucafAuthenticationData: payment.payment_cryptogram,
-              ucafCollectionIndicator: '2'
-            }
-          else
-            post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
-          end
+        end
+      end
+
+      def add_apple_pay_google_pay_cryptogram(post, payment)
+        if card_brand(payment) == 'master'
+          post[:consumerAuthenticationInformation] = {
+            ucafAuthenticationData: payment.payment_cryptogram,
+            ucafCollectionIndicator: '2'
+          }
+        else
+          post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
         end
       end
 
@@ -313,6 +336,13 @@ module ActiveMerchant #:nodoc:
         merchant[:locality] = options[:merchant_descriptor_locality] if options[:merchant_descriptor_locality]
       end
 
+      def add_merchant_category_code(post, options)
+        return unless options[:merchant_category_code]
+
+        post[:merchantInformation] ||= {}
+        post[:merchantInformation][:categoryCode] = options[:merchant_category_code] if options[:merchant_category_code]
+      end
+
       def add_stored_credentials(post, payment, options)
         return unless options[:stored_credential]
 
@@ -358,7 +388,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        "#{test? ? test_url : live_url}/pts/v2/#{action}"
+        "#{test? ? test_url : live_url}/pts/#{fetch_version}/#{action}"
       end
 
       def host
@@ -398,32 +428,29 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['status'] if success_from(response)
 
-        response['errorInformation']['message'] || response['message']
+        response.dig('errorInformation', 'message') || response['message']
       end
 
       def authorization_from(response)
         id = response['id']
-        has_amount = response['orderInformation'] && response['orderInformation']['amountDetails'] && response['orderInformation']['amountDetails']['authorizedAmount']
-        amount = response['orderInformation']['amountDetails']['authorizedAmount'].delete('.') if has_amount
+        amount = response.dig('orderInformation', 'amountDetails', 'authorizedAmount')&.delete('.')
 
-        return id if amount.blank?
-
-        [id, amount].join('|')
+        amount.present? ? [id, amount].join('|') : id
       end
 
       def error_code_from(response)
-        response['errorInformation']['reason'] unless success_from(response)
+        response.dig('errorInformation', 'reason') unless success_from(response)
       end
 
       # This implementation follows the Cybersource guide on how create the request signature, see:
       # https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/GenerateHeader/httpSignatureAuthentication.html
       def get_http_signature(resource, digest, http_method = 'post', gmtdatetime = Time.now.httpdate)
         string_to_sign = {
-          host: host,
+          host:,
           date: gmtdatetime,
-          "request-target": "#{http_method} /pts/v2/#{resource}",
-          digest: digest,
-          "v-c-merchant-id": @options[:merchant_id]
+          'request-target': "#{http_method} /pts/#{fetch_version}/#{resource}",
+          digest:,
+          'v-c-merchant-id': @options[:merchant_id]
         }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
 
         {
@@ -465,7 +492,7 @@ module ActiveMerchant #:nodoc:
         return unless mdd_fields.present?
 
         post[:merchantDefinedInformation] = mdd_fields.map do |key, value|
-          { key: key, value: value }
+          { key:, value: }
         end
       end
 

@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class NcrSecurePayGateway < Gateway
       self.test_url = 'https://testbox.monetra.com:8665/'
       self.live_url = 'https://portal.ncrsecurepay.com:8444/'
