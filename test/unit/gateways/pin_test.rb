@@ -240,6 +240,19 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_find
+    post_data = {}
+    headers = {}
+    token = 'ch_Kw_JxmVqMeSOQU19_krRdw'
+    @gateway.stubs(:headers).returns(headers)
+    @gateway.expects(:ssl_request).with(:get, "https://test-api.pinpayments.com/1/charges/#{token}", nil, headers).returns(successful_find_response)
+
+    assert response = @gateway.find(token)
+    assert_success response
+    assert_equal token, response.authorization
+    assert response.test?
+  end
+
   def test_successful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
     @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", { amount: '100' }.to_json, instance_of(Hash)).returns(successful_refund_response)
@@ -726,6 +739,64 @@ class PinTest < Test::Unit::TestCase
     '{
       "error": "not_found",
       "error_description": "The requested resource could not be found."
+    }'
+  end
+
+  def successful_find_response
+    '{
+      "response": {
+        "token": "ch_Kw_JxmVqMeSOQU19_krRdw",
+        "success": true,
+        "amount": 400,
+        "currency": "AUD",
+        "description": "test charge",
+        "email": "roland@pinpayments.com",
+        "ip_address": "203.192.1.172",
+        "created_at": "2023-06-20T03:10:49Z",
+        "status_message": "Success",
+        "error_message": null,
+        "card": {
+          "token": "card_pIQJKMs93GsCc9vLSLevbw",
+          "scheme": "master",
+          "display_number": "XXXX-XXXX-XXXX-0000",
+          "issuing_country": "AU",
+          "expiry_month": 5,
+          "expiry_year": 2026,
+          "name": "Roland Robot",
+          "address_line1": "42 Sevenoaks St",
+          "address_line2": "",
+          "address_city": "Lathlain",
+          "address_postcode": "6454",
+          "address_state": "WA",
+          "address_country": "Australia",
+          "network_type": null,
+          "network_format": null,
+          "customer_token": null,
+          "primary": null
+        },
+        "transfer": [
+          {
+            "state": "paid",
+            "paid_at": "2023-06-27T03:10:49Z",
+            "token": "tfer_j_u-Ef7aO0Y4CuLnGh92rg"
+          }
+        ],
+        "amount_refunded": 0,
+        "total_fees": 42,
+        "merchant_entitlement": 358,
+        "refund_pending": false,
+        "authorisation_token": null,
+        "authorisation_expired": false,
+        "authorisation_voided": false,
+        "captured": true,
+        "captured_at": "2023-06-20T03:10:49Z",
+        "settlement_currency": "AUD",
+        "active_chargebacks": false,
+        "metadata": {
+          "OrderNumber": "123456",
+          "CustomerName": "Roland Robot"
+        }
+      }
     }'
   end
 
