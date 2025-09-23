@@ -281,12 +281,12 @@ class RemotePinTest < Test::Unit::TestCase
     assert_failure already_voided
   end
 
-  def test_successful_find
+  def test_successful_inquire
     authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
 
-    assert find = @gateway.find(authorization.authorization, @options)
-    assert_success find
+    assert inquire = @gateway.inquire(authorization.authorization, @options)
+    assert_success inquire
   end
 
   def test_invalid_login

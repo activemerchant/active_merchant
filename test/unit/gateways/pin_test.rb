@@ -240,14 +240,14 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_find
+  def test_successful_inquire
     post_data = {}
     headers = {}
     token = 'ch_Kw_JxmVqMeSOQU19_krRdw'
     @gateway.stubs(:headers).returns(headers)
-    @gateway.expects(:ssl_request).with(:get, "https://test-api.pinpayments.com/1/charges/#{token}", nil, headers).returns(successful_find_response)
+    @gateway.expects(:ssl_request).with(:get, "https://test-api.pinpayments.com/1/charges/#{token}", nil, headers).returns(successful_inquire_response)
 
-    assert response = @gateway.find(token)
+    assert response = @gateway.inquire(token)
     assert_success response
     assert_equal token, response.authorization
     assert response.test?
@@ -742,7 +742,7 @@ class PinTest < Test::Unit::TestCase
     }'
   end
 
-  def successful_find_response
+  def successful_inquire_response
     '{
       "response": {
         "token": "ch_Kw_JxmVqMeSOQU19_krRdw",
