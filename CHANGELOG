@@ -202,6 +202,7 @@
 * Normalize API Version for Plexo, Pin, Priority [adarsh-spreedly] #5517
 * Stripe PI: Update API version [almalee24] #5360
 * Airwallex: Add optional products array field [yunnydang] #5530
+* Pin Payments: Add inquire method to get details of payment [hudakh] #5537
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

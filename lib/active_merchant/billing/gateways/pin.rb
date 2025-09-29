@@ -84,6 +84,11 @@ module ActiveMerchant # :nodoc:
         commit(:put, "charges/#{CGI.escape(token)}/void", {}, options)
       end
 
+      # Returns the details of a charge
+      def inquire(token, options = {})
+        commit(:get, "charges/#{CGI.escape(token)}", nil, options)
+      end
+
       # Verify a previously authorized charge.
       def verify_3ds(session_token, options = {})
         commit(:get, "/charges/verify?session_token=#{session_token}", nil, options)
