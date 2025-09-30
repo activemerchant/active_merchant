@@ -71,7 +71,11 @@ class RemotePaysafeTest < Test::Unit::TestCase
         computerized_reservation_system: 'DATS',
         ticket: {
           ticket_number: 9876789,
-          is_restricted_ticket: false
+          is_restricted_ticket: false,
+          city_of_ticket_issuing: 'Porto',
+          ticket_delivery_method: 'E_TICKET',
+          ticket_issue_date: '2026-01-26',
+          number_of_pax: 4
         },
         customer_reference_number: 107854099,
         travel_agency: {
@@ -99,6 +103,58 @@ class RemotePaysafeTest < Test::Unit::TestCase
             is_stop_over_allowed: true,
             destination: 'SOF',
             fare_basis: 'VMAY',
+            departure_date: '2026-11-30'
+          }
+        }
+      }
+    }
+
+    @cruiseline_details = {
+      cruiseline_travel_details: {
+        cruise_ship_name: 'Cruise Ship',
+        passenger_name: 'Joe Smith',
+        departure_date: '2026-11-30',
+        return_date: '2026-12-30',
+        country: 'US',
+        state: 'CA',
+        origin_city: 'SXF',
+        room_rate: 1200,
+        travel_package_application: 'CAR_RENTAL_RESERVATION',
+        ticket: {
+          ticket_number: 9876789,
+          is_restricted_ticket: false
+        },
+        passengers: {
+          passenger1: {
+            ticket_number: '12J13J1',
+            first_name: 'Joe',
+            last_name: 'Smith',
+            phone_number: '8888994222',
+            passenger_code: 'INF',
+            gender: 'M'
+          },
+          passenger2: {
+            ticket_number: '12J12J1',
+            first_name: 'Jane',
+            last_name: 'Smith',
+            phone_number: '8888994223',
+            passenger_code: 'INF',
+            gender: 'F'
+          }
+        },
+        trip_legs: {
+          leg1: {
+            service_class: 'F',
+            departure_city: 'DOM',
+            destination_city: 'BDS',
+            fare: 10,
+            departure_date: '2026-11-30'
+          },
+          leg2: {
+            service_class: 'F',
+            departure_city: 'DOM',
+            destination_city: 'BDS',
+            fare: 10,
             departure_date: '2026-11-30'
           }
         }
@@ -148,6 +204,17 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_equal 'COMPLETED', response.message
     assert_equal 'LH', response.params['airlineTravelDetails']['tripLegs']['leg1']['flight']['carrierCode']
     assert_equal 'F', response.params['airlineTravelDetails']['tripLegs']['leg2']['serviceClass']
+  end
+
+  def test_successful_purchase_with_cruiseline_details
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@cruiseline_details))
+
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal 'M', response.params['cruiselineTravelDetails']['passengers']['passenger1']['gender']
+    assert_equal 'INF', response.params['cruiselineTravelDetails']['passengers']['passenger2']['passengerCode']
+    assert_equal 'BDS', response.params['cruiselineTravelDetails']['tripLegs']['leg1']['destinationCity']
+    assert_equal 'F', response.params['cruiselineTravelDetails']['tripLegs']['leg2']['serviceClass']
   end
 
   def test_successful_purchase_with_truncated_address

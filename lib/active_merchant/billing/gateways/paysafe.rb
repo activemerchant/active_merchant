@@ -20,7 +20,6 @@ module ActiveMerchant # :nodoc:
       def purchase(money, payment, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment, options)
-        add_airline_travel_details(post, options)
         add_split_pay_details(post, options)
         post[:settleWithAuth] = true
 
@@ -129,6 +128,8 @@ module ActiveMerchant # :nodoc:
         add_three_d_secure(post, payment, options) if options[:three_d_secure]
         add_stored_credential(post, options) if options[:stored_credential]
         add_funding_transaction(post, options)
+        add_airline_travel_details(post, options)
+        add_cruiseline_travel_details(post, options)
       end
 
       # Customer data can be included in transactions where the payment method is a credit card
@@ -230,30 +231,112 @@ module ActiveMerchant # :nodoc:
         post[:authentication][:directoryServerTransactionId] = three_d_secure[:ds_transaction_id] unless payment.is_a?(String) || !mastercard?(payment)
       end
 
-      def add_airline_travel_details(post, options)
-        return unless options[:airline_travel_details]
+      def add_cruiseline_travel_details(post, options)
+        return unless cruiseline_data = options[:cruiseline_travel_details]
 
-        post[:airlineTravelDetails] = {}
-        post[:airlineTravelDetails][:passengerName] = options[:airline_travel_details][:passenger_name] if options[:airline_travel_details][:passenger_name]
-        post[:airlineTravelDetails][:departureDate] = options[:airline_travel_details][:departure_date] if options[:airline_travel_details][:departure_date]
-        post[:airlineTravelDetails][:origin] = options[:airline_travel_details][:origin] if options[:airline_travel_details][:origin]
-        post[:airlineTravelDetails][:computerizedReservationSystem] = options[:airline_travel_details][:computerized_reservation_system] if options[:airline_travel_details][:computerized_reservation_system]
-        post[:airlineTravelDetails][:customerReferenceNumber] = options[:airline_travel_details][:customer_reference_number] if options[:airline_travel_details][:customer_reference_number]
+        post[:cruiselineTravelDetails] = {}
+        post[:cruiselineTravelDetails][:cruiseShipName] = cruiseline_data[:cruise_ship_name] if cruiseline_data[:cruise_ship_name]
+        post[:cruiselineTravelDetails][:passengerName] = cruiseline_data[:passenger_name] if cruiseline_data[:passenger_name]
+        post[:cruiselineTravelDetails][:departureDate] = cruiseline_data[:departure_date] if cruiseline_data[:departure_date]
+        post[:cruiselineTravelDetails][:returnDate] = cruiseline_data[:return_date] if cruiseline_data[:return_date]
+        post[:cruiselineTravelDetails][:country] = cruiseline_data[:country] if cruiseline_data[:country]
+        post[:cruiselineTravelDetails][:state] = cruiseline_data[:state] if cruiseline_data[:state]
+        post[:cruiselineTravelDetails][:originCity] = cruiseline_data[:origin_city] if cruiseline_data[:origin_city]
+        post[:cruiselineTravelDetails][:roomRate] = cruiseline_data[:room_rate] if cruiseline_data[:room_rate]
+        post[:cruiselineTravelDetails][:travelPackageApplication] = cruiseline_data[:travel_package_application] if cruiseline_data[:travel_package_application]
 
-        add_ticket_details(post, options)
-        add_travel_agency_details(post, options)
-        add_trip_legs(post, options)
+        add_cruiseline_ticket_details(post, options)
+        add_cruiseline_passenger_details(post, options)
+        add_cruisline_trip_leg_details(post, options)
       end
 
-      def add_ticket_details(post, options)
+      def add_cruiseline_ticket_details(post, options)
+        return unless ticket = options[:cruiseline_travel_details][:ticket]
+
+        post[:cruiselineTravelDetails][:ticket] = {}
+        post[:cruiselineTravelDetails][:ticket][:ticketNumber] = ticket[:ticket_number] if ticket[:ticket_number]
+        post[:cruiselineTravelDetails][:ticket][:isRestrictedTicket] = ticket[:is_restricted_ticket].to_s.present?
+      end
+
+      def add_cruiseline_passenger_details(post, options)
+        return unless passengers = options[:cruiseline_travel_details][:passengers]
+
+        passengers_hash = {}
+        passengers.each.with_index(1) do |passenger, i|
+          my_passenger = "passenger#{i}".to_sym
+          details = add_passenger_details(my_passenger, passenger[1])
+
+          passengers_hash[my_passenger] = details
+        end
+        post[:cruiselineTravelDetails][:passengers] = passengers_hash
+      end
+
+      def add_passenger_details(obj, passenger)
+        details = {}
+
+        details[:ticketNumber] = passenger[:ticket_number] if passenger[:ticket_number]
+        details[:firstName] = passenger[:first_name] if passenger[:first_name]
+        details[:lastName] = passenger[:last_name] if passenger[:last_name]
+        details[:phoneNumber] = passenger[:phone_number] if passenger[:phone_number]
+        details[:passengerCode] = passenger[:passenger_code] if passenger[:passenger_code]
+        details[:gender] = passenger[:gender] if passenger[:gender]
+
+        details
+      end
+
+      def add_cruisline_trip_leg_details(post, options)
+        return unless trip_legs = options[:cruiseline_travel_details][:trip_legs]
+
+        trip_legs_hash = {}
+        trip_legs.each.with_index(1) do |leg, i|
+          my_leg = "leg#{i}".to_sym
+          details = add_cruiseline_leg_details(my_leg, leg[1])
+
+          trip_legs_hash[my_leg] = details
+        end
+        post[:cruiselineTravelDetails][:tripLegs] = trip_legs_hash
+      end
+
+      def add_cruiseline_leg_details(obj, leg)
+        details = {}
+
+        details[:serviceClass] = leg[:service_class] if leg[:service_class]
+        details[:departureCity] = leg[:departure_city] if leg[:departure_city]
+        details[:destinationCity] = leg[:destination_city] if leg[:destination_city]
+        details[:fare] = leg[:fare] if leg[:fare]
+        details[:departureDate] = leg[:departure_date] if leg[:departure_date]
+
+        details
+      end
+
+      def add_airline_travel_details(post, options)
+        return unless airline_data = options[:airline_travel_details]
+
+        post[:airlineTravelDetails] = {}
+        post[:airlineTravelDetails][:passengerName] = airline_data[:passenger_name] if airline_data[:passenger_name]
+        post[:airlineTravelDetails][:departureDate] = airline_data[:departure_date] if airline_data[:departure_date]
+        post[:airlineTravelDetails][:origin] = airline_data[:origin] if airline_data[:origin]
+        post[:airlineTravelDetails][:computerizedReservationSystem] = airline_data[:computerized_reservation_system] if airline_data[:computerized_reservation_system]
+        post[:airlineTravelDetails][:customerReferenceNumber] = airline_data[:customer_reference_number] if airline_data[:customer_reference_number]
+
+        add_airline_ticket_details(post, options)
+        add_airline_travel_agency_details(post, options)
+        add_airline_trip_legs(post, options)
+      end
+
+      def add_airline_ticket_details(post, options)
         return unless ticket = options[:airline_travel_details][:ticket]
 
         post[:airlineTravelDetails][:ticket] = {}
         post[:airlineTravelDetails][:ticket][:ticketNumber] = ticket[:ticket_number] if ticket[:ticket_number]
-        post[:airlineTravelDetails][:ticket][:isRestrictedTicket] = ticket[:is_restricted_ticket] if ticket[:is_restricted_ticket]
+        post[:airlineTravelDetails][:ticket][:isRestrictedTicket] = ticket[:is_restricted_ticket].to_s.present?
+        post[:airlineTravelDetails][:ticket][:cityOfTicketIssuing] = ticket[:city_of_ticket_issuing] if ticket[:city_of_ticket_issuing]
+        post[:airlineTravelDetails][:ticket][:ticketDeliveryMethod] = ticket[:ticket_delivery_method] if ticket[:ticket_delivery_method]
+        post[:airlineTravelDetails][:ticket][:ticketIssueDate] = ticket[:ticket_issue_date] if ticket[:ticket_issue_date]
+        post[:airlineTravelDetails][:ticket][:numberOfPax] = ticket[:number_of_pax] if ticket[:number_of_pax]
       end
 
-      def add_travel_agency_details(post, options)
+      def add_airline_travel_agency_details(post, options)
         return unless agency = options[:airline_travel_details][:travel_agency]
 
         post[:airlineTravelDetails][:travelAgency] = {}
@@ -261,24 +344,24 @@ module ActiveMerchant # :nodoc:
         post[:airlineTravelDetails][:travelAgency][:code] = agency[:code] if agency[:code]
       end
 
-      def add_trip_legs(post, options)
+      def add_airline_trip_legs(post, options)
         return unless trip_legs = options[:airline_travel_details][:trip_legs]
 
         trip_legs_hash = {}
         trip_legs.each.with_index(1) do |leg, i|
           my_leg = "leg#{i}".to_sym
-          details = add_leg_details(my_leg, leg[1])
+          details = add_airline_leg_details(my_leg, leg[1])
 
           trip_legs_hash[my_leg] = details
         end
         post[:airlineTravelDetails][:tripLegs] = trip_legs_hash
       end
 
-      def add_leg_details(obj, leg)
+      def add_airline_leg_details(obj, leg)
         details = {}
         add_flight_details(details, obj, leg)
         details[:serviceClass] = leg[:service_class] if leg[:service_class]
-        details[:isStopOverAllowed] = leg[:is_stop_over_allowed] if leg[:is_stop_over_allowed]
+        details[:isStopOverAllowed] = leg[:is_stop_over_allowed].to_s.present?
         details[:destination] = leg[:destination] if leg[:destination]
         details[:fareBasis] = leg[:fare_basis] if leg[:fare_basis]
         details[:departureDate] = leg[:departure_date] if leg[:departure_date]
