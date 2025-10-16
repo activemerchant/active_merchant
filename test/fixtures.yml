@@ -29,6 +29,12 @@ allied_wallet:
   merchant_id: merchant_id
   token: token
 
+# Working credentials, no need to replace
+amazon_payments:
+  merchant_id: 'merchant_id'
+  access_key: 'access_key'
+  secret_key: 'secret_key'
+
 # Working credentials, no need to replace as of Oct 28 2014
 authorize_net:
   login: 7Tt72zseSzH
