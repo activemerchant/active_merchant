@@ -823,8 +823,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     [[:visa, 3000], [:mc, 4100], [:amex, 105500], [:ds, 1000], [:jcb, 2900]].each do |suite|
       amount = suite[1]
       card = credit_card(@cards[suite[0]])
-      assert auth_response = @gateway.authorize(amount, card, @options)
-      assert capt_response = @gateway.capture(amount, auth_response.authorization)
+      assert auth_response = @gateway.authorize(amount, card, @options.merge(:order_id => '2'))
+      assert capt_response = @gateway.capture(amount, auth_response.authorization, :order_id => '2')
       assert_kind_of Response, capt_response
 
       # Makes it easier to fill in cert sheet if you print these to the command line

@@ -1038,7 +1038,7 @@ module ActiveMerchant # :nodoc:
         xml.tag! :Request do
           xml.tag! :MarkForCapture do
             add_xml_credentials(xml)
-            xml.tag! :OrderID, format_order_id(order_id)
+            xml.tag! :OrderID, format_order_id(order_id || parameters[:order_id])
             xml.tag! :Amount, amount(money)
             add_level2_tax(xml, parameters)
             add_bin_merchant_and_terminal(xml, parameters)
