@@ -2,13 +2,12 @@ require 'active_merchant/billing/gateways/braintree/braintree_common'
 require 'active_merchant/billing/gateways/braintree/token_nonce'
 require 'active_support/core_ext/array/extract_options'
 
+gem 'braintree', '>= 4.11.0'
 begin
   require 'braintree'
 rescue LoadError
   raise 'Could not load the braintree gem.  Use `gem install braintree` to install it.'
 end
-
-raise 'Need braintree gem >= 2.0.0.' unless Braintree::Version::Major >= 2 && Braintree::Version::Minor >= 0
 
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
