@@ -253,6 +253,77 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_transaction_search
+    @gateway.expects(:ssl_request).with(:get, 'https://test-api.pinpayments.com/1/charges/search', nil, instance_of(Hash)).returns(successful_transaction_search_response)
+
+    assert response = @gateway.transaction_search
+    assert_success response
+    assert_equal 2, response.params['response'].length
+    assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.params['response'][0]['token']
+    assert response.test?
+  end
+
+  def test_transaction_search_with_query
+    @gateway.expects(:ssl_request).with(:get, 'https://test-api.pinpayments.com/1/charges/search?query=roland%40pinpayments.com', nil, instance_of(Hash)).returns(successful_transaction_search_response)
+
+    assert response = @gateway.transaction_search(query: 'roland@pinpayments.com')
+    assert_success response
+    assert_equal 2, response.params['response'].length
+    assert response.test?
+  end
+
+  def test_transaction_search_with_date_range
+    start_date = '2025-01-01'
+    end_date = '2025-01-31'
+    @gateway.expects(:ssl_request).with(:get, "https://test-api.pinpayments.com/1/charges/search?end_date=#{end_date}&start_date=#{start_date}", nil, instance_of(Hash)).returns(successful_transaction_search_response)
+
+    assert response = @gateway.transaction_search(start_date: start_date, end_date: end_date)
+    assert_success response
+    assert response.test?
+  end
+
+  def test_transaction_search_with_pagination
+    @gateway.expects(:ssl_request).with(:get, 'https://test-api.pinpayments.com/1/charges/search?page=2', nil, instance_of(Hash)).returns(successful_transaction_search_response)
+
+    assert response = @gateway.transaction_search(page: 2)
+    assert_success response
+    assert response.test?
+  end
+
+  def test_transaction_search_with_sort_and_direction
+    @gateway.expects(:ssl_request).with(:get, 'https://test-api.pinpayments.com/1/charges/search?direction=1&sort=created_at', nil, instance_of(Hash)).returns(successful_transaction_search_response)
+
+    assert response = @gateway.transaction_search(sort: 'created_at', direction: 1)
+    assert_success response
+    assert response.test?
+  end
+
+  def test_transaction_search_with_amount_sort
+    @gateway.expects(:ssl_request).with(:get, 'https://test-api.pinpayments.com/1/charges/search?direction=-1&sort=amount', nil, instance_of(Hash)).returns(successful_transaction_search_response)
+
+    assert response = @gateway.transaction_search(sort: 'amount', direction: -1)
+    assert_success response
+    assert response.test?
+  end
+
+  def test_transaction_search_empty_results
+    @gateway.expects(:ssl_request).with(:get, 'https://test-api.pinpayments.com/1/charges/search', nil, instance_of(Hash)).returns(empty_transaction_search_response)
+
+    assert response = @gateway.transaction_search
+    assert_success response
+    assert_equal 0, response.params['response'].length
+    assert response.test?
+  end
+
+  def test_unsuccessful_transaction_search
+    @gateway.expects(:ssl_request).returns(failed_transaction_search_response)
+
+    assert response = @gateway.transaction_search
+    assert_failure response
+    assert_equal 'The requested resource could not be found.', response.message
+    assert response.test?
+  end
+
   def test_successful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
     @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", { amount: '100' }.to_json, instance_of(Hash)).returns(successful_refund_response)
@@ -797,6 +868,96 @@ class PinTest < Test::Unit::TestCase
           "CustomerName": "Roland Robot"
         }
       }
+    }'
+  end
+
+  def successful_transaction_search_response
+    '{
+      "response": [
+        {
+          "token": "ch_Kw_JxmVqMeSOQU19_krRdw",
+          "success": true,
+          "amount": 400,
+          "currency": "AUD",
+          "description": "test charge",
+          "email": "roland@pinpayments.com",
+          "ip_address": "203.192.1.172",
+          "created_at": "2025-01-14T03:00:41Z",
+          "status_message": "Success!",
+          "error_message": null,
+          "card": {
+            "token": "card_0oG1hjachN7g8KsOnWlOcg",
+            "display_number": "XXXX-XXXX-XXXX-0000",
+            "scheme": "master",
+            "address_line1": "42 Sevenoaks St",
+            "address_line2": null,
+            "address_city": "Lathlain",
+            "address_postcode": "6454",
+            "address_state": "WA",
+            "address_country": "AU"
+          },
+          "transfer": [],
+          "amount_refunded": 0,
+          "total_fees": 62,
+          "merchant_entitlement": 338,
+          "refund_pending": false,
+          "captured": true,
+          "captured_at": "2025-01-14T03:00:41Z"
+        },
+        {
+          "token": "ch_ABC123XYZ",
+          "success": true,
+          "amount": 200,
+          "currency": "AUD",
+          "description": "another test charge",
+          "email": "roland@pinpayments.com",
+          "ip_address": "203.192.1.173",
+          "created_at": "2025-01-15T04:00:41Z",
+          "status_message": "Success!",
+          "error_message": null,
+          "card": {
+            "token": "card_ABC123",
+            "display_number": "XXXX-XXXX-XXXX-1111",
+            "scheme": "visa"
+          },
+          "transfer": [],
+          "amount_refunded": 0,
+          "total_fees": 32,
+          "merchant_entitlement": 168,
+          "refund_pending": false,
+          "captured": true,
+          "captured_at": "2025-01-15T04:00:41Z"
+        }
+      ],
+      "pagination": {
+        "current": 1,
+        "previous": null,
+        "next": null,
+        "per_page": 25,
+        "pages": 1,
+        "count": 2
+      }
+    }'
+  end
+
+  def empty_transaction_search_response
+    '{
+      "response": [],
+      "pagination": {
+        "current": 1,
+        "previous": null,
+        "next": null,
+        "per_page": 25,
+        "pages": 0,
+        "count": 0
+      }
+    }'
+  end
+
+  def failed_transaction_search_response
+    '{
+      "error": "not_found",
+      "error_description": "The requested resource could not be found."
     }'
   end
 
