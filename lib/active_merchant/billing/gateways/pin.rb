@@ -89,6 +89,29 @@ module ActiveMerchant # :nodoc:
         commit(:get, "charges/#{CGI.escape(token)}", nil, options)
       end
 
+      # Returns a paginated list of charges matching the search criteria.
+      # ==== Options:
+      # * <tt>:query </tt> -- (Optional) Return only charges whose fields match the query. Fields covered include description, email, metadata, cardholder name, currency, amount (exact), charge token (exact), card token (exact), refund token (exact), and customer token (exact).
+      # * <tt>:start_date </tt> -- (Optional) Return only charges created on or after this date (e.g. 2012/12/25).
+      # * <tt>:end_date </tt> -- (Optional) Return only charges created before this date (e.g. 2013/12/25).
+      # * <tt>:sort</tt> -- (Optional) The field used to sort the charges (created_at or amount). Default value is created_at.
+      # * <tt>:direction </tt> -- (Optional) The direction in which to sort the charges (1 for ascending or -1 for descending). Default value is 1.
+      #
+      def transaction_search(options = {})
+        params = {}
+        params[:query] = options[:query] if options[:query]
+        params[:start_date] = options[:start_date] if options[:start_date]
+        params[:end_date] = options[:end_date] if options[:end_date]
+        params[:sort] = options[:sort] if options[:sort]
+        params[:direction] = options[:direction] if options[:direction]
+        params[:page] = options[:page] if options[:page]
+
+        action = 'charges/search'
+        action += '?' + params.to_query unless params.empty?
+
+        commit(:get, action, nil, options)
+      end
+
       # Verify a previously authorized charge.
       def verify_3ds(session_token, options = {})
         commit(:get, "/charges/verify?session_token=#{session_token}", nil, options)
@@ -257,6 +280,8 @@ module ActiveMerchant # :nodoc:
 
         if body.nil?
           no_content_response
+        elsif body['response'].is_a?(Array)
+          paginated_response(body)
         elsif body['response']
           success_response(body)
         elsif body['error']
@@ -300,6 +325,15 @@ module ActiveMerchant # :nodoc:
         message = 'Invalid JSON response received from Pin Payments. Please contact support@pinpayments.com if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
+      end
+
+      def paginated_response(body)
+        Response.new(
+          true,
+          'Search successful',
+          body,
+          test: test?
+        )
       end
 
       def token(response)
