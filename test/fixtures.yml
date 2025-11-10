@@ -365,6 +365,12 @@ element:
   application_name: "Spreedly"
   application_version: "1"
 
+#Working credentials, no need to replace
+emerchantpay_direct:
+  username: test_username
+  password: test_password
+  token:    test_token
+
 # login: merchant number
 # password: referrer url (for authorize authentication)
 epay:
