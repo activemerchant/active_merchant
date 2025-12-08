@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information visit {Transact Pro Services}[https://www.transactpro.lv/business/]
     #
     # This gateway was formerly associated with www.1stpayments.net

@@ -126,38 +126,7 @@ class MercuryTest < Test::Unit::TestCase
 
   def successful_purchase_response
     <<~RESPONSE
-      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><CreditTransactionResponse xmlns="http://www.mercurypay.com"><CreditTransactionResult><?xml version="1.0"?>
-      <RStream>
-        <CmdResponse>
-          <ResponseOrigin>Processor</ResponseOrigin>
-          <DSIXReturnCode>000000</DSIXReturnCode>
-          <CmdStatus>Approved</CmdStatus>
-          <TextResponse>AP*</TextResponse>
-          <UserTraceData></UserTraceData>
-        </CmdResponse>
-        <TranResponse>
-          <MerchantID>595901</MerchantID>
-          <AcctNo>5499990123456781</AcctNo>
-          <ExpDate>0813</ExpDate>
-          <CardType>M/C</CardType>
-          <TranCode>Sale</TranCode>
-          <AuthCode>000011</AuthCode>
-          <CaptureStatus>Captured</CaptureStatus>
-          <RefNo>0194</RefNo>
-          <InvoiceNo>1</InvoiceNo>
-          <AVSResult>Y</AVSResult>
-          <CVVResult>M</CVVResult>
-          <OperatorID>999</OperatorID>
-          <Memo>LM Integration (Ruby)</Memo>
-          <Amount>
-            <Purchase>1.00</Purchase>
-            <Authorize>1.00</Authorize>
-          </Amount>
-          <AcqRefData>KbMCC0742510421  </AcqRefData>
-          <ProcessData>|17|410100700000</ProcessData>
-        </TranResponse>
-      </RStream>
-      </CreditTransactionResult></CreditTransactionResponse></soap:Body></soap:Envelope>
+      <?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><CreditTransactionResponse xmlns=\"http://www.mercurypay.com\"><CreditTransactionResult><?xml version=\"1.0\"?>\r\n<RStream>\r\n\t<CmdResponse>\r\n\t\t<ResponseOrigin>Processor</ResponseOrigin>\r\n\t\t<DSIXReturnCode>000000</DSIXReturnCode>\r\n\t\t<CmdStatus>Approved</CmdStatus>\r\n\t\t<TextResponse>AP</TextResponse>\r\n\t\t<UserTraceData></UserTraceData>\r\n\t</CmdResponse>\r\n\t<TranResponse>\r\n\t\t<MerchantID>595901</MerchantID>\r\n\t\t<AcctNo>5499990123456781</AcctNo>\r\n\t\t<ExpDate>0813</ExpDate>\r\n\t\t<CardType>M/C</CardType>\r\n\t\t<TranCode>Sale</TranCode>\r\n\t\t<AuthCode>000011</AuthCode>\r\n\t\t<CaptureStatus>Captured</CaptureStatus>\r\n\t\t<RefNo>0194</RefNo>\r\n\t\t<InvoiceNo>1</InvoiceNo>\r\n\t\t<AVSResult>Y</AVSResult>\r\n\t\t<CVVResult>M</CVVResult>\r\n\t\t<OperatorID>999</OperatorID>\r\n\t\t<Memo>LM Integration (Ruby)</Memo>\r\n\t\t<Amount>\r\n\t\t\t<Purchase>1.00</Purchase>\r\n\t\t\t<Authorize>1.00</Authorize>\r\n\t\t</Amount>\r\n\t\t<AcqRefData>KbMCC0742510421  </AcqRefData>\r\n\t\t<ProcessData>|17|410100700000</ProcessData>\r\n\t</TranResponse>\r\n</RStream>\r\n</CreditTransactionResult></CreditTransactionResponse></soap:Body></soap:Envelope>
     RESPONSE
   end
 

@@ -1,8 +1,8 @@
 require 'digest/md5'
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MerchantWarriorGateway < Gateway
       TOKEN_TEST_URL = 'https://base.merchantwarrior.com/token/'
       TOKEN_LIVE_URL = 'https://api.merchantwarrior.com/token/'

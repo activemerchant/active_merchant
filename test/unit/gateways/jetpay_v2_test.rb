@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class JetpayV2Test < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = JetpayV2Gateway.new(login: 'login')
 
@@ -17,6 +19,20 @@ class JetpayV2Test < Test::Unit::TestCase
       ip: '127.0.0.1',
       order_id: '12345'
     }
+  end
+
+  def test_default_api_version
+    # Ensure the default API version is correctly set
+    assert_equal '2.2', @gateway.fetch_version(:default_api), 'Default API version should be 2.2'
+  end
+
+  def test_successful_purchase_uses_versionable
+    # Test with version 2.2
+    stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(api_version: '2.2'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<JetPay Version="2.2">}, data, 'Request should include the correct API version: 2.2'
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_purchase

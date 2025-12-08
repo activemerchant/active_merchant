@@ -1,10 +1,10 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SecurePayAuGateway < Gateway
-      API_VERSION = 'xml-4.2'
-      PERIODIC_API_VERSION = 'spxml-3.0'
+      version 'xml-4.2'
+      version 'spxml-3.0', :periodic_api
 
       class_attribute :test_periodic_url, :live_periodic_url
 
@@ -22,9 +22,6 @@ module ActiveMerchant #:nodoc:
 
       # The name of the gateway
       self.display_name = 'SecurePay'
-
-      class_attribute :request_timeout
-      self.request_timeout = 60
 
       self.money_format = :cents
       self.default_currency = 'AUD'
@@ -59,6 +56,10 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
         super
+      end
+
+      def request_timeout
+        @options[:request_timeout] || 60
       end
 
       def purchase(money, credit_card_or_stored_id, options = {})
@@ -157,7 +158,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'messageID', SecureRandom.hex(15)
             xml.tag! 'messageTimestamp', generate_timestamp
             xml.tag! 'timeoutValue', request_timeout
-            xml.tag! 'apiVersion', API_VERSION
+            xml.tag! 'apiVersion', fetch_version
           end
 
           xml.tag! 'MerchantInfo' do
@@ -181,7 +182,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request), { 'Content-Type' => 'text/xml; charset=utf-8' }))
 
         Response.new(
           success?(response),
@@ -207,6 +208,7 @@ module ActiveMerchant #:nodoc:
         end
         xml.tag! 'amount', amount(money)
         xml.tag! 'periodicType', PERIODIC_TYPES[action] if PERIODIC_TYPES[action]
+        xml.tag! 'transactionReference', options[:order_id] if options[:order_id]
 
         xml.target!
       end
@@ -219,7 +221,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'messageID', SecureRandom.hex(15)
             xml.tag! 'messageTimestamp', generate_timestamp
             xml.tag! 'timeoutValue', request_timeout
-            xml.tag! 'apiVersion', PERIODIC_API_VERSION
+            xml.tag! 'apiVersion', fetch_version(:periodic_api)
           end
 
           xml.tag! 'MerchantInfo' do
@@ -241,7 +243,7 @@ module ActiveMerchant #:nodoc:
 
       def commit_periodic(request)
         my_request = build_periodic_request(request)
-        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request))
+        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request, { 'Content-Type' => 'text/xml; charset=utf-8' }))
 
         Response.new(
           success?(response),

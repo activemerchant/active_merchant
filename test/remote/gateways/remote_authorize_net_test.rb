@@ -519,7 +519,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     new_card = credit_card('4424222222222222')
     customer_profile_id, = store.authorization.split('#')
 
-    assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
+    assert response = @gateway.store(new_card, customer_profile_id:)
     assert_success response
     assert_equal 'Successful', response.message
     assert_equal '1', response.params['message_code']
@@ -533,7 +533,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     new_card = credit_card('141241')
     customer_profile_id, = store.authorization.split('#')
 
-    assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
+    assert response = @gateway.store(new_card, customer_profile_id:)
     assert_failure response
     assert_equal 'The field length is invalid for Card Number', response.message
   end
@@ -585,7 +585,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     new_card = credit_card('4007000000027')
     customer_profile_id, = store.authorization.split('#')
 
-    assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id, email: 'anet@example.com', billing_address: address)
+    assert response = @gateway.store(new_card, customer_profile_id:, email: 'anet@example.com', billing_address: address)
     assert_success response
 
     response = @gateway.purchase(@amount, response.authorization, @options)

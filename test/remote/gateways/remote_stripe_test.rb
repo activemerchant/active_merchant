@@ -10,6 +10,28 @@ class RemoteStripeTest < Test::Unit::TestCase
     @new_credit_card = credit_card('5105105105105100')
     @debit_card = credit_card('4000056655665556')
 
+    @google_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      source: :google_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030'
+    )
+
+    @apple_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      source: :apple_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
     @check = check({
       bank_name: 'STRIPE TEST BANK',
       account_number: '000123456789',
@@ -77,7 +99,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_destination
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(destination: destination)
+    custom_options = @options.merge(destination:)
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -87,9 +109,21 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'wow@example.com', response.params['metadata']['email']
   end
 
+  def test_successful_purchase_with_google_pay_tokenization
+    purchase = @gateway.purchase(@amount, @google_pay, @options)
+    assert_success purchase
+    assert_match('android_pay', purchase.params['source']['tokenization_method'])
+  end
+
+  def test_successful_purchase_with_non_google_pay_tokenization
+    purchase = @gateway.purchase(@amount, @apple_pay, @options)
+    assert_success purchase
+    assert_match('apple_pay', purchase.params['source']['tokenization_method'])
+  end
+
   def test_successful_purchase_with_destination_and_amount
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(destination: destination, destination_amount: @amount - 20)
+    custom_options = @options.merge(destination:, destination_amount: @amount - 20)
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -167,10 +201,10 @@ class RemoteStripeTest < Test::Unit::TestCase
     # simultaneously. They are mutually exclusive.
     options = @options.merge({
       customer: @customer,
-      application_fee_amount: application_fee_amount,
+      application_fee_amount:,
       transfer_destination: destination,
       on_behalf_of: destination,
-      transfer_group: transfer_group
+      transfer_group:
     })
 
     assert response = @gateway.purchase(@amount, @credit_card, options)
@@ -217,7 +251,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase_with_destination_and_amount
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(destination: destination, destination_amount: @amount + 20)
+    custom_options = @options.merge(destination:, destination_amount: @amount + 20)
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_failure response
     assert_match %r{must be less than or equal to the charge amount}, response.message
@@ -271,7 +305,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_authorization_and_capture_with_destination
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(destination: destination)
+    custom_options = @options.merge(destination:)
 
     assert authorization = @gateway.authorize(@amount, @credit_card, custom_options)
     assert_success authorization
@@ -286,7 +320,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_authorization_and_capture_with_destination_and_amount
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(destination: destination, destination_amount: @amount - 20)
+    custom_options = @options.merge(destination:, destination_amount: @amount - 20)
 
     assert authorization = @gateway.authorize(@amount, @credit_card, custom_options)
     assert_success authorization
@@ -334,10 +368,18 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
 
-    assert void = @gateway.void(response.authorization, metadata: { test_metadata: 123 })
+    void_options = {
+      metadata: {
+        test_metadata: 123
+      },
+      order_id: '123445abcde'
+    }
+
+    assert void = @gateway.void(response.authorization, void_options)
     assert void.test?
     assert_success void
     assert_equal '123', void.params['metadata']['test_metadata']
+    assert_equal '123445abcde', void.params['metadata']['order_id']
   end
 
   def test_successful_void_with_reason
@@ -353,7 +395,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_void_with_reverse_transfer
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(destination: destination))
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(destination:))
     assert_success response
 
     @gateway.capture(@amount, response.authorization)
@@ -394,6 +436,27 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'fraudulent', refund.params['reason']
   end
 
+  def test_successful_refund_with_metada_and_order_id
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+
+    refund_options = {
+      metadata: {
+        test_metadata: 123
+      },
+      order_id: '123445abcde'
+    }
+
+    assert refund = @gateway.refund(@amount - 20, response.authorization, refund_options)
+    assert refund.test?
+    refund_id = refund.params['id']
+    assert_equal refund.authorization, refund_id
+    assert_success refund
+    assert_equal '123445abcde', refund.params['metadata']['order_id']
+    assert_equal '123', refund.params['metadata']['test_metadata']
+  end
+
   def test_successful_refund_on_verified_bank_account
     customer_id = @verified_bank_account[:customer_id]
     bank_account_id = @verified_bank_account[:bank_account_id]
@@ -411,7 +474,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_refund_with_reverse_transfer
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(destination: destination))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(destination:))
     assert_success response
 
     assert refund = @gateway.refund(@amount - 20, response.authorization, reverse_transfer: true)
@@ -564,7 +627,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_store_with_existing_account
     account = fixtures(:stripe_destination)[:stripe_user_id]
-    assert response = @gateway.store(@debit_card, account: account)
+    assert response = @gateway.store(@debit_card, account:)
     assert_success response
     # Delete the stored external account to prevent hitting the limit
     @gateway.delete_latest_test_external_account(account)

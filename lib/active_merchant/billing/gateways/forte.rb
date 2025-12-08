@@ -1,12 +1,14 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ForteGateway < Gateway
       include Empty
 
-      self.test_url = 'https://sandbox.forte.net/api/v2'
-      self.live_url = 'https://api.forte.net/v2'
+      version 'v2'
+
+      self.test_url = "https://sandbox.forte.net/api/#{fetch_version}"
+      self.live_url = "https://api.forte.net/#{fetch_version}"
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'

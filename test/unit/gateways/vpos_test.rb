@@ -1,7 +1,7 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class VposGateway
       def one_time_public_key
         OpenSSL::PKey::RSA.new(2048)
@@ -11,6 +11,8 @@ module ActiveMerchant #:nodoc:
 end
 
 class VposTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = VposGateway.new(public_key: 'some_key', private_key: 'some_other_key', encryption_key: OpenSSL::PKey::RSA.new(512))
     @credit_card = credit_card
@@ -30,6 +32,12 @@ class VposTest < Test::Unit::TestCase
 
     assert_equal '701175#233024225526089', response.authorization
     assert response.test?
+  end
+
+  def test_successful_generate_one_time_public_key
+    encryiption_key = @gateway.one_time_public_key
+    assert_instance_of OpenSSL::PKey::RSA, encryiption_key
+    assert_equal 256, encryiption_key.n.num_bytes
   end
 
   def test_failed_purchase
@@ -72,6 +80,14 @@ class VposTest < Test::Unit::TestCase
     response = @gateway.void(nil)
     assert_failure response
     assert_equal 'AlreadyRollbackedError:The payment has already been rollbacked.', response.message
+  end
+
+  def test_successful_inquire
+    stub_comms(@gateway, :ssl_post) do
+      @gateway.inquire('authorization#123')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/123/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_scrub

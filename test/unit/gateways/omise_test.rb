@@ -138,7 +138,7 @@ class OmiseTest < Test::Unit::TestCase
   def test_add_customer_without_card
     result = {}
     customer_id = 'cust_test_4zjzcgm8kpdt4xdhdw2'
-    @gateway.send(:add_customer, result, { customer_id: customer_id })
+    @gateway.send(:add_customer, result, { customer_id: })
     assert_equal 'cust_test_4zjzcgm8kpdt4xdhdw2', result[:customer]
   end
 
@@ -146,7 +146,7 @@ class OmiseTest < Test::Unit::TestCase
     result = {}
     customer_id   = 'cust_test_4zjzcgm8kpdt4xdhdw2'
     result[:card] = 'card_test_4zguktjcxanu3dw171a'
-    @gateway.send(:add_customer, result, { customer_id: customer_id })
+    @gateway.send(:add_customer, result, { customer_id: })
     assert_equal customer_id, result[:customer]
   end
 

@@ -1,8 +1,8 @@
 require 'nokogiri'
 require 'securerandom'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ElementGateway < Gateway
       self.test_url = 'https://certtransaction.elementexpress.com/express.asmx'
       self.live_url = 'https://transaction.elementexpress.com/express.asmx'
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         trans_id, trans_amount = split_authorization(authorization)
-        options.merge!({ trans_id: trans_id, trans_amount: trans_amount, reversal_type: 'Full' })
+        options.merge!({ trans_id:, trans_amount:, reversal_type: 'Full' })
 
         request = build_soap_request do |xml|
           xml.CreditCardReversal(xmlns: 'https://transaction.elementexpress.com') do

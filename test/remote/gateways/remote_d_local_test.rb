@@ -1,5 +1,5 @@
 require 'test_helper'
-
+ActiveMerchant::Billing::DLocalGateway.application_id = 'ActiveMerchant'
 class RemoteDLocalTest < Test::Unit::TestCase
   def setup
     @gateway = DLocalGateway.new(fixtures(:d_local))
@@ -48,6 +48,20 @@ class RemoteDLocalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_country_override
+    options = {
+      billing_address: address(country: 'Mexico'),
+      document: '71575743221',
+      currency: 'BRL',
+      country: 'Brazil'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+    assert_match 'BR', response.params['card']['country']
   end
 
   def test_successful_purchase_with_ip_and_phone
@@ -128,7 +142,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
     purchase_payment_id = response.params['id']
     order_id = response.params['order_id']
 
-    response = @gateway.inquire(nil, { order_id: order_id })
+    response = @gateway.inquire(nil, { order_id: })
     check_payment_id = response.params['payment_id']
     assert_success response
     assert_match purchase_payment_id, check_payment_id
@@ -297,6 +311,16 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'Amount exceeded', response.message
   end
 
+  def test_successful_refund_with_description
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options.merge(notification_url: 'http://example.com', description: 'test'))
+    assert_success refund
+    assert_match 'The refund was paid', refund.message
+    assert_match 'test', refund.params['description']
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -338,7 +362,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{Invalid parameter}, response.message
+    assert_match %r{non valid values}, response.message
   end
 
   def test_transcript_scrubbing
@@ -378,5 +402,15 @@ class RemoteDLocalTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_match 'The payment was authorized', auth.message
+  end
+
+  def test_passes_issuer_identification_number_in_card_object
+    issuer_identification_number = 424242
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    @options[:issuer_identification_number] = issuer_identification_number
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, credit_card, @options)
+    end
+    assert_match %r{bin.*#{issuer_identification_number}}, transcript
   end
 end

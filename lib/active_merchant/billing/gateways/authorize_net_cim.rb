@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # ==== Customer Information Manager (CIM)
     #
     # The Authorize.Net Customer Information Manager (CIM) is an optional additional service that allows you to store sensitive payment information on

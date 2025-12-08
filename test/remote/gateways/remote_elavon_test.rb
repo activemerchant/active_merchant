@@ -210,7 +210,6 @@ class RemoteElavonTest < Test::Unit::TestCase
   def test_stored_credentials_with_pass_in_card
     # Initial CIT authorize
     initial_params = {
-      stored_cred_v2: true,
       stored_credential: {
         initial_transaction: true,
         reason_type: 'recurring',
@@ -228,9 +227,9 @@ class RemoteElavonTest < Test::Unit::TestCase
 
     # Subsequent unscheduled MIT purchase, with additional data
     unscheduled_params = {
-      approval_code: approval_code,
-      par_value: par_value,
-      association_token_data: association_token_data,
+      approval_code:,
+      par_value:,
+      association_token_data:,
       stored_credential: {
         reason_type: 'unscheduled',
         initiator: 'merchant',
@@ -242,7 +241,7 @@ class RemoteElavonTest < Test::Unit::TestCase
 
     # Subsequent recurring MIT purchase
     recurring_params = {
-      approval_code: approval_code,
+      approval_code:,
       stored_credential: {
         reason_type: 'recurring',
         initiator: 'merchant',
@@ -256,7 +255,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     installment_params = {
       installments: '4',
       payment_number: '2',
-      approval_code: approval_code,
+      approval_code:,
       stored_credential: {
         reason_type: 'installment',
         initiator: 'merchant',
@@ -275,7 +274,6 @@ class RemoteElavonTest < Test::Unit::TestCase
 
     # Initial CIT authorize
     initial_params = {
-      stored_cred_v2: true,
       stored_credential: {
         initial_transaction: true,
         reason_type: 'recurring',
@@ -291,8 +289,8 @@ class RemoteElavonTest < Test::Unit::TestCase
 
     # Subsequent unscheduled MIT purchase, with additional data
     unscheduled_params = {
-      par_value: par_value,
-      association_token_data: association_token_data,
+      par_value:,
+      association_token_data:,
       stored_credential: {
         reason_type: 'unscheduled',
         initiator: 'merchant',
@@ -330,7 +328,6 @@ class RemoteElavonTest < Test::Unit::TestCase
   def test_stored_credentials_with_manual_token
     # Initial CIT get token request
     get_token_params = {
-      stored_cred_v2: true,
       add_recurring_token: 'Y',
       stored_credential: {
         initial_transaction: true,
@@ -349,8 +346,8 @@ class RemoteElavonTest < Test::Unit::TestCase
     # Subsequent unscheduled MIT purchase, with additional data
     unscheduled_params = {
       ssl_token: token,
-      par_value: par_value,
-      association_token_data: association_token_data,
+      par_value:,
+      association_token_data:,
       stored_credential: {
         reason_type: 'unscheduled',
         initiator: 'merchant',

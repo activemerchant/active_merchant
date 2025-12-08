@@ -15,7 +15,7 @@ class RemoteOppTest < Test::Unit::TestCase
     @complete_request_options = {
       order_id: "Order #{time}",
       merchant_transaction_id: "active_merchant_test_complete #{time}",
-      address: address,
+      address:,
       description: 'Store Purchase - Books',
       # riskWorkflow: true,
       # testMode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
@@ -46,7 +46,7 @@ class RemoteOppTest < Test::Unit::TestCase
         company_name:  'JJ Ltd.',
         identification_doctype:  'PASSPORT',
         identification_docid:  'FakeID2342431234123',
-        ip:  ip
+        ip:
       }
     }
 

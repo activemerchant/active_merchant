@@ -18,6 +18,20 @@ class HpsTest < Test::Unit::TestCase
     }
   end
 
+  def test_api_version
+    assert_equal '1.0', @gateway.fetch_version
+  end
+
+  def test_api_version_in_xml
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:Ver1.0>/, data)
+    end.respond_with(successful_charge_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_charge_response)
 
@@ -639,21 +653,21 @@ class HpsTest < Test::Unit::TestCase
 
     options = {
       three_d_secure: {
+        version: '2.2.0',
         cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
         eci: '05',
-        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+        ds_transaction_id: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
-      assert_match(/<hps:PaymentDataSource>Visa 3DSecure<\/hps:PaymentDataSource>/, data)
-      assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
-      assert_match(/<hps:PaymentData>#{options[:three_d_secure][:cavv]}<\/hps:PaymentData>/, data)
-      assert_match(/<hps:ECommerceIndicator>5<\/hps:ECommerceIndicator>/, data)
-      assert_match(/<hps:XID>#{options[:three_d_secure][:xid]}<\/hps:XID>/, data)
+      assert_match(/<hps:Secure3D>(.*)<\/hps:Secure3D>/, data)
+      assert_match(/<hps:Version>#{options[:three_d_secure][:version]}<\/hps:Version>/, data)
+      assert_match(/<hps:AuthenticationValue>#{options[:three_d_secure][:cavv]}<\/hps:AuthenticationValue>/, data)
+      assert_match(/<hps:ECI>5<\/hps:ECI>/, data)
+      assert_match(/<hps:DirectoryServerTxnId>#{options[:three_d_secure][:ds_transaction_id]}<\/hps:DirectoryServerTxnId>/, data)
     end.respond_with(successful_charge_response)
 
     assert_success response
@@ -666,21 +680,21 @@ class HpsTest < Test::Unit::TestCase
 
     options = {
       three_d_secure: {
+        version: '2.2.0',
         cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
         eci: '05',
-        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+        ds_transaction_id: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
-      assert_match(/<hps:PaymentDataSource>MasterCard 3DSecure<\/hps:PaymentDataSource>/, data)
-      assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
-      assert_match(/<hps:PaymentData>#{options[:three_d_secure][:cavv]}<\/hps:PaymentData>/, data)
-      assert_match(/<hps:ECommerceIndicator>5<\/hps:ECommerceIndicator>/, data)
-      assert_match(/<hps:XID>#{options[:three_d_secure][:xid]}<\/hps:XID>/, data)
+      assert_match(/<hps:Secure3D>(.*)<\/hps:Secure3D>/, data)
+      assert_match(/<hps:Version>#{options[:three_d_secure][:version]}<\/hps:Version>/, data)
+      assert_match(/<hps:AuthenticationValue>#{options[:three_d_secure][:cavv]}<\/hps:AuthenticationValue>/, data)
+      assert_match(/<hps:ECI>5<\/hps:ECI>/, data)
+      assert_match(/<hps:DirectoryServerTxnId>#{options[:three_d_secure][:ds_transaction_id]}<\/hps:DirectoryServerTxnId>/, data)
     end.respond_with(successful_charge_response)
 
     assert_success response
@@ -695,19 +709,17 @@ class HpsTest < Test::Unit::TestCase
       three_d_secure: {
         cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
         eci: '5',
-        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+        ds_transaction_id: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
-      assert_match(/<hps:PaymentDataSource>Discover 3DSecure<\/hps:PaymentDataSource>/, data)
-      assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
-      assert_match(/<hps:PaymentData>#{options[:three_d_secure][:cavv]}<\/hps:PaymentData>/, data)
-      assert_match(/<hps:ECommerceIndicator>5<\/hps:ECommerceIndicator>/, data)
-      assert_match(/<hps:XID>#{options[:three_d_secure][:xid]}<\/hps:XID>/, data)
+      assert_match(/<hps:Secure3D>(.*)<\/hps:Secure3D>/, data)
+      assert_match(/<hps:AuthenticationValue>#{options[:three_d_secure][:cavv]}<\/hps:AuthenticationValue>/, data)
+      assert_match(/<hps:ECI>5<\/hps:ECI>/, data)
+      assert_match(/<hps:DirectoryServerTxnId>#{options[:three_d_secure][:ds_transaction_id]}<\/hps:DirectoryServerTxnId>/, data)
     end.respond_with(successful_charge_response)
 
     assert_success response
@@ -722,19 +734,17 @@ class HpsTest < Test::Unit::TestCase
       three_d_secure: {
         cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
         eci: '05',
-        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+        ds_transaction_id: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
-      assert_match(/<hps:PaymentDataSource>AMEX 3DSecure<\/hps:PaymentDataSource>/, data)
-      assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
-      assert_match(/<hps:PaymentData>#{options[:three_d_secure][:cavv]}<\/hps:PaymentData>/, data)
-      assert_match(/<hps:ECommerceIndicator>5<\/hps:ECommerceIndicator>/, data)
-      assert_match(/<hps:XID>#{options[:three_d_secure][:xid]}<\/hps:XID>/, data)
+      assert_match(/<hps:Secure3D>(.*)<\/hps:Secure3D>/, data)
+      assert_match(/<hps:AuthenticationValue>#{options[:three_d_secure][:cavv]}<\/hps:AuthenticationValue>/, data)
+      assert_match(/<hps:ECI>5<\/hps:ECI>/, data)
+      assert_match(/<hps:DirectoryServerTxnId>#{options[:three_d_secure][:ds_transaction_id]}<\/hps:DirectoryServerTxnId>/, data)
     end.respond_with(successful_charge_response)
 
     assert_success response

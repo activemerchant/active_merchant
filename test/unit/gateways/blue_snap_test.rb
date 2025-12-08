@@ -463,7 +463,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_refund_with_merchant_id
     merchant_transaction_id = '12678'
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.refund(@amount, '', @options.merge({ merchant_transaction_id: merchant_transaction_id }))
+      @gateway.refund(@amount, '', @options.merge({ merchant_transaction_id: }))
     end.check_request do |_action, endpoint, _data, _headers|
       assert_includes endpoint, "/refund/merchant/#{merchant_transaction_id}"
     end.respond_with(successful_refund_response)
@@ -643,7 +643,7 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def check_amount_registered(amount, currency)
     doc = BlueSnapCurrencyDocMock.new
-    options = @options.merge(currency: currency)
+    options = @options.merge(currency:)
     @gateway.send(:add_amount, doc, amount, options)
 
     doc.received_amount

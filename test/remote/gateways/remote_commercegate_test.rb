@@ -7,7 +7,7 @@ class RemoteCommercegateTest < Test::Unit::TestCase
     @amount = 1000
 
     @options = {
-      address: address
+      address:
     }
 
     @credit_card = credit_card(fixtures(:commercegate)[:card_number])

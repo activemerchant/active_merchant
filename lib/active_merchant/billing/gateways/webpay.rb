@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WebpayGateway < StripeGateway
       self.live_url = 'https://api.webpay.jp/v1/'
 
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def headers(options = {})
+      def headers(method = :post, options = {})
         {
           'Authorization' => 'Basic ' + Base64.encode64(@api_key.to_s + ':').strip,
           'User-Agent' => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",

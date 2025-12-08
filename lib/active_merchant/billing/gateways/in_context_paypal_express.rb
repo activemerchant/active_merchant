@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class InContextPaypalExpressGateway < PaypalExpressGateway
       self.test_redirect_url = 'https://www.sandbox.paypal.com/checkoutnow'
       self.live_redirect_url = 'https://www.paypal.com/checkoutnow'

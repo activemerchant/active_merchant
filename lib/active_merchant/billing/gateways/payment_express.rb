@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # In NZ DPS supports ANZ, Westpac, National Bank, ASB and BNZ.
     # In Australia DPS supports ANZ, NAB, Westpac, CBA, St George and Bank of South Australia.
     # The Maybank in Malaysia is supported and the Citibank for Singapore.

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CashnetGateway < Gateway
       include Empty
 
@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url        = 'https://transactcampus.com'
       self.display_name        = 'Cashnet'
       self.money_format        = :dollars
-      self.max_retries         = 0
+      self.max_retries         = 1
 
       # Creates a new CashnetGateway
       #

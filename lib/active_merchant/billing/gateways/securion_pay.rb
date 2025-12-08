@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SecurionPayGateway < Gateway
       self.test_url = 'https://api.securionpay.com/'
       self.live_url = 'https://api.securionpay.com/'

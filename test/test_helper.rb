@@ -127,7 +127,7 @@ module ActiveMerchant
 
     private
 
-    def clean_backtrace(&block)
+    def clean_backtrace(&)
       yield
     rescue ASSERTION_CLASS => e
       path = File.expand_path(__FILE__)
@@ -153,7 +153,7 @@ module ActiveMerchant
     def credit_card(number = '4242424242424242', options = {})
       number = number.is_a?(Integer) ? number.to_s : number
       defaults = {
-        number: number,
+        number:,
         month: default_expiration_date.month,
         year: default_expiration_date.year,
         first_name: 'Longbob',
@@ -177,7 +177,7 @@ module ActiveMerchant
 
     def network_tokenization_credit_card(number = '4242424242424242', options = {})
       defaults = {
-        number: number,
+        number:,
         month: default_expiration_date.month,
         year: default_expiration_date.year,
         first_name: 'Longbob',
@@ -333,7 +333,7 @@ Test::Unit::TestCase.class_eval do
       gateway.purchase(amount, credit_card, params)
     end
 
-    File.open('transcript.log', 'w') { |f| f.write(transcript) }
+    File.write('transcript.log', transcript)
     assert false, 'A purchase transcript has been written to transcript.log for you to test scrubbing with.'
   end
 end

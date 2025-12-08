@@ -1,8 +1,8 @@
 require 'active_merchant/billing/gateways/cecabank/cecabank_xml'
 require 'active_merchant/billing/gateways/cecabank/cecabank_json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CecabankGateway < Gateway
       self.abstract_class = true
 

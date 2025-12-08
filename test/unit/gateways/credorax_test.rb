@@ -289,6 +289,17 @@ class CredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_verify_with_0_auth
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options.merge(zero_dollar_auth: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/a9=5/, data)
+      assert_match(/a4=0/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_verify
     response = stub_comms do
       @gateway.verify(@credit_card)
@@ -426,10 +437,10 @@ class CredoraxTest < Test::Unit::TestCase
     xid = 'sample-xid'
     options_with_normalized_3ds = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        xid: xid
+        version:,
+        eci:,
+        cavv:,
+        xid:
       }
     )
 
@@ -494,10 +505,10 @@ class CredoraxTest < Test::Unit::TestCase
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     options_with_normalized_3ds = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id
+        version:,
+        eci:,
+        cavv:,
+        ds_transaction_id:
       }
     )
 
@@ -516,9 +527,9 @@ class CredoraxTest < Test::Unit::TestCase
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     options_with_normalized_3ds = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        ds_transaction_id: ds_transaction_id
+        version:,
+        eci:,
+        ds_transaction_id:
       }
     )
 
@@ -537,6 +548,49 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/a9=8/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_adds_aft_fields
+    aft_options = @options.merge(
+      aft: true,
+      sender_ref_number: 'test',
+      sender_fund_source: '01',
+      sender_country_code: 'USA',
+      sender_street_address: 'sender street',
+      sender_city: 'city',
+      sender_state: 'NY',
+      sender_first_name: 'george',
+      sender_last_name: 'smith',
+      recipient_street_address: 'street',
+      recipient_city: 'chicago',
+      recipient_province_code: '312',
+      recipient_postal_code: '12345',
+      recipient_country_code: 'USA',
+      recipient_first_name: 'logan',
+      recipient_last_name: 'bill'
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, aft_options)
+    end.check_request do |_endpoint, data, _headers|
+      # recipient fields
+      assert_match(/j5=logan/, data)
+      assert_match(/j6=street/, data)
+      assert_match(/j7=chicago/, data)
+      assert_match(/j8=312/, data)
+      assert_match(/j9=USA/, data)
+      assert_match(/j13=bill/, data)
+      assert_match(/j12=12345/, data)
+      # sender fields
+      assert_match(/s10=george/, data)
+      assert_match(/s11=smith/, data)
+      assert_match(/s12=sender\+street/, data)
+      assert_match(/s13=city/, data)
+      assert_match(/s14=NY/, data)
+      assert_match(/s15=USA/, data)
+      assert_match(/s17=test/, data)
+      assert_match(/s18=01/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -574,6 +628,16 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/h3=12345/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_adds_crypto_currency_type
+    options_with_crypto_details = @options.merge({ crypto_currency_type: '7', transaction_type: '6' })
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_crypto_details)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/crypto_currency_type=7/, data)
+      assert_match(/a9=6/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -840,6 +904,20 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
+  def test_authorize_adds_cardholder_name_inquiry
+    @options[:account_name_inquiry] = true
+    @options[:first_name] = 'Art'
+    @options[:last_name] = 'Vandelay'
+    stub_comms do
+      @gateway.authorize(0, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/c22=Art/, data)
+      assert_match(/c23=Vandelay/, data)
+      assert_match(/a9=5/, data)
+      assert_not_match(/c1=/, data)
+    end.respond_with(successful_credit_response)
+  end
+
   def test_purchase_omits_phone_when_nil
     # purchase passes the phone number when provided
     @options[:billing_address][:phone] = '555-444-3333'
@@ -1091,6 +1169,77 @@ class CredoraxTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_purchase_adds_aft_fields_along_with_sender_birth_date
+    aft_options = @options.merge(
+      aft: true,
+      sender_ref_number: 'test',
+      sender_fund_source: '01',
+      sender_country_code: 'USA',
+      sender_street_address: 'sender street',
+      sender_city: 'city',
+      sender_state: 'NY',
+      sender_first_name: 'george',
+      sender_last_name: 'smith',
+      sender_birth_date: '12121212',
+      recipient_street_address: 'street',
+      recipient_city: 'chicago',
+      recipient_province_code: '312',
+      recipient_postal_code: '12345',
+      recipient_country_code: 'USA',
+      recipient_first_name: 'logan',
+      recipient_last_name: 'bill'
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, aft_options)
+    end.check_request do |_endpoint, data, _headers|
+      # recipient fields
+      assert_match(/j5=logan/, data)
+      assert_match(/j6=street/, data)
+      assert_match(/j7=chicago/, data)
+      assert_match(/j8=312/, data)
+      assert_match(/j9=USA/, data)
+      assert_match(/j13=bill/, data)
+      assert_match(/j12=12345/, data)
+      # sender fields
+      assert_match(/s10=george/, data)
+      assert_match(/s11=smith/, data)
+      assert_match(/s12=sender\+street/, data)
+      assert_match(/s13=city/, data)
+      assert_match(/s14=NY/, data)
+      assert_match(/s15=USA/, data)
+      assert_match(/s17=test/, data)
+      assert_match(/s18=01/, data)
+      assert_match(/s19=12121212/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_sort_parameters
+    params = { a4: '100', a1: '  f16e646bf6812eed9e3c962d3309809f ', a5: 'EUR', h9: 'b4dcad79ebff332ca34ffa248ceb9c38', c1: 'Longbob Longsen', b2: '1', b1: '4176661000001015', b5: '281', b4: '26', b3: '12', d1: '127.0.0.1', c5: '123 Your Street', c7: 'Toronto', c10: 'K2C3N7', c8: 'ON', c9: 'CA', c3: 'unspecified@example.com', a9: '9', M: 'SPREE978', O: '1' }
+    sorted_params = @gateway.send(:sort_parameters, params)
+    assert_equal %i[M O a1 a4 a5 a9 b1 b2 b3 b4 b5 c1 c10 c3 c5 c7 c8 c9 d1 h9], sorted_params.keys
+    assert_equal ['SPREE978',
+                  '1',
+                  'f16e646bf6812eed9e3c962d3309809f',
+                  '100',
+                  'EUR',
+                  '9',
+                  '4176661000001015',
+                  '1',
+                  '12',
+                  '26',
+                  '281',
+                  'Longbob Longsen',
+                  'K2C3N7',
+                  'unspecified@example.com',
+                  '123 Your Street',
+                  'Toronto',
+                  'ON',
+                  'CA',
+                  '127.0.0.1',
+                  'b4dcad79ebff332ca34ffa248ceb9c38'], sorted_params.values
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)
@@ -1099,7 +1248,7 @@ class CredoraxTest < Test::Unit::TestCase
       description: 'AM test',
       currency: 'GBP',
       customer: '123',
-      stored_credential: stored_credential(*args, id: id)
+      stored_credential: stored_credential(*args, id:)
     }
   end
 

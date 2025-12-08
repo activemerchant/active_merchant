@@ -1,7 +1,7 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayTraceGateway < Gateway
       def settle
         post = {}
@@ -263,7 +263,8 @@ class RemotePayTraceTest < Test::Unit::TestCase
     assert_success capture
 
     transaction_id = auth.authorization
-    assert_equal "Visa/MasterCard enhanced data was successfully added to Transaction ID #{transaction_id}. 2 line item records were created.", capture.message
+    assert_equal capture.authorization, transaction_id
+    assert_equal 'Your transaction was successfully captured.', capture.message
   end
 
   def test_failed_authorize
@@ -391,7 +392,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
   def test_duplicate_customer_creation
     create = @gateway.store(@discover, @options)
     customer_id = create.params['customer_id']
-    response = @gateway.store(@discover, @options.merge(customer_id: customer_id))
+    response = @gateway.store(@discover, @options.merge(customer_id:))
     assert_failure response
   end
 

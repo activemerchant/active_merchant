@@ -10,7 +10,7 @@ class MercadoPagoTest < Test::Unit::TestCase
       '5067268650517446',
       month: 10,
       year: 2020,
-      first_name: 'John',
+      first_name: 'John :)',
       last_name: 'Smith',
       verification_value: '737'
     )
@@ -27,7 +27,7 @@ class MercadoPagoTest < Test::Unit::TestCase
       month: 10,
       year: 2020,
       first_name: 'John',
-      last_name: 'Smith',
+      last_name: 'Smith😀',
       verification_value: '123'
     )
     @amount = 100
@@ -39,10 +39,18 @@ class MercadoPagoTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase
-    @gateway.expects(:ssl_post).at_most(2).returns(successful_purchase_response)
+  def test_supported_card_types
+    assert_equal MercadoPagoGateway.supported_cardtypes, %i[visa master american_express elo cabal naranja creditel patagonia_365 tarjeta_sol]
+  end
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
+  def test_successful_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal true, request['binary_mode'] if /payments/.match?(endpoint)
+    end.respond_with(successful_purchase_response)
+
     assert_success response
 
     assert_equal '4141491|1.0', response.authorization
@@ -362,6 +370,23 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_includes_idempotency_key_header
+    @options[:idempotency_key] = '12345'
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json' }).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json', 'X-Idempotency-Key' => '12345' }).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_includes_idempotency_key_header_for_refund
+    @options[:idempotency_key] = '12345'
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json', 'X-Idempotency-Key' => '12345' }).returns(successful_refund_response)
+
+    response = @gateway.refund(@amount, 'authorization|1.0', @options)
+    assert_success response
+  end
+
   def test_includes_additional_data
     @options[:additional_info] = { 'foo' => 'bar', 'baz' => 'quux' }
     response = stub_comms do
@@ -419,7 +444,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     net_amount = 9500
 
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(net_amount: net_amount))
+      @gateway.purchase(@amount, @credit_card, @options.merge(net_amount:))
     end.check_request do |endpoint, data, _headers|
       assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
@@ -469,7 +494,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     net_amount = 9500
 
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(net_amount: net_amount))
+      @gateway.authorize(@amount, @credit_card, @options.merge(net_amount:))
     end.check_request do |endpoint, data, _headers|
       assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
     end.respond_with(successful_authorize_response)
@@ -497,6 +522,46 @@ class MercadoPagoTest < Test::Unit::TestCase
         @gateway.purchase(@amount, @credit_card, @options.merge(taxes: [{ amount: 500, type: 'IVA' }]))
       end.respond_with(successful_purchase_response)
     end
+  end
+
+  def test_set_binary_mode_to_nil_when_request_is_3ds
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(execute_threed: true))
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['binary_mode'] if /payments/.match?(endpoint)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_should_not_include_sponsor_id_when_test_mode_is_enabled
+    @options[:sponsor_id] = '1234'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      assert_not_match(%r("sponsor_id":), data) if /payments/.match?(endpoint)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_should_include_sponsor_id_when_test_mode_is_disabled
+    @gateway.stubs(test?: false)
+    @options[:sponsor_id] = '1234'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '1234', request['sponsor_id'] if /payments/.match?(endpoint)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
+  end
+
+  def test_test_and_live_urls
+    assert_equal 'https://api.mercadopago.com/v1', @gateway.test_url
+    assert_equal 'https://api.mercadopago.com/v1', @gateway.live_url
   end
 
   private

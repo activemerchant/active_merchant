@@ -1,12 +1,13 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CenposGateway < Gateway
       self.display_name = 'CenPOS'
       self.homepage_url = 'https://www.cenpos.com/'
 
       self.live_url = 'https://ww3.cenpos.net/6/transact.asmx'
+      self.test_url = 'https://abistaging.cenpos.net/6/transact.asmx'
 
       self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
       self.default_currency = 'USD'
@@ -98,6 +99,7 @@ module ActiveMerchant #:nodoc:
         post[:CurrencyCode] = options[:currency] || currency(money)
         post[:InvoiceDetail] = options[:invoice_detail] if options[:invoice_detail]
         post[:CustomerCode] = options[:customer_code] if options[:customer_code]
+        post[:PurchaseOrderNumber] = options[:purchase_order_number] if options[:purchase_order_number]
         add_order_id(post, options)
         add_tax(post, options)
       end
@@ -145,6 +147,10 @@ module ActiveMerchant #:nodoc:
         post[:Amount] = split_authorization(authorization).last
       end
 
+      def url
+        test? ? test_url : live_url
+      end
+
       def commit(action, post)
         post[:MerchantId] = @options[:merchant_id]
         post[:Password] = @options[:password]
@@ -153,7 +159,7 @@ module ActiveMerchant #:nodoc:
 
         data = build_request(post)
         begin
-          xml = ssl_post(self.live_url, data, headers)
+          xml = ssl_post(url, data, headers)
           raw = parse(xml)
         rescue ActiveMerchant::ResponseError => e
           if e.response.code == '500' && e.response.body.start_with?('<s:Envelope')

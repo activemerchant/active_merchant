@@ -1,7 +1,7 @@
 require 'set'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Convenience methods that can be included into a custom Credit Card object, such as an ActiveRecord based Credit Card object.
     module CreditCardMethods
       CARD_COMPANY_DETECTORS = {
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
         'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
         'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
-        'routex' => ->(num) { num =~ /^(700674|700676|700678)\d{13}$/ },
+        'routex' => ->(num) { num =~ /^(700674|700676|700678)\d{12,13}$/ },
         'mada' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MADA_RANGES) },
         'bp_plus' => ->(num) { num =~ /^(7050\d\s\d{9}\s\d{3}$|705\d\s\d{8}\s\d{5}$)/ },
         'passcard' => ->(num) { num =~ /^628026\d{10}$/ },
@@ -54,7 +54,9 @@ module ActiveMerchant #:nodoc:
         'panal' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), PANAL_RANGES) },
         'verve' => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 6), VERVE_RANGES) },
         'tuya' => ->(num) { num =~ /^588800\d{10}$/ },
-        'uatp' => ->(num) { num =~ /^(1175|1290)\d{11}$/ }
+        'uatp' => ->(num) { num =~ /^(1175|1290)\d{11}$/ },
+        'patagonia_365' => ->(num) { num =~ /^504656\d{10}$/ },
+        'tarjeta_sol' => ->(num) { num =~ /^504639\d{10}$/ }
       }
 
       SODEXO_NO_LUHN = ->(num) { num =~ /^(505864|505865)\d{10}$/ }
@@ -127,7 +129,7 @@ module ActiveMerchant #:nodoc:
             501500 501623
             501879 502113 502120 502121 502301
             503175 503337 503645 503670
-            504310 504338 504363 504533 504587 504620 504639 504656 504738 504781 504910
+            504310 504338 504363 504533 504587 504620 504738 504781 504910
             505616
             507001 507002 507004 507082 507090
             560014 560565 561033
@@ -377,9 +379,9 @@ module ActiveMerchant #:nodoc:
         # - http://www.beachnet.com/~hstiles/cardtype.html
         def valid_number?(number)
           valid_test_mode_card_number?(number) ||
-            valid_card_number_length?(number) &&
+            (valid_card_number_length?(number) &&
               valid_card_number_characters?(brand?(number), number) &&
-              valid_by_algorithm?(brand?(number), number)
+              valid_by_algorithm?(brand?(number), number))
         end
 
         def card_companies
@@ -439,20 +441,20 @@ module ActiveMerchant #:nodoc:
 
         private
 
-        def valid_card_number_length?(number) #:nodoc:
+        def valid_card_number_length?(number) # :nodoc:
           return false if number.nil?
 
           number.length >= 12
         end
 
-        def valid_card_number_characters?(brand, number) #:nodoc:
+        def valid_card_number_characters?(brand, number) # :nodoc:
           return false if number.nil?
           return number =~ /\A[0-9 ]+\Z/ if brand == 'bp_plus'
 
           !number.match(/\D/)
         end
 
-        def valid_test_mode_card_number?(number) #:nodoc:
+        def valid_test_mode_card_number?(number) # :nodoc:
           ActiveMerchant::Billing::Base.test? &&
             %w[1 2 3 success failure error].include?(number)
         end
@@ -461,10 +463,10 @@ module ActiveMerchant #:nodoc:
           SODEXO_NO_LUHN.call(numbers)
         end
 
-        def valid_by_algorithm?(brand, numbers) #:nodoc:
+        def valid_by_algorithm?(brand, numbers) # :nodoc:
           case brand
           when 'naranja'
-            valid_naranja_algo?(numbers)
+            valid_naranja_algo?(numbers) || valid_luhn?(numbers)
           when 'creditel'
             valid_creditel_algo?(numbers)
           when 'alia', 'confiable', 'maestro_no_luhn', 'anda', 'tarjeta-d', 'hipercard'
@@ -508,7 +510,7 @@ module ActiveMerchant #:nodoc:
         # Checks the validity of a card number by use of the Luhn Algorithm.
         # Please see http://en.wikipedia.org/wiki/Luhn_algorithm for details.
         # This implementation is from the luhn_checksum gem, https://github.com/zendesk/luhn_checksum.
-        def valid_luhn?(numbers) #:nodoc:
+        def valid_luhn?(numbers) # :nodoc:
           sum = 0
 
           odd = true
@@ -547,7 +549,7 @@ module ActiveMerchant #:nodoc:
         end
 
         # Checks the validity of a card number by use of specific algorithms
-        def valid_naranja_algo?(numbers) #:nodoc:
+        def valid_naranja_algo?(numbers) # :nodoc:
           num_array = numbers.to_s.chars.map(&:to_i)
           multipliers = [4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
           num_sum = num_array[0..14].zip(multipliers).map { |a, b| a * b }.reduce(:+)
@@ -556,7 +558,7 @@ module ActiveMerchant #:nodoc:
           final_num == num_array[15]
         end
 
-        def valid_creditel_algo?(numbers) #:nodoc:
+        def valid_creditel_algo?(numbers) # :nodoc:
           num_array = numbers.to_s.chars.map(&:to_i)
           multipliers = [5, 4, 3, 2, 1, 9, 8, 7, 6, 5, 4, 3, 2, 1, 9]
           num_sum = num_array[0..14].zip(multipliers).map { |a, b| a * b }.reduce(:+)

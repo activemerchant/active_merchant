@@ -226,7 +226,7 @@ class MundipaggTest < Test::Unit::TestCase
     }
 
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    response = @gateway.authorize(@amount, @credit_card, @options.merge(shipping_address: shipping_address))
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(shipping_address:))
     assert_success response
 
     assert_equal 'ch_gm5wrlGMI2Fb0x6K', response.authorization
@@ -387,6 +387,14 @@ class MundipaggTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
+  end
+
+  def test_url_for
+    assert_equal 'https://api.mundipagg.com/core/v1/charges/', @gateway.send(:url_for, 'sale')
   end
 
   private

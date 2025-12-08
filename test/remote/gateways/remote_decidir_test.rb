@@ -9,6 +9,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
     @credit_card = credit_card('4507990000004905')
     @master_card_credit_card = credit_card('5299910010000015')
     @amex_credit_card = credit_card('373953192351004')
+    @patagonia_365_card = credit_card('5046562602769006')
     @diners_club_credit_card = credit_card('36463664750005')
     @cabal_credit_card = credit_card('5896570000000008')
     @naranja_credit_card = credit_card('5895627823453005')
@@ -33,9 +34,12 @@ class RemoteDecidirTest < Test::Unit::TestCase
     @network_token = network_tokenization_credit_card(
       '4012001037141112',
       brand: 'visa',
-      eci: '05',
-      payment_cryptogram: '000203016912340000000FA08400317500000000',
-      name: 'Tesest payway'
+      eci: '07',
+      payment_cryptogram: '060103078512340000000FA08400317400000000',
+      name: 'Tesest payway',
+      verification_value: '840',
+      month: '12',
+      year: '2027'
     )
 
     @failed_message = ['PEDIR AUTORIZACION | request_authorization_card', 'COMERCIO INVALIDO | invalid_card']
@@ -63,7 +67,15 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert response.authorization
   end
 
-  def test_successful_purchase_with_network_token
+  def test_successful_purchase_with_patagonia_365
+    @patagonia_365_card.brand = 'patagonia_365'
+    response = @gateway_for_purchase.purchase(@amount, @patagonia_365_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_network_token_visa
     options = {
       card_holder_door_number: 1234,
       card_holder_birthday: '200988',
@@ -169,6 +181,15 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert response = @gateway_for_purchase.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'approved', response.message
+  end
+
+  def test_successful_purchase_wallet_id
+    options = @options.merge(wallet_id: 'moto')
+
+    response = @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
   end
 
   def test_successful_purchase_with_customer_object

@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MerchantPartnersGateway < Gateway
       self.display_name = 'Merchant Partners'
       self.homepage_url = 'http://www.merchantpartners.com/'

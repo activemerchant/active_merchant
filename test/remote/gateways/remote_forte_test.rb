@@ -88,7 +88,7 @@ class RemoteForteTest < Test::Unit::TestCase
       order_id: '1',
       ip: '127.0.0.1',
       email: 'joe@example.com',
-      address: address
+      address:
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)

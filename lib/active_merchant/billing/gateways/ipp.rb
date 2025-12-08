@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class IppGateway < Gateway
       self.live_url = 'https://www.ippayments.com.au/interface/api/dts.asmx'
       self.test_url = 'https://demo.ippayments.com.au/interface/api/dts.asmx'

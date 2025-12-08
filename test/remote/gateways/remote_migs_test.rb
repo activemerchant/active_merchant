@@ -52,7 +52,7 @@ class RemoteMigsTest < Test::Unit::TestCase
     }
 
     responses.each_pair do |card_type, response_text|
-      url = @gateway.purchase_offsite_url(@amount, options.merge(card_type: card_type))
+      url = @gateway.purchase_offsite_url(@amount, options.merge(card_type:))
       assert_response_match response_text, url
     end
   end

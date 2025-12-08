@@ -825,6 +825,10 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'idempotency_key', REXML::XPath.first(request, '//n2:DoExpressCheckoutPaymentRequestDetails/n2:MsgSubID').text
   end
 
+  def test_api_version
+    assert_equal '2.0', @gateway.fetch_version
+  end
+
   private
 
   def successful_create_billing_agreement_response

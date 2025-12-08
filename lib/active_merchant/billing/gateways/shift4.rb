@@ -1,8 +1,10 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Shift4Gateway < Gateway
-      self.test_url = 'https://utgapi.shift4test.com/api/rest/v1/'
-      self.live_url = 'https://utg.shift4api.net/api/rest/v1/'
+      version 'v1'
+
+      self.test_url = "https://utgapi.shift4test.com/api/rest/#{fetch_version}/"
+      self.live_url = "https://utg.shift4api.net/api/rest/#{fetch_version}/"
 
       self.supported_countries = %w(US CA CU HT DO PR JM TT GP MQ BS BB LC CW AW VC VI GD AG DM KY KN SX TC MF VG BQ AI BL MS)
       self.default_currency = 'USD'
@@ -170,7 +172,7 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction(post, options)
         post[:transaction] = {}
-        post[:transaction][:invoice] = options[:invoice] || Time.new.to_i.to_s[1..3] + rand.to_s[2..7]
+        post[:transaction][:invoice] = options[:invoice] || (Time.new.to_i.to_s[1..3] + rand.to_s[2..7])
         post[:transaction][:notes] = options[:notes] if options[:notes].present?
         post[:transaction][:vendorReference] = options[:order_id]
 
@@ -269,7 +271,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(action, response)
-        success_from(action, response) ? 'Transaction successful' : (error(response)&.dig('longText') || response['result'].first&.dig('transaction', 'hostResponse', 'reasonDescription') || 'Transaction declined')
+        if success_from(action, response)
+          'Transaction successful'
+        else
+          error(response)&.dig('longText') ||
+            response['result'].first&.dig('transaction', 'hostresponse', 'reasonDescription') ||
+            response['result'].first&.dig('transaction', 'hostResponse', 'reasonDescription') ||
+            'Transaction declined'
+        end
       end
 
       def error_code_from(action, response)
@@ -277,7 +286,9 @@ module ActiveMerchant #:nodoc:
         primary_code = response['result'].first['error'].present?
         return unless code == 'D' || primary_code == true || success_from(action, response)
 
-        if response['result'].first&.dig('transaction', 'hostResponse')
+        if response['result'].first&.dig('transaction', 'hostresponse')
+          response['result'].first&.dig('transaction', 'hostresponse', 'reasonCode')
+        elsif response['result'].first&.dig('transaction', 'hostResponse')
           response['result'].first&.dig('transaction', 'hostResponse', 'reasonCode')
         elsif response['result'].first['error']
           response['result'].first&.dig('error', 'primaryCode')
@@ -314,7 +325,7 @@ module ActiveMerchant #:nodoc:
         headers['AccessToken'] = @access_token
         headers['Invoice'] = options[:invoice] if action != 'capture' && options[:invoice].present?
         headers['InterfaceVersion'] = '1'
-        headers['InterfaceName'] = 'Spreedly'
+        headers['InterfaceName'] = options[:interface_name]
         headers['CompanyName'] = 'Spreedly'
         headers
       end

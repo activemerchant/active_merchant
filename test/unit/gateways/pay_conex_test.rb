@@ -17,6 +17,10 @@ class PayConexTest < Test::Unit::TestCase
     }
   end
 
+  def test_api_version
+    assert_equal '3.8', @gateway.fetch_version
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @credit_card, @options)
@@ -174,6 +178,11 @@ class PayConexTest < Test::Unit::TestCase
   def test_scrub_check
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed_check), post_scrubbed_check
+  end
+
+  def test_url
+    assert_equal 'https://cert.payconex.net/api/qsapi/3.8/', @gateway.test_url
+    assert_equal 'https://secure.payconex.net/api/qsapi/3.8/', @gateway.live_url
   end
 
   private

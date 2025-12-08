@@ -55,7 +55,7 @@ class RemoteDeepstackTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      shipping_address: shipping_address,
+      shipping_address:,
       description: 'Store Purchase'
     }
   end

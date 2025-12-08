@@ -2,8 +2,8 @@ require 'net/http'
 require 'net/https'
 require 'active_merchant/billing/response'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     #
     # == Description
     # The Gateway class is the base class for all ActiveMerchant gateway implementations.
@@ -55,6 +55,7 @@ module ActiveMerchant #:nodoc:
     class Gateway
       include PostsData
       include CreditCardFormatting
+      include Versionable
 
       CREDIT_DEPRECATION_MESSAGE = 'Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead.'
       RECURRING_DEPRECATION_MESSAGE = 'Recurring functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it.'
@@ -313,6 +314,16 @@ module ActiveMerchant #:nodoc:
         last_name  = names.pop
         first_name = names.join(' ')
         [first_name, last_name]
+      end
+
+      def format_name(str = '')
+        return nil unless str.respond_to?(:force_encoding)
+
+        str = str.force_encoding('utf-8').encode
+        emoji_regex = /[\u{1f600}-\u{1f64f}\u{2702}-\u{27b0}\u{1f680}-\u{1f6ff}\u{24C2}-\u{1F251}\u{1f300}-\u{1f5ff}]/
+        emoticon_regex = /[:;=8xX]-?[)(DPpO3]/
+        str = str.gsub(emoji_regex, '').gsub(emoticon_regex, '').strip
+        I18n.transliterate(str).gsub(/[^\w\s]/, '')
       end
 
       def split_address(full_address)

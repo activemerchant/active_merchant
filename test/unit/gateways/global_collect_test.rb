@@ -7,6 +7,8 @@ class GlobalCollectTest < Test::Unit::TestCase
     @gateway = GlobalCollectGateway.new(merchant_id: '1234',
                                         api_key_id: '39u4193urng12',
                                         secret_api_key: '109H/288H*50Y18W4/0G8571F245KA=')
+    @gateway_direct = GlobalCollectGateway.new(fixtures(:global_collect_direct))
+    @gateway_direct.options[:url_override] = 'ogone_direct'
 
     @credit_card = credit_card('4567350000427977')
     @apple_pay_network_token = network_tokenization_credit_card(
@@ -22,7 +24,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     @google_pay_network_token = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :google_pay,
-      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+      payment_data: { 'version' => 'EC_v1', 'data' => 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9' }
     })
 
     @declined_card = credit_card('5424180279791732')
@@ -45,6 +47,32 @@ class GlobalCollectTest < Test::Unit::TestCase
         flow: 'frictionless'
       }
     )
+  end
+
+  def test_url
+    url = @gateway.test? ? @gateway.test_url : @gateway.live_url
+    merchant_id = @gateway.options[:merchant_id]
+    assert_equal "#{url}/v1/#{merchant_id}/payments", @gateway.send(:url, :authorize, nil)
+    assert_equal "#{url}/v1/#{merchant_id}/payments", @gateway.send(:url, :verify, nil)
+    assert_equal "#{url}/v1/#{merchant_id}/payments/0000/approve", @gateway.send(:url, :capture, '0000')
+    assert_equal "#{url}/v1/#{merchant_id}/payments/0000/refund", @gateway.send(:url, :refund, '0000')
+    assert_equal "#{url}/v1/#{merchant_id}/payments/0000/cancel", @gateway.send(:url, :void, '0000')
+    assert_equal "#{url}/v1/#{merchant_id}/payments/0000", @gateway.send(:url, :inquire, '0000')
+  end
+
+  def test_ogone_url
+    url = @gateway_direct.test? ? @gateway_direct.ogone_direct_test : @gateway_direct.ogone_direct_live
+    merchant_id = @gateway_direct.options[:merchant_id]
+    assert_equal "#{url}/v2/#{merchant_id}/payments", @gateway_direct.send(:url, :authorize, nil)
+    assert_equal "#{url}/v2/#{merchant_id}/payments", @gateway_direct.send(:url, :verify, nil)
+    assert_equal "#{url}/v2/#{merchant_id}/payments/0000/capture", @gateway_direct.send(:url, :capture, '0000')
+    assert_equal "#{url}/v2/#{merchant_id}/payments/0000/refund", @gateway_direct.send(:url, :refund, '0000')
+    assert_equal "#{url}/v2/#{merchant_id}/payments/0000/cancel", @gateway_direct.send(:url, :void, '0000')
+    assert_equal "#{url}/v2/#{merchant_id}/payments/0000", @gateway_direct.send(:url, :inquire, '0000')
+  end
+
+  def test_supported_card_types
+    assert_equal GlobalCollectGateway.supported_cardtypes, %i[visa master american_express discover naranja cabal tuya patagonia_365 tarjeta_sol]
   end
 
   def test_successful_authorize_and_capture
@@ -91,14 +119,14 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_purchase_request_with_encrypted_google_pay
     google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :google_pay,
-      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+      payment_data: { 'version' => 'EC_v1', 'data' => 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9' }
     })
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@accepted_amount, google_pay, { use_encrypted_payment_data: true })
     end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
       assert_equal '320', JSON.parse(data)['mobilePaymentMethodSpecificInput']['paymentProductId']
-      assert_equal google_pay.payment_data, JSON.parse(data)['mobilePaymentMethodSpecificInput']['encryptedPaymentData']
+      assert_equal google_pay.payment_data.to_s&.gsub('=>', ':'), JSON.parse(data)['mobilePaymentMethodSpecificInput']['encryptedPaymentData']
     end
   end
 
@@ -131,7 +159,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_includes post.keys.first, 'mobilePaymentMethodSpecificInput'
     assert_equal post['mobilePaymentMethodSpecificInput']['paymentProductId'], '320'
     assert_equal post['mobilePaymentMethodSpecificInput']['authorizationMode'], 'FINAL_AUTHORIZATION'
-    assert_equal post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'], @google_pay_network_token.payment_data
+    assert_equal post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'], @google_pay_network_token.payment_data.to_s&.gsub('=>', ':')
   end
 
   def test_add_payment_for_apple_pay
@@ -494,17 +522,25 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_successful_verify
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_verify_response)
+    assert_equal '000000219600000096240000100001', response.authorization
+
+    assert_success response
+  end
+
+  def test_successful_verify_ogone_direct
+    response = stub_comms(@gateway_direct, :ssl_request) do
+      @gateway_direct.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_equal '000000142800000000920000100001', response.authorization
 
     assert_success response
   end
 
-  def test_failed_verify
-    response = stub_comms(@gateway, :ssl_request) do
-      @gateway.verify(@credit_card, @options)
+  def test_failed_verify_ogone_direct
+    response = stub_comms(@gateway_direct, :ssl_request) do
+      @gateway_direct.verify(@credit_card, @options)
     end.respond_with(failed_authorize_response)
-    assert_equal '000000142800000000640000100001', response.authorization
 
     assert_failure response
   end
@@ -703,6 +739,10 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def successful_authorize_response
     "{\n   \"creationOutput\" : {\n      \"additionalReference\" : \"00000014280000000092\",\n      \"externalReference\" : \"000000142800000000920000100001\"\n   },\n   \"payment\" : {\n      \"id\" : \"000000142800000000920000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 4005,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            },\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0920\"\n            }\n         }\n      },\n      \"status\" : \"PENDING_APPROVAL\",\n      \"statusOutput\" : {\n         \"isCancellable\" : true,\n         \"statusCategory\" : \"PENDING_MERCHANT\",\n         \"statusCode\" : 600,\n         \"statusCodeChangeDateTime\" : \"20191203162910\",\n         \"isAuthorized\" : true,\n         \"isRefundable\" : false\n      }\n   }\n}"
+  end
+
+  def successful_verify_response
+    "{\n   \"creationOutput\" : {\n      \"additionalReference\" : \"00000021960000009624\",\n      \"externalReference\" : \"000000219600000096240000100001\"\n   },\n   \"payment\" : {\n      \"id\" : \"000000219600000096240000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 0,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            },\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"cardholderName\" : \"Longbob Longsen\",\n               \"expiryDate\" : \"0925\"\n            }\n         }\n      },\n      \"status\" : \"ACCOUNT_VERIFIED\",\n      \"statusOutput\" : {\n         \"isCancellable\" : false,\n         \"isRetriable\" : false,\n         \"statusCategory\" : \"ACCOUNT_VERIFIED\",\n         \"statusCode\" : 300,\n         \"statusCodeChangeDateTime\" : \"20241010205138\",\n         \"isAuthorized\" : false,\n         \"isRefundable\" : false\n      }\n   }\n}"
   end
 
   def successful_authorize_with_3ds2_data_response

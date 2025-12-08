@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayJunctionV2Gateway < Gateway
       self.display_name = 'PayJunction'
       self.homepage_url = 'https://www.payjunction.com/'

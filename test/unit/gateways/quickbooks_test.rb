@@ -256,6 +256,26 @@ class QuickBooksTest < Test::Unit::TestCase
     assert_equal 'AuthorizationFailed', response.error_code
   end
 
+  def test_base_path_includes_version
+    assert_includes @oauth_1_gateway.base_path, '/v4/'
+    assert_includes @oauth_2_gateway.base_path, '/v4/'
+  end
+
+  def test_default_version_in_endpoint_url
+    assert_match(%r{/v4/payments/charges\z}, @oauth_1_gateway.endpoint)
+    assert_match(%r{/v4/payments/charges\z}, @oauth_2_gateway.endpoint)
+  end
+
+  def test_request_url_includes_version
+    [@oauth_1_gateway, @oauth_2_gateway].each do |gateway|
+      stub_comms(gateway) do
+        gateway.purchase(@amount, @credit_card, @options)
+      end.check_request do |endpoint, _data, _headers|
+        assert_match(%r{/quickbooks/v4/payments/charges\z}, endpoint)
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
   private
 
   def pre_scrubbed_small_json

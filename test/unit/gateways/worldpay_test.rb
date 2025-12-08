@@ -28,11 +28,6 @@ class WorldpayTest < Test::Unit::TestCase
       source: :network_token,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     )
-    @nt_credit_card_without_eci = network_tokenization_credit_card(
-      '4895370015293175',
-      source: :network_token,
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
     @credit_card_with_two_digits_year = credit_card(
       '4514 1600 0000 0008',
       month: 10,
@@ -179,6 +174,50 @@ class WorldpayTest < Test::Unit::TestCase
         }
       }
     }
+
+    @aft_less_options = {
+      account_funding_transaction: true,
+      aft_type: 'A',
+      aft_payment_purpose: '01',
+      aft_sender_account_type: '02',
+      aft_sender_account_reference: '4111111111111112',
+      aft_sender_full_name: {
+        first: 'First',
+        last: 'Sender'
+      },
+      aft_sender_funding_address: {
+        address1: '123 Sender St',
+        postal_code: '12345',
+        city: 'Senderville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_account_type: '03',
+      aft_recipient_account_reference: '4111111111111111',
+      aft_recipient_full_name: {
+        first: 'First',
+        last: 'Recipient'
+      },
+      aft_recipient_funding_address: {
+        address1: '123 Recipient St',
+        postal_code: '12345',
+        city: 'Recipientville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_funding_data: {
+        telephone_number: '123456789',
+        birth_date: {
+          day_of_month: '01',
+          month: '01',
+          year: '1980'
+        }
+      }
+    }
+  end
+
+  def test_supported_card_types
+    assert_equal WorldpayGateway.supported_cardtypes, %i[visa master american_express discover jcb maestro elo naranja cabal unionpay patagonia_365 tarjeta_sol]
   end
 
   def test_payment_type_for_network_card
@@ -186,9 +225,9 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal payment, :network_token
   end
 
-  def test_payment_type_returns_network_token_if_the_payment_method_responds_to_source_payment_cryptogram_and_eci
-    payment_method = mock
-    payment_method.stubs(source: nil, payment_cryptogram: nil, eci: nil)
+  def test_payment_type_returns_network_token_if_payment_method_is_nt_credit_card_and_not_encrypted
+    payment_method = @nt_credit_card
+    payment_method.stubs(source: nil, payment_cryptogram: nil, eci: nil, payment_data: nil)
     result = @gateway.send(:payment_details, payment_method)
     assert_equal({ payment_type: :network_token }, result)
   end
@@ -219,6 +258,17 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal payment, :credit
   end
 
+  def test_successful_purchase_checking_idempotency_header
+    headers_list = []
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge!({ idempotency_key: 'test123' }))
+    end.check_request do |_endpoint, _data, headers|
+      headers_list << headers
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_not_equal headers_list[0]['Idempotency-Key'], headers_list[1]['Idempotency-Key']
+    assert_success response
+  end
+
   def test_successful_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -243,6 +293,76 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal 'R50704213207145707', response.authorization
   end
 
+  def test_successful_authorize_encrypted_apple_pay
+    apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :apple_pay,
+      payment_data: {
+        version: 'EC_v1',
+        data: 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9',
+        signature: 'signature',
+        header: {
+          ephemeralPublicKey: 'ephemeralPublicKey',
+          publicKeyHash: 'publicKeyHash',
+          transactionId: 'transactionId'
+        }
+      }
+    })
+
+    stub_comms do
+      @gateway.authorize(@amount, apple_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/APPLEPAY-SSL/, data)
+      assert_match(%r(<version>EC_v1</version>), data)
+      assert_match(%r(<transactionId>transactionId</transactionId>), data)
+      assert_match(%r(<data>QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9</data>), data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_authorize_encrypted_google_pay
+    google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :google_pay,
+      payment_data: {
+        version: 'EC_v1',
+        data: 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9',
+        signature: 'signature',
+        header: {
+          ephemeralPublicKey: 'ephemeralPublicKey',
+          publicKeyHash: 'publicKeyHash',
+          transactionId: 'transactionId'
+        }
+      }
+    })
+
+    stub_comms do
+      @gateway.authorize(@amount, google_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/PAYWITHGOOGLE-SSL/, data)
+      assert_match(%r(<protocolVersion>EC_v1</protocolVersion>), data)
+      assert_match(%r(<signature>signature</signature>), data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_encrypted_payment_with_invalid_source
+    apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :android_pay,
+      payment_data: {
+        version: 'EC_v1',
+        data: 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9',
+        signature: 'signature',
+        header: {
+          ephemeralPublicKey: 'ephemeralPublicKey',
+          publicKeyHash: 'publicKeyHash',
+          transactionId: 'transactionId'
+        }
+      }
+    })
+    error = assert_raises(ArgumentError) do
+      @gateway.authorize(@amount, apple_pay, @options)
+    end
+
+    assert_equal 'Invalid encrypted wallet source', error.message
+  end
+
   def test_successful_authorize_by_reference
     response = stub_comms do
       @gateway.authorize(@amount, @options[:order_id].to_s, @options)
@@ -265,7 +385,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_risk_data_in_request
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(risk_data: risk_data))
+      @gateway.authorize(@amount, @credit_card, @options.merge(risk_data:))
     end.check_request do |_endpoint, data, _headers|
       doc = Nokogiri::XML(data)
 
@@ -388,7 +508,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"FIRST\" customerInitiatedReason\=\"RECURRING\"\>/, data)
+      assert_match(/<storedCredentials usage\=\"FIRST\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -417,6 +537,19 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<storedCredentials usage\=\"FIRST\" merchantInitiatedReason\=\"INSTALMENT\"\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_correct_stored_credentials_for_first_unscheduled
+    options = @options.merge(
+      stored_credential_usage: 'FIRST',
+      stored_credential_initiated_reason: 'UNSCHEDULED'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage="FIRST" merchantInitiatedReason="UNSCHEDULED">/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -502,6 +635,19 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_custom_string_fields
+    options = @options.merge(custom_string_fields: { custom_string_field_1: 'testvalue1', custom_string_field_2: 'testvalue2' })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<FraudSightData>\n), data
+      assert_match %r(<customStringFields>\n), data
+      assert_match %r(<customStringField1>testvalue1</customStringField1>), data
+      assert_match %r(<customStringField2>testvalue2</customStringField2>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_sub_merchant_data
     options = @options.merge(@sub_merchant_options)
     response = stub_comms do
@@ -525,11 +671,40 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_network_token_with_stored_credentials
+    response = stub_comms do
+      @gateway.purchase(@amount, @nt_credit_card, @options.merge(stored_credential_usage: 'FIRST',
+                                                                 stored_credential_transaction_id: '123', stored_credential: { initiator: 'merchant' }))
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_success_purchase_with_network_token_with_stored_credentials_with_cit
+    response = stub_comms do
+                 @gateway.purchase(@amount, @nt_credit_card, @options.merge(stored_credential_usage: 'FIRST',
+                                                                            stored_credential_transaction_id: '123', stored_credential: { initiator: 'cardholder' }))
+               end.check_request do |_endpoint, data, _headers|
+      element = Nokogiri::XML(data)
+      scheme_transaction_identifier = element.xpath('//schemeTransactionIdentifier')
+      assert_empty(scheme_transaction_identifier, 'XML should not contain <schemeTransactionIdentifier> element')
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
   def test_successful_authorize_with_network_token_with_eci
     response = stub_comms do
       @gateway.authorize(@amount, @nt_credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match %r(<eciIndicator>05</eciIndicator>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_network_token_with_shopper_ip_address
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(ip: '127.0.0.1', email: 'wow@example.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<session shopperIPAddress=\"127.0.0.1\"\/>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -645,6 +820,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal '924e810350efc21a989e0ac7727ce43b', response.params['cancel_received_order_code']
   end
 
+  def test_successful_refund_with_refund_reference_field
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options.merge(refund_reference: 12233, authorization_validated: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<refund reference=\"12233\">/, data)
+    end.respond_with(successful_refund_response)
+
+    assert_success response
+  end
+
   def test_successful_refund_for_captured_payment
     response = stub_comms do
       @gateway.refund(@amount, @options[:order_id], @options)
@@ -722,6 +907,17 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_fast_fund_credit
+    options = @options.merge({ fast_fund_credit: true, email: 'test@email.com' })
+
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<FF_DISBURSE-SSL>/, data)
+      assert_match(/<shopperEmailAddress>/, data)
+    end.respond_with(successful_visa_credit_response)
+  end
+
   def test_successful_visa_credit
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options)
@@ -746,6 +942,28 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options.merge(@aft_options))
     end.check_request do |_endpoint, data, _headers|
+      assert_match(/<fundingTransfer type="A" category="PULL_FROM_CARD">/, data)
+    end.respond_with(successful_visa_credit_response)
+    assert_success response
+    assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
+  def test_successful_authorize_visa_account_funding_transaction
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(@aft_options))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<fundingTransfer type="A" category="PULL_FROM_CARD">/, data)
+    end.respond_with(successful_visa_credit_response)
+    assert_success response
+    assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
+  def test_successful_authorize_visa_aft_not_include_address2_or_middle_name
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(@aft_less_options))
+    end.check_request do |_endpoint, data, _headers|
+      refute data.include?('middle')
+      refute data.include?('address2')
       assert_match(/<fundingTransfer type="A" category="PULL_FROM_CARD">/, data)
     end.respond_with(successful_visa_credit_response)
     assert_success response
@@ -843,7 +1061,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(address: address))
+      @gateway.authorize(100, @credit_card, @options.merge(address:))
     end.check_request do |_endpoint, data, _headers|
       assert_match %r(<firstName>Jim</firstName>), data
       assert_match %r(<lastName>Smith</lastName>), data
@@ -1210,9 +1428,9 @@ class WorldpayTest < Test::Unit::TestCase
     df_reference_id = '1326vj9jc2'
 
     options = @options.merge(
-      session_id: session_id,
-      df_reference_id: df_reference_id,
-      browser_size: browser_size,
+      session_id:,
+      df_reference_id:,
+      browser_size:,
       execute_threed: true,
       three_ds_version: '2.0.1'
     )
@@ -1257,6 +1475,19 @@ class WorldpayTest < Test::Unit::TestCase
       assert_match %r{<cavv>cavv</cavv>}, data
       assert_match %r{<dsTransactionId>ds_transaction_id</dsTransactionId>}, data
       assert_match %r{<threeDSVersion>2.1.0</threeDSVersion>}, data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_3ds_version_2_request_nt
+    stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(three_d_secure_option(version: '2.1.0', ds_transaction_id: 'ds_transaction_id')))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<paymentService version="1.4" merchantCode="testlogin">}, data
+      assert_match %r{<eci>eci</eci>}, data
+      assert_match %r{<cavv>cavv</cavv>}, data
+      assert_match %r{<dsTransactionId>ds_transaction_id</dsTransactionId>}, data
+      assert_match %r{<threeDSVersion>2.1.0</threeDSVersion>}, data
+      assert_match %r(<EMVCO_TOKEN-SSL type="NETWORKTOKEN">), data
     end.respond_with(successful_authorize_response)
   end
 
@@ -1588,6 +1819,59 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_stored_credentials_for_initial_customer_transaction
+    options = @options.merge!(
+      {
+        stored_credential: {
+          initial_transaction: true,
+          reason_type: 'unscheduled',
+          initiator: 'cardholder'
+        }
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"FIRST\" customerInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_stored_credentials_for_subsequent_customer_transaction
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    })
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\"\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_recurring_apple_pay_with_ntid
+    stored_credential_params = stored_credential(:used, :recurring, :merchant, network_transaction_id: '3812908490218390214124')
+
+    @options.merge({
+      stored_credential: stored_credential_params,
+      stored_credential_transaction_id: '000000000000020005060720116005060',
+      wallet_type: :apple_pay
+    })
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_play_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="APPLEPAY">), data
+      refute_match %r(<cryptogram>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_inquire_with_order_id
     response = stub_comms do
       @gateway.inquire(nil, { order_id: @options[:order_id].to_s })
@@ -1606,6 +1890,78 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal 'R50704213207145707', response.authorization
+  end
+
+  def test_successful_inquire_for_verify
+    verification = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_void_response)
+
+    response = stub_comms do
+      @gateway.inquire(verification.authorization, { original_request: 'verification' })
+    end.respond_with(successful_refund_inquiry_response('CANCELLED'))
+
+    assert_success response
+  end
+
+  def test_successful_inquire_for_purchase
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    response = stub_comms do
+      @gateway.inquire(purchase.authorization, { original_request: 'purchase' })
+    end.respond_with(successful_refund_inquiry_response('SETTLED'))
+
+    assert_success response
+  end
+
+  def test_successful_inquire_for_authorize
+    purchase = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response)
+
+    response = stub_comms do
+      @gateway.inquire(purchase.authorization, { original_request: 'authorization' })
+    end.respond_with(successful_refund_inquiry_response('AUTHORISED'))
+
+    assert_success response
+  end
+
+  def test_failed_inquire_for_verify
+    verification = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_void_response)
+
+    response = stub_comms do
+      @gateway.inquire(verification.authorization, { original_request: 'verification' })
+    end.respond_with(successful_refund_inquiry_response('REFUSED'))
+
+    assert_failure response
+  end
+
+  def test_failed_inquire_for_purchase
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    response = stub_comms do
+      @gateway.inquire(purchase.authorization, { original_request: 'purchase' })
+    end.respond_with(failed_void_response)
+
+    assert_failure response
+  end
+
+  def test_failed_inquire_for_authorize
+    authorize = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response)
+
+    response = stub_comms do
+      @gateway.inquire(authorize.authorization, { original_request: 'authorization' })
+    end.respond_with(successful_refund_inquiry_response('CANCELLED'))
+
+    assert_failure response
   end
 
   private
@@ -1628,9 +1984,9 @@ class WorldpayTest < Test::Unit::TestCase
       three_d_secure: {
         eci: 'eci',
         cavv: 'cavv',
-        xid: xid,
-        ds_transaction_id: ds_transaction_id,
-        version: version
+        xid:,
+        ds_transaction_id:,
+        version:
       }
     }
   end

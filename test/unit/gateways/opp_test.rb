@@ -16,7 +16,7 @@ class OppTest < Test::Unit::TestCase
     @complete_request_options = {
       order_id: "Order #{time}",
       merchant_transaction_id: "active_merchant_test_complete #{time}",
-      address: address,
+      address:,
       description: 'Store Purchase - Books',
       #      risk_workflow: true,
       #      test_mode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
@@ -48,7 +48,7 @@ class OppTest < Test::Unit::TestCase
         company_name:  'No such deal Ltd.',
         identification_doctype:  'PASSPORT',
         identification_docid:  'FakeID2342431234123',
-        ip:  ip
+        ip:
       }
     }
 

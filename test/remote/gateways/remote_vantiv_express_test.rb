@@ -250,7 +250,7 @@ class RemoteVantivExpressTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(3200, auth.authorization)
     assert_success capture
-    assert_equal 'Approved', capture.message
+    assert_equal 'Success', capture.message
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
@@ -269,7 +269,7 @@ class RemoteVantivExpressTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'Approved', capture.message
+    assert_equal 'Success', capture.message
   end
 
   def test_failed_authorize
@@ -371,5 +371,66 @@ class RemoteVantivExpressTest < Test::Unit::TestCase
     assert_scrubbed(@check.account_number, transcript)
     assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:account_token], transcript)
+  end
+
+  def test_successful_purchase_with_level_2_data
+    level_ii_options = {
+      sales_tax_amount: 850,
+      commercial_card_customer_code: 'PO123456',
+      ticket_number: 'INV789'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_ii_options))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_authorize_and_capture_with_level_3_data
+    level_iii_options = {
+      level_3_data: {
+        merchant_vat_registration_number: SecureRandom.hex(3),
+        customer_vat_registration_number: SecureRandom.hex(3),
+        summary_commodity_code: '1234',
+        discount_amount: '12',
+        freight_amount: 500, # $5.00 shipping
+        duty_amount: 0,
+        destination_postal_code: '12345',
+        ship_from_postal_code: '54321',
+        destination_country_code: 'US',
+        unique_vat_invoice_reference_number: SecureRandom.hex(3),
+        order_date: 20250910,
+        vat_amount: '12',
+        vat_rate: '12',
+        alternate_tax_amount: '234',
+        national_tax_amount: 850,
+        line_items: [
+          {
+            commodity_code: '1234567890',
+            product_code: 'WIDGET001',
+            description: 'Widget A',
+            quantity: 2,
+            unit_price: 4000, # $40.00 each
+            unit_measure: '2',
+            total_amount: 8000, # $80.00 total
+            tax_amount: 640, # $6.40 tax
+            tax_rate: '2',
+            discount_amount: '6',
+            alternate_tax_id: '1123',
+            vat_type: '1',
+            discount_code: 'NotSupported',
+            net_gross_code: 'ItemAmountIncludesTaxAmount',
+            extended_item_amount: '8',
+            debit_credit_code: 'ExtendedItemAmountIsDebit',
+            item_discount_rate: '1'
+          }
+        ]
+      }
+    }
+
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, level_iii_options)
+    assert_success capture
+    assert_equal 'Success', capture.message
   end
 end

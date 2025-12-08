@@ -269,7 +269,7 @@ class FirstdataE4Test < Test::Unit::TestCase
       stub_comms do
         credit_card = network_tokenization_credit_card(
           '378282246310005',
-          brand: brand,
+          brand:,
           transaction_id: '123',
           eci: '05',
           payment_cryptogram: 'whatever_the_cryptogram_is'

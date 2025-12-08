@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # ActiveMerchant Implementation for Quantum Gateway XML Requester Service
     # Based on API Doc from 8/6/2009
     #
@@ -220,7 +220,7 @@ module ActiveMerchant #:nodoc:
           message,
           response,
           test: test?,
-          authorization: authorization,
+          authorization:,
           avs_result: { code: response[:AVSResponseCode] },
           cvv_result: response[:CVV2ResponseCode]
         )

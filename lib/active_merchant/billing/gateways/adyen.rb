@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class AdyenGateway < Gateway
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
@@ -10,15 +10,16 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
       self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
-      self.supported_cardtypes = %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay patagonia_365 tarjeta_sol]
 
       self.money_format = :cents
 
       self.homepage_url = 'https://www.adyen.com/'
       self.display_name = 'Adyen'
 
-      PAYMENT_API_VERSION = 'v68'
-      RECURRING_API_VERSION = 'v68'
+      version 'v68', :payment_api
+      version 'v68', :payout_api
+      version 'v68', :recurring_api
 
       STANDARD_ERROR_CODE_MAPPING = {
         '0' => STANDARD_ERROR_CODE[:processing_error],
@@ -63,7 +64,7 @@ module ActiveMerchant #:nodoc:
         add_3ds(post, options)
         add_3ds_authenticated_data(post, options)
         add_splits(post, options)
-        add_recurring_contract(post, options)
+        add_recurring_contract(post, options, payment)
         add_network_transaction_reference(post, options)
         add_application_info(post, options)
         add_level_2_data(post, options)
@@ -71,6 +72,10 @@ module ActiveMerchant #:nodoc:
         add_data_airline(post, options)
         add_data_lodging(post, options)
         add_metadata(post, options)
+        add_recurring_detail_reference(post, options)
+        add_fund_source(post, options)
+        add_fund_destination(post, options)
+        post[:localizedShopperStatement] = options[:localized_shopper_statement] if options[:localized_shopper_statement]
         commit('authorise', post, options)
       end
 
@@ -90,6 +95,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization, options)
         add_splits(post, options)
         add_network_transaction_reference(post, options)
+        add_shopper_statement(post, options)
         commit('refund', post, options)
       end
 
@@ -115,7 +121,7 @@ module ActiveMerchant #:nodoc:
           post[:dateOfBirth] = options[:date_of_birth] if options[:date_of_birth]
           post[:nationality] = options[:nationality] if options[:nationality]
         end
-
+        add_recurring_detail_reference(post, options)
         commit(action, post, options)
       end
 
@@ -132,6 +138,7 @@ module ActiveMerchant #:nodoc:
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
         add_extra_data(post, nil, options)
+        add_recurring_detail_reference(post, options)
         commit('adjustAuthorisation', post, options)
       end
 
@@ -247,8 +254,7 @@ module ActiveMerchant #:nodoc:
 
       def add_extra_data(post, payment, options)
         post[:telephoneNumber] = (options[:billing_address][:phone_number] if options.dig(:billing_address, :phone_number)) || (options[:billing_address][:phone] if options.dig(:billing_address, :phone)) || ''
-        post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
-        post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
+        post[:selectedBrand] = options[:selected_brand] if options[:selected_brand] && !post[:selectedBrand]
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
         post[:captureDelayHours] = options[:capture_delay_hours] if options[:capture_delay_hours]
@@ -274,12 +280,12 @@ module ActiveMerchant #:nodoc:
         post[:additionalData] ||= {}
         post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
         post[:additionalData][:customRoutingFlag] = options[:custom_routing_flag] if options[:custom_routing_flag]
-        post[:additionalData]['paymentdatasource.type'] = NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
         post[:additionalData][:authorisationType] = options[:authorisation_type] if options[:authorisation_type]
         post[:additionalData][:adjustAuthorisationData] = options[:adjust_authorisation_data] if options[:adjust_authorisation_data]
         post[:additionalData][:industryUsage] = options[:industry_usage] if options[:industry_usage]
         post[:additionalData][:RequestedTestAcquirerResponseCode] = options[:requested_test_acquirer_response_code] if options[:requested_test_acquirer_response_code] && test?
         post[:additionalData][:updateShopperStatement] = options[:update_shopper_statement] if options[:update_shopper_statement]
+        post[:additionalData][:manualCapture] = options[:manual_capture] if options[:manual_capture]
       end
 
       def extract_and_transform(mapper, from)
@@ -293,8 +299,8 @@ module ActiveMerchant #:nodoc:
         return unless options[:level_2_data].present?
 
         mapper = {
-          "enhancedSchemeData.totalTaxAmount": 'total_tax_amount',
-          "enhancedSchemeData.customerReference": 'customer_reference'
+          'enhancedSchemeData.totalTaxAmount': 'total_tax_amount',
+          'enhancedSchemeData.customerReference': 'customer_reference'
         }
         post[:additionalData].merge!(extract_and_transform(mapper, options[:level_2_data]))
       end
@@ -302,13 +308,13 @@ module ActiveMerchant #:nodoc:
       def add_level_3_data(post, options)
         return unless options[:level_3_data].present?
 
-        mapper = { "enhancedSchemeData.freightAmount": 'freight_amount',
-          "enhancedSchemeData.destinationStateProvinceCode": 'destination_state_province_code',
-          "enhancedSchemeData.shipFromPostalCode": 'ship_from_postal_code',
-          "enhancedSchemeData.orderDate": 'order_date',
-          "enhancedSchemeData.destinationPostalCode": 'destination_postal_code',
-          "enhancedSchemeData.destinationCountryCode": 'destination_country_code',
-          "enhancedSchemeData.dutyAmount": 'duty_amount' }
+        mapper = { 'enhancedSchemeData.freightAmount': 'freight_amount',
+          'enhancedSchemeData.destinationStateProvinceCode': 'destination_state_province_code',
+          'enhancedSchemeData.shipFromPostalCode': 'ship_from_postal_code',
+          'enhancedSchemeData.orderDate': 'order_date',
+          'enhancedSchemeData.destinationPostalCode': 'destination_postal_code',
+          'enhancedSchemeData.destinationCountryCode': 'destination_country_code',
+          'enhancedSchemeData.dutyAmount': 'duty_amount' }
 
         post[:additionalData].merge!(extract_and_transform(mapper, options[:level_3_data]))
 
@@ -362,6 +368,26 @@ module ActiveMerchant #:nodoc:
           post[:additionalData].merge!(extract_and_transform(leg_data, options[:additional_data_airline][:leg]))
         end
 
+        # temporary duplication with minor modification (:legs array with nested hashes instead of a single :leg hash)
+        # this should preserve backward-compatibility with :leg logic above until it is deprecated/removed
+        if options[:additional_data_airline][:legs].present?
+          options[:additional_data_airline][:legs].each_with_index do |leg, number|
+            leg_data = %w[
+              carrier_code
+              class_of_travel
+              date_of_travel
+              depart_airport
+              depart_tax
+              destination_code
+              fare_base_code
+              flight_number
+              stop_over_code
+            ].each_with_object({}) { |value, hash| hash["airline.leg#{number + 1}.#{value}"] = value }
+
+            post[:additionalData].merge!(extract_and_transform(leg_data, leg))
+          end
+        end
+
         if options[:additional_data_airline][:passenger].present?
           passenger_data = %w[
             date_of_birth
@@ -403,11 +429,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopper_statement(post, options)
-        return unless options[:shopper_statement]
-
-        post[:additionalData] = {
-          shopperStatement: options[:shopper_statement]
-        }
+        post[:additionalData] ||= {}
+        post[:additionalData][:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
+        post[:additionalData][:localizedShopperStatement] = options[:localized_shopper_statement] if options[:localized_shopper_statement]
       end
 
       def add_merchant_data(post, options)
@@ -435,16 +459,17 @@ module ActiveMerchant #:nodoc:
 
         splits = []
         split_data.each do |split|
-          amount = {
-            value: split['amount']['value']
-          }
-          amount[:currency] = split['amount']['currency'] if split['amount']['currency']
+          if split['amount']
+            amount = {}
+            amount[:value] = split['amount']['value'] if split['amount']['value']
+            amount[:currency] = split['amount']['currency'] if split['amount']['currency']
+          end
 
           split_hash = {
-            amount: amount,
             type: split['type'],
             reference: split['reference']
           }
+          split_hash[:amount] = amount unless amount.nil?
           split_hash['account'] = split['account'] if split['account']
           splits.push(split_hash)
         end
@@ -465,9 +490,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopper_interaction(post, payment, options = {})
-        if  (options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'cardholder') ||
-            (payment.respond_to?(:verification_value) && payment.verification_value && options.dig(:stored_credential, :initial_transaction).nil?) ||
-            payment.is_a?(NetworkTokenizationCreditCard)
+        if ecommerce_shopper_interaction?(payment, options)
           shopper_interaction = 'Ecommerce'
         else
           shopper_interaction = 'ContAuth'
@@ -510,9 +533,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(post, options, address)
+        address[:address1] = 'NA' if address[:address1].blank?
+        address[:address2] = 'NA' if address[:address2].blank?
+
         post[:billingAddress] = {}
-        post[:billingAddress][:street] = options[:address_override] == true ? address[:address2] : address[:address1] || 'NA'
-        post[:billingAddress][:houseNumberOrName] = options[:address_override] == true ? address[:address1] : address[:address2] || 'NA'
+        post[:billingAddress][:street] = options[:address_override] == true ? address[:address2] : address[:address1]
+        post[:billingAddress][:houseNumberOrName] = options[:address_override] == true ? address[:address1] : address[:address2]
         post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
         post[:billingAddress][:city] = address[:city] || 'NA'
         post[:billingAddress][:stateOrProvince] = get_state(address)
@@ -532,7 +558,7 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
         amount = {
           value: localized_amount(money, currency),
-          currency: currency
+          currency:
         }
 
         post[:amount] = amount
@@ -542,22 +568,31 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
         amount = {
           value: localized_amount(money, currency),
-          currency: currency
+          currency:
         }
         post[:modificationAmount] = amount
       end
 
       def add_payment(post, payment, options, action = nil)
-        if payment.is_a?(String)
+        case payment
+        when String
           _, _, recurring_detail_reference = payment.split('#')
           post[:selectedRecurringDetailReference] = recurring_detail_reference
           options[:recurring_contract_type] ||= 'RECURRING'
-        elsif payment.is_a?(Check)
+        when Check
           add_bank_account(post, payment, options, action)
         else
-          add_mpi_data_for_network_tokenization_card(post, payment, options) if payment.is_a?(NetworkTokenizationCreditCard)
+          add_network_tokenization_card(post, payment, options) if network_tokenization_payment?(payment, options)
           add_card(post, payment)
         end
+      end
+
+      def network_tokenization_payment?(payment, options)
+        payment.is_a?(NetworkTokenizationCreditCard) || options[:wallet_type] == :google_pay
+      end
+
+      def add_recurring_detail_reference(post, options)
+        post[:selectedRecurringDetailReference] = options[:recurring_detail_reference] if options[:recurring_detail_reference].present?
       end
 
       def add_bank_account(post, bank_account, options, action)
@@ -617,25 +652,44 @@ module ActiveMerchant #:nodoc:
         post[:originalReference] = original_reference
       end
 
-      def add_mpi_data_for_network_tokenization_card(post, payment, options)
-        return if options[:skip_mpi_data] == 'Y'
+      def add_network_tokenization_card(post, payment, options)
+        selected_brand = NETWORK_TOKENIZATION_CARD_SOURCE[options[:wallet_type]&.to_s || payment.source.to_s]
+        if selected_brand
+          post[:selectedBrand] = selected_brand
+          post[:additionalData] = {} unless post[:additionalData]
+          post[:additionalData]['paymentdatasource.type'] = selected_brand
+          post[:additionalData]['paymentdatasource.tokenized'] = options[:wallet_type] ? 'false' : 'true' if selected_brand == 'googlepay'
+        end
 
-        post[:mpiData] = {}
-        post[:mpiData][:authenticationResponse] = 'Y'
-        post[:mpiData][:cavv] = payment.payment_cryptogram
-        post[:mpiData][:directoryResponse] = 'Y'
-        post[:mpiData][:eci] = payment.eci || '07'
+        return if skip_mpi_data?(payment, options)
+
+        post[:mpiData] = {
+          authenticationResponse: 'Y',
+          directoryResponse: 'Y',
+          eci: payment.eci || '07'
+        }
+
+        cryptogram_field = payment.try(:network_token?) ? :tokenAuthenticationVerificationValue : :cavv
+        post[:mpiData][cryptogram_field] = payment.payment_cryptogram
       end
 
-      def add_recurring_contract(post, options = {})
-        return unless options[:recurring_contract_type]
+      def add_recurring_contract(post, options = {}, payment = nil)
+        return unless options[:recurring_contract_type] || payment.try(:network_token?)
 
-        post[:recurring] = {}
-        post[:recurring][:contract] = options[:recurring_contract_type]
+        post[:recurring] ||= {}
+        post[:recurring][:contract] = options[:recurring_contract_type] if options[:recurring_contract_type]
         post[:recurring][:recurringDetailName] = options[:recurring_detail_name] if options[:recurring_detail_name]
         post[:recurring][:recurringExpiry] = options[:recurring_expiry] if options[:recurring_expiry]
         post[:recurring][:recurringFrequency] = options[:recurring_frequency] if options[:recurring_frequency]
         post[:recurring][:tokenService] = options[:token_service] if options[:token_service]
+
+        if payment.try(:network_token?)
+          post[:recurring][:contract] = 'EXTERNAL'
+          post[:recurring][:tokenService] = case payment.brand
+                                            when 'visa' then 'VISATOKENSERVICE'
+                                            else 'MCTOKENSERVICE'
+                                            end
+        end
       end
 
       def add_application_info(post, options)
@@ -736,6 +790,7 @@ module ActiveMerchant #:nodoc:
 
         post[:fundSource] = {}
         post[:fundSource][:additionalData] = fund_source[:additional_data] if fund_source[:additional_data]
+        post[:fundSource][:shopperEmail] = fund_source[:shopper_email] if fund_source[:shopper_email]
 
         if fund_source[:first_name] && fund_source[:last_name]
           post[:fundSource][:shopperName] = {}
@@ -746,6 +801,13 @@ module ActiveMerchant #:nodoc:
         if (address = fund_source[:billing_address])
           add_billing_address(post[:fundSource], options, address)
         end
+      end
+
+      def add_fund_destination(post, options)
+        return unless fund_destination = options[:fund_destination]
+
+        post[:fundDestination] = {}
+        post[:fundDestination][:additionalData] = fund_destination[:additional_data] if fund_destination[:additional_data]
       end
 
       def add_metadata(post, options = {})
@@ -819,11 +881,11 @@ module ActiveMerchant #:nodoc:
       def endpoint(action)
         case action
         when 'disable', 'storeToken'
-          "Recurring/#{RECURRING_API_VERSION}/#{action}"
+          "Recurring/#{fetch_version(:recurring_api)}/#{action}"
         when 'payout'
-          "Payout/#{PAYMENT_API_VERSION}/#{action}"
+          "Payout/#{fetch_version(:payout_api)}/#{action}"
         else
-          "Payment/#{PAYMENT_API_VERSION}/#{action}"
+          "Payment/#{fetch_version(:payment_api)}/#{action}"
         end
       end
 
@@ -889,18 +951,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize_message_from(response, options = {})
-        return raw_authorize_error_message(response) if options[:raw_error_message]
-
         if response['refusalReason'] && response['additionalData'] && (response['additionalData']['merchantAdviceCode'] || response['additionalData']['refusalReasonRaw'])
           "#{response['refusalReason']} | #{response['additionalData']['merchantAdviceCode'] || response['additionalData']['refusalReasonRaw']}"
-        else
-          response['refusalReason'] || response['resultCode'] || response['message'] || response['result']
-        end
-      end
-
-      def raw_authorize_error_message(response)
-        if response['refusalReason'] && response['additionalData'] && response['additionalData']['refusalReasonRaw']
-          "#{response['refusalReason']} | #{response['additionalData']['refusalReasonRaw']}"
         else
           response['refusalReason'] || response['resultCode'] || response['message'] || response['result']
         end
@@ -967,6 +1019,30 @@ module ActiveMerchant #:nodoc:
 
       def card_not_stored?(response)
         response.authorization ? response.authorization.split('#')[2].nil? : true
+      end
+
+      def skip_mpi_data?(payment, options = {})
+        return true if options[:shopper_interaction] == 'ContAuth' && options[:recurring_processing_model] == 'Subscription'
+        return true if options.dig(:stored_credential, :initiator) == 'merchant' && payment.is_a?(NetworkTokenizationCreditCard)
+
+        # Skips adding the NT mpi data if it is explicitly skipped in options, or if it is MIT and not the initial transaction.
+        options[:wallet_type] || (!options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'merchant')
+      end
+
+      def ecommerce_shopper_interaction?(payment, options)
+        return true if payment.is_a?(NetworkTokenizationCreditCard) && options.dig(:stored_credential, :initiator) != 'merchant'
+        return true unless (stored_credential = options[:stored_credential])
+
+        cardholder_shopper_interaction?(stored_credential) ||
+          (payment.respond_to?(:verification_value) && payment.verification_value && stored_credential[:initial_transaction])
+      end
+
+      def cardholder_shopper_interaction?(stored_credential)
+        if stored_credential[:reason_type] == 'unscheduled'
+          stored_credential[:initial_transaction] && stored_credential[:initiator] == 'cardholder'
+        else
+          stored_credential[:initiator] == 'cardholder'
+        end
       end
     end
   end

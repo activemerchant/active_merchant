@@ -470,7 +470,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         initial_transaction: false,
         reason_type: 'recurring',
         initiator: 'merchant',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
 
@@ -515,7 +515,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         initial_transaction: false,
         reason_type: 'installment',
         initiator: 'merchant',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     assert auth = @gateway.authorize(5500, credit_card, used_options)
@@ -559,7 +559,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         initial_transaction: false,
         reason_type: 'unscheduled',
         initiator: 'merchant',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     assert auth = @gateway.authorize(2500, credit_card, used_options)
@@ -603,7 +603,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         initial_transaction: false,
         reason_type: 'unscheduled',
         initiator: 'cardholder',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     assert auth = @gateway.authorize(4000, credit_card, used_options)
@@ -655,7 +655,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         initial_transaction: false,
         reason_type: 'unscheduled',
         initiator: 'cardholder',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     assert auth = @gateway.purchase(4000, credit_card, used_options)

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class UsaEpayTransactionGateway < Gateway
       self.live_url = 'https://www.usaepay.com/gate'
       self.test_url = 'https://sandbox.usaepay.com/gate'
@@ -337,7 +337,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(action, response),
           cvv_result: response[:cvv2_result_code],
           avs_result: { code: response[:avs_result_code] },
-          error_code: error_code
+          error_code:
         )
       end
 

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     module CreditCardFormatting
       def expdate(credit_card)
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
@@ -7,6 +7,13 @@ module ActiveMerchant #:nodoc:
 
       def strftime_yyyymm(credit_card)
         format(credit_card.year, :four_digits) + format(credit_card.month, :two_digits)
+      end
+
+      def strftime_yyyymmdd_last_day(credit_card)
+        year = credit_card.year.to_i
+        month = credit_card.month.to_i
+        last_day = Date.civil(year, month, -1).day
+        format(year, :four_digits) + format(month, :two_digits) + format(last_day, :two_digits)
       end
 
       # This method is used to format numerical information pertaining to credit cards.

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayscoutGateway < Gateway
       self.live_url = self.test_url = 'https://secure.payscout.com/api/transact.php'
 

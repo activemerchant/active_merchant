@@ -39,8 +39,8 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     Builder::XmlMarkup.new
   end
 
-  def wrap_xml(&block)
-    REXML::Document.new(@gateway.send(:build_request_wrapper, 'Action', &block))
+  def wrap_xml(&)
+    REXML::Document.new(@gateway.send(:build_request_wrapper, 'Action', &))
   end
 
   def test_add_payment_details_adds_express_only_payment_details_when_necessary

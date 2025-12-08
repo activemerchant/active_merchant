@@ -1,8 +1,10 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PinGateway < Gateway
-      self.test_url = 'https://test-api.pinpayments.com/1'
-      self.live_url = 'https://api.pinpayments.com/1'
+      version '1'
+
+      self.test_url = "https://test-api.pinpayments.com/#{fetch_version}"
+      self.live_url = "https://api.pinpayments.com/#{fetch_version}"
 
       self.default_currency = 'AUD'
       self.money_format = :cents
@@ -16,18 +18,18 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      # Create a charge using a credit card, card token or customer token
+      # Create a charge using a payment method, card token or customer token
       #
-      # To charge a credit card: purchase([money], [creditcard hash], ...)
+      # To charge a payment method: purchase([money], [payment_method hash], ...)
       # To charge a customer: purchase([money], [token], ...)
-      def purchase(money, creditcard, options = {})
+      def purchase(money, payment_method, options = {})
         post = {}
 
         add_amount(post, money, options)
         add_customer_data(post, options)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
+        add_payment_method(post, payment_method)
+        add_address(post, payment_method, options)
         add_capture(post, options)
         add_metadata(post, options)
         add_3ds(post, options)
@@ -36,18 +38,18 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'charges', post, options)
       end
 
-      # Create a customer and associated credit card. The token that is returned
-      # can be used instead of a credit card parameter in the purchase method
-      def store(creditcard, options = {})
+      # Create a customer and associated payment method. The token that is returned
+      # can be used instead of a payment method parameter in the purchase method
+      def store(payment_method, options = {})
         post = {}
 
-        add_creditcard(post, creditcard)
+        add_payment_method(post, payment_method)
         add_customer_data(post, options)
-        add_address(post, creditcard, options)
+        add_address(post, payment_method, options)
         commit(:post, 'customers', post, options)
       end
 
-      # Unstore a customer and associated credit card.
+      # Unstore a customer and associated payment method.
       def unstore(token)
         customer_token =
           if /cus_/.match?(token)
@@ -63,12 +65,12 @@ module ActiveMerchant #:nodoc:
         commit(:post, "charges/#{CGI.escape(token)}/refunds", { amount: amount(money) }, options)
       end
 
-      # Authorize an amount on a credit card. Once authorized, you can later
+      # Authorize an amount on a payment method. Once authorized, you can later
       # capture this charge using the charge token that is returned.
-      def authorize(money, creditcard, options = {})
+      def authorize(money, payment_method, options = {})
         options[:capture] = false
 
-        purchase(money, creditcard, options)
+        purchase(money, payment_method, options)
       end
 
       # Captures a previously authorized charge. Capturing only part of the original
@@ -82,19 +84,47 @@ module ActiveMerchant #:nodoc:
         commit(:put, "charges/#{CGI.escape(token)}/void", {}, options)
       end
 
+      # Returns the details of a charge
+      def inquire(token, options = {})
+        commit(:get, "charges/#{CGI.escape(token)}", nil, options)
+      end
+
+      # Returns a paginated list of charges matching the search criteria.
+      # ==== Options:
+      # * <tt>:query </tt> -- (Optional) Return only charges whose fields match the query. Fields covered include description, email, metadata, cardholder name, currency, amount (exact), charge token (exact), card token (exact), refund token (exact), and customer token (exact).
+      # * <tt>:start_date </tt> -- (Optional) Return only charges created on or after this date (e.g. 2012/12/25).
+      # * <tt>:end_date </tt> -- (Optional) Return only charges created before this date (e.g. 2013/12/25).
+      # * <tt>:sort</tt> -- (Optional) The field used to sort the charges (created_at or amount). Default value is created_at.
+      # * <tt>:direction </tt> -- (Optional) The direction in which to sort the charges (1 for ascending or -1 for descending). Default value is 1.
+      #
+      def transaction_search(options = {})
+        params = {}
+        params[:query] = options[:query] if options[:query]
+        params[:start_date] = options[:start_date] if options[:start_date]
+        params[:end_date] = options[:end_date] if options[:end_date]
+        params[:sort] = options[:sort] if options[:sort]
+        params[:direction] = options[:direction] if options[:direction]
+        params[:page] = options[:page] if options[:page]
+
+        action = 'charges/search'
+        action += '?' + params.to_query unless params.empty?
+
+        commit(:get, action, nil, options)
+      end
+
       # Verify a previously authorized charge.
       def verify_3ds(session_token, options = {})
         commit(:get, "/charges/verify?session_token=#{session_token}", nil, options)
       end
 
-      # Updates the credit card for the customer.
-      def update(token, creditcard, options = {})
+      # Updates the payment method for the customer.
+      def update(token, payment_method, options = {})
         post = {}
         token = get_customer_token(token)
 
-        add_creditcard(post, creditcard)
+        add_payment_method(post, payment_method)
         add_customer_data(post, options)
-        add_address(post, creditcard, options)
+        add_address(post, payment_method, options)
         commit(:put, "customers/#{CGI.escape(token)}", post, options)
       end
 
@@ -106,7 +136,8 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(/(number\\?":\\?")(\d*)/, '\1[FILTERED]').
-          gsub(/(cvc\\?":\\?")(\d*)/, '\1[FILTERED]')
+          gsub(/(cvc\\?":\\?")(\d*)/, '\1[FILTERED]').
+          gsub(/(cryptogram\\?":\\?")(\w*)/, '\1[FILTERED]')
       end
 
       private
@@ -122,8 +153,8 @@ module ActiveMerchant #:nodoc:
         post[:ip_address] = options[:ip] if options[:ip]
       end
 
-      def add_address(post, creditcard, options)
-        return if creditcard.kind_of?(String)
+      def add_address(post, payment_method, options)
+        return if payment_method.kind_of?(String) || payment_method.kind_of?(NetworkTokenizationCreditCard)
 
         address = (options[:billing_address] || options[:address])
         return unless address
@@ -149,24 +180,49 @@ module ActiveMerchant #:nodoc:
         post[:capture] = capture != false
       end
 
-      def add_creditcard(post, creditcard)
-        if creditcard.respond_to?(:number)
-          post[:card] ||= {}
+      def add_payment_method(post, payment_method)
+        return unless payment_method
 
+        case payment_method
+        when NetworkTokenizationCreditCard
+          get_token = get_single_use_token(payment_method, options)
+          post[:payment_source_token] = get_token.params.dig('response', 'token')
+        when CreditCard
+          post[:card] ||= {}
           post[:card].merge!(
-            number: creditcard.number,
-            expiry_month: creditcard.month,
-            expiry_year: creditcard.year,
-            cvc: creditcard.verification_value,
-            name: creditcard.name
+            number: payment_method.number,
+            expiry_month: payment_method.month,
+            expiry_year: payment_method.year,
+            cvc: payment_method.verification_value,
+            name: payment_method.name
           )
-        elsif creditcard.kind_of?(String)
-          if /^card_/.match?(creditcard)
-            post[:card_token] = get_card_token(creditcard)
+        when String
+          if /^card_/.match?(payment_method)
+            post[:card_token] = get_card_token(payment_method)
           else
-            post[:customer_token] = creditcard
+            post[:customer_token] = payment_method
           end
+        else
+          raise ArgumentError, "Invalid payment method type: #{payment_method.class}"
         end
+      end
+
+      # Get a single use token from Pin for NT based payment methods
+      # This is used to create a charge using a network tokenized card
+      def get_single_use_token(payment_method, options)
+        post = {
+          type: 'network_token',
+          source: {
+            number: payment_method.number,
+            expiry_month: payment_method.month,
+            expiry_year: payment_method.year,
+            network_type: payment_method.source.to_s.gsub('_', ''),
+            cryptogram: payment_method.payment_cryptogram,
+            eci: payment_method.eci
+          }
+        }
+
+        commit(:post, 'payment_sources', post, options)
       end
 
       def get_customer_token(token)
@@ -224,6 +280,8 @@ module ActiveMerchant #:nodoc:
 
         if body.nil?
           no_content_response
+        elsif body['response'].is_a?(Array)
+          paginated_response(body)
         elsif body['response']
           success_response(body)
         elsif body['error']
@@ -267,6 +325,15 @@ module ActiveMerchant #:nodoc:
         message = 'Invalid JSON response received from Pin Payments. Please contact support@pinpayments.com if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
+      end
+
+      def paginated_response(body)
+        Response.new(
+          true,
+          'Search successful',
+          body,
+          test: test?
+        )
       end
 
       def token(response)

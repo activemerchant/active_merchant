@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CardprocessGateway < Gateway
       self.test_url = 'https://test.vr-pay-ecommerce.de/v1/payments'
       self.live_url = 'https://vr-pay-ecommerce.de/v1/payments'

@@ -495,7 +495,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
   def test_successful_refund_with_merchant_id
     order_id = generate_unique_id
-    purchase = @gateway.purchase(@amount, @credit_card, @options.merge({ order_id: order_id }))
+    purchase = @gateway.purchase(@amount, @credit_card, @options.merge({ order_id: }))
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization, @refund_options.merge({ merchant_transaction_id: order_id }))

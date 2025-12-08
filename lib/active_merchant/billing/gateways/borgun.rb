@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BorgunGateway < Gateway
       self.display_name = 'Borgun'
       self.homepage_url = 'http://www.borgun.com'

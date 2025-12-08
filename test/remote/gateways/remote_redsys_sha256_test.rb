@@ -33,10 +33,10 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
       @credit_card,
       @options.merge(
         three_d_secure: {
-          version: version,
-          xid: xid,
-          cavv: cavv,
-          eci: eci
+          version:,
+          xid:,
+          cavv:,
+          eci:
         },
         description: 'description',
         store: 'store',
@@ -59,10 +59,10 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
       @credit_card,
       @options.merge(
         three_d_secure: {
-          version: version,
-          xid: xid,
-          cavv: cavv,
-          eci: eci
+          version:,
+          xid:,
+          cavv:,
+          eci:
         },
         description: 'description',
         store: 'store',
@@ -85,10 +85,10 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
       @credit_card,
       @options.merge(
         three_d_secure: {
-          version: version,
-          ds_transaction_id: ds_transaction_id,
-          three_ds_server_trans_id: three_ds_server_trans_id,
-          eci: eci
+          version:,
+          ds_transaction_id:,
+          three_ds_server_trans_id:,
+          eci:
         },
         description: 'description',
         store: 'store',
@@ -163,7 +163,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'unscheduled',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     response = @gateway.purchase(@amount, @credit_card, used_options)
@@ -189,7 +189,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'recurring',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     response = @gateway.purchase(@amount, @credit_card, used_options)
@@ -266,7 +266,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'recurring',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       },
       sca_exemption: 'MIT',
       sca_exemption_direct_payment_enabled: true

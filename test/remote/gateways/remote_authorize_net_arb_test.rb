@@ -30,7 +30,7 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
 
     subscription_id = response.authorization
 
-    assert response = @gateway.update_recurring(subscription_id: subscription_id, amount: @amount * 2)
+    assert response = @gateway.update_recurring(subscription_id:, amount: @amount * 2)
     assert_success response
 
     assert response = @gateway.status_recurring(subscription_id)

@@ -18,12 +18,12 @@ class DatatransTest < Test::Unit::TestCase
         eci: '05',
         cavv: '3q2+78r+ur7erb7vyv66vv8=',
         cavv_algorithm: '1',
-        xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+        ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
         enrolled: 'Y',
         authentication_response_status: 'Y',
         directory_response_status: 'Y',
         version: '2',
-        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+        three_ds_server_trans_id: '97267598-FAE6-48F2-8083-C23433990FBC'
       }
     })
 
@@ -168,8 +168,8 @@ class DatatransTest < Test::Unit::TestCase
       parsed_3d = parsed_data['card']['3D']
 
       assert_equal('05', parsed_3d['eci'])
-      assert_equal(three_d_secure[:xid], parsed_3d['xid'])
-      assert_equal(three_d_secure[:ds_transaction_id], parsed_3d['threeDSTransactionId'])
+      assert_equal(three_d_secure[:ds_transaction_id], parsed_3d['xid'])
+      assert_equal(three_d_secure[:three_ds_server_trans_id], parsed_3d['threeDSTransactionId'])
       assert_equal(three_d_secure[:cavv], parsed_3d['cavv'])
       assert_equal('2', parsed_3d['threeDSVersion'])
       assert_equal(three_d_secure[:cavv_algorithm], parsed_3d['cavvAlgorithm'])
@@ -340,6 +340,17 @@ class DatatransTest < Test::Unit::TestCase
                    'response' => {},
                    'errors' =>
                     ['Invalid JSON response received from Datatrans. Please contact them for support if you continue to receive this message.  (The raw response returned by the API was "{\\"transactionId\\":\\"240418170233899207\\",acquirerAuthorizationCode\\":\\"170233\\"}")'] }
+  end
+
+  def test_base_urls_include_version
+    assert_includes @gateway.test_url, '/v1/'
+    assert_includes @gateway.live_url, '/v1/'
+  end
+
+  def test_default_version_in_endpoint_url
+    action = :authorize
+    url = @gateway.send(:url, action)
+    assert_match(%r{/v1/transactions/authorize\z}, url)
   end
 
   private

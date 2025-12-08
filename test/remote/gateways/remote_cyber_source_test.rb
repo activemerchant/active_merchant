@@ -6,6 +6,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = CyberSourceGateway.new({ nexus: 'NC' }.merge(fixtures(:cyber_source)))
+    @gateway_certificate = CyberSourceGateway.new({ nexus: 'NC' }.merge(fixtures(:cyber_source_certificate)))
     @gateway_latam = CyberSourceGateway.new({}.merge(fixtures(:cyber_source_latam_pe)))
 
     @credit_card = credit_card('4111111111111111', verification_value: '987')
@@ -33,25 +34,32 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       brand: :visa
     )
     @three_ds_enrolled_card = credit_card(
-      '4000000000000002',
+      '4000000000001091',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
       brand: :visa
     )
     @three_ds_invalid_card = credit_card(
-      '4000000000000010',
+      '4000000000002537',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
       brand: :visa
     )
     @three_ds_enrolled_mastercard = credit_card(
-      '5200000000001005',
+      '5200000000002235',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
       brand: :master
+    )
+    @three_ds_frictionless_card = credit_card(
+      '4000000000002313',
+      verification_value: '321',
+      month: '12',
+      year: (Time.now.year + 2).to_s,
+      brand: :visa
     )
     @visa_network_token = network_tokenization_credit_card(
       '4111111111111111',
@@ -74,6 +82,14 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       eci: '05',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       source: :network_token
+    )
+
+    @carnet_credit_card = credit_card(
+      '5062280000000002',
+      verification_value: '321',
+      month: '12',
+      year: (Time.now.year + 2).to_s,
+      brand: :carnet
     )
 
     @amount = 100
@@ -110,7 +126,9 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       invoice_number: '123',
       first_recurring_payment: true,
       mobile_remote_payment_type: 'A1',
-      vat_tax_rate: '1'
+      vat_tax_rate: '1',
+      reconciliation_id: '1936831',
+      aggregator_id: 'ABCDE'
     }
 
     @capture_options = {
@@ -127,6 +145,23 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
         auto_renew: true,
         amount: 100
       }
+    }
+
+    @three_ds_options = {
+      three_ds_2: {
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        }
+      },
+      return_url: 'return_url.com',
+      payer_auth_enroll_service: true
     }
 
     @issuer_additional_data = 'PR25000000000011111111111112222222sk111111111111111111111111111'
@@ -159,6 +194,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_authorization_with_merchant_catefory_code
+    options = @options.merge(merchant_category_code: '1111')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_successful_response(response)
     assert !response.authorization.blank?
   end
@@ -308,6 +350,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_purchase_with_merchant_catefory_code
+    options = @options.merge(merchant_category_code: '1111')
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
   def test_successful_auth_with_gratuity_amount
     options = @options.merge(gratuity_amount: '7.50')
 
@@ -360,6 +409,24 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(purchase)
     assert void = @gateway.void(purchase.authorization, @options)
+    assert_successful_response(void)
+  end
+
+  def test_void_with_no_authorization_value
+    merchant_transaction_id = 'testTransaction131' + SecureRandom.hex(3)
+
+    @gateway.authorize(@amount, @credit_card, @options.merge(merchant_transaction_id:))
+
+    assert void = @gateway.void(nil, @options.merge({ merchant_transaction_id:, amount: @amount }))
+    assert_successful_response(void)
+  end
+
+  def test_purchase_and_void_with_merchant_category_code
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+
+    void_options = @options.merge(merchant_category_code: '1111')
+    assert void = @gateway.void(purchase.authorization, void_options)
     assert_successful_response(void)
   end
 
@@ -439,6 +506,12 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_carnet_card
+    assert response = @gateway.purchase(@amount, @carnet_credit_card, @options)
+    assert_successful_response(response)
+    assert_equal '002', response.params['cardType']
   end
 
   def test_successful_purchase_with_bank_account
@@ -680,6 +753,37 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_capture_with_merchant_reference_code_override
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    assert response = @gateway.capture(@amount, auth.authorization, @capture_options.merge(merchant_reference_code: '1234566778'))
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+    assert_equal '1234566778', response.params['merchantReferenceCode']
+  end
+
+  def test_successful_capture_without_merchant_reference_code_override
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+    order_id = auth.authorization.split(';').first
+
+    assert response = @gateway.capture(@amount, auth.authorization, @capture_options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+    assert_equal order_id, response.params['merchantReferenceCode']
+  end
+
+  def test_successful_capture_with_merchant_category_code
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    capture_options = @options.merge(merchant_category_code: '1111')
+    assert response = @gateway.capture(@amount, auth.authorization, capture_options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
   def test_successful_capture_with_solution_id
     ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
@@ -738,6 +842,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
   end
 
+  def test_successful_refund_with_merchant_category_code
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+
+    refund_options = @options.merge(merchant_category_code: '1111')
+    assert response = @gateway.refund(@amount, response.authorization, refund_options)
+    assert_successful_response(response)
+  end
+
   def test_successful_refund_with_bank_account_follow_on
     bank_account = check({ account_number: '4100', routing_number: '011000015' })
     assert response = @gateway.purchase(10000, bank_account, @options)
@@ -779,7 +892,8 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       '378282246310005',
       brand: 'american_express',
       eci: '05',
-      payment_cryptogram: long_cryptogram
+      payment_cryptogram: long_cryptogram,
+      source: :network_token
     )
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
@@ -830,6 +944,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('5555555555554444',
                                                    brand: 'master',
                                                    eci: '05',
+                                                   source: :network_token,
                                                    payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     options = { ignore_avs: true, order_id: generate_unique_id, vat_tax_rate: 1.01 }
@@ -845,6 +960,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('5555555555554444',
                                                    brand: 'master',
                                                    eci: '05',
+                                                   source: :network_token,
                                                    payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     options = { ignore_avs: true, order_id: generate_unique_id, vat_tax_rate: 1.01 }
@@ -1085,69 +1201,52 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_3ds_enroll_request_via_purchase
-    assert response = @gateway.purchase(1202, @three_ds_enrolled_card, @options.merge(payer_auth_enroll_service: true))
+    assert response = @gateway.purchase(1202, @three_ds_enrolled_card, @three_ds_options)
     assert_equal '475', response.params['reasonCode']
     assert !response.params['acsURL'].blank?
     assert !response.params['paReq'].blank?
-    assert !response.params['xid'].blank?
     assert !response.success?
   end
 
   def test_3ds_enroll_request_via_authorize
-    assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @options.merge(payer_auth_enroll_service: true))
+    assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @three_ds_options)
     assert_equal '475', response.params['reasonCode']
     assert !response.params['acsURL'].blank?
     assert !response.params['paReq'].blank?
-    assert !response.params['xid'].blank?
     assert !response.success?
   end
 
   def test_successful_3ds_requests_with_unenrolled_card
-    assert response = @gateway.purchase(1202, @three_ds_unenrolled_card, @options.merge(payer_auth_enroll_service: true))
+    assert response = @gateway.purchase(1202, @three_ds_unenrolled_card, @three_ds_options)
     assert response.success?
 
-    assert response = @gateway.authorize(1202, @three_ds_unenrolled_card, @options.merge(payer_auth_enroll_service: true))
+    assert response = @gateway.authorize(1202, @three_ds_unenrolled_card, @three_ds_options)
     assert response.success?
   end
 
-  # to create a valid pares, use the test credentials to request `test_3ds_enroll_request_via_purchase` with debug=true.
-  # Extract this XML and generate an accessToken. Using this access token to create a form, visit the stepUpURL provided
-  # and check the network exchange in the browser dev console for a CCA, which will contain a usable PaRes. Documentation for this feature
-  # can be found at https://docs.cybersource.com/content/dam/new-documentation/documentation/en/fraud-management/payer-auth/so/payer-auth-so.pdf
-  # Version => September 2017
-  # Chapter 2 "Authenticating Enrolled Cards" page 27
-  # something like:
-  # <html>
-  #   <body onload="document.PAEnrollForm.submit();">
-  #     <form id="PAEnrollForm" name="PAEnrollForm" action="acsURL" method="post" target="paInlineFrame">
-  #       <input type="hidden" name="PaReq" value="paReq value" />
-  #       <input type="hidden" name="TermUrl" value="localhost_url" />
-  #       <input type="hidden" name="MD" value="xid value" />
-  #     </form>
-  #   </body>
-  # </html>
   def test_successful_3ds_validate_purchase_request
-    assert response = @gateway.purchase(1202, @three_ds_enrolled_card, @options.merge(payer_auth_validate_service: true, pares: pares))
+    assert response = @gateway.purchase(1202, @three_ds_frictionless_card, @three_ds_options)
     assert_equal '100', response.params['reasonCode']
-    assert_equal '0', response.params['authenticationResult']
+    assert_equal '6', response.params['authenticationResult']
     assert response.success?
   end
 
   def test_failed_3ds_validate_purchase_request
-    assert response = @gateway.purchase(1202, @three_ds_invalid_card, @options.merge(payer_auth_validate_service: true, pares: pares))
+    assert response = @gateway.purchase(1202, @three_ds_invalid_card, @three_ds_options)
     assert_equal '476', response.params['reasonCode']
     assert !response.success?
   end
 
   def test_successful_3ds_validate_authorize_request
-    assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @options.merge(payer_auth_validate_service: true, pares: pares))
+    assert response = @gateway.authorize(1202, @three_ds_frictionless_card, @three_ds_options)
     assert_equal '100', response.params['reasonCode']
-    assert_equal '0', response.params['authenticationResult']
+    assert_equal '6', response.params['authenticationResult']
     assert response.success?
   end
 
   def test_failed_3ds_validate_authorize_request
-    assert response = @gateway.authorize(1202, @three_ds_invalid_card, @options.merge(payer_auth_validate_service: true, pares: pares))
+    assert response = @gateway.authorize(1202, @three_ds_invalid_card, @three_ds_options)
+
     assert_equal '476', response.params['reasonCode']
     assert !response.success?
   end
@@ -1296,7 +1395,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
     }
 
-    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(three_ds_exemption_type: 'moto'))
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(three_ds_exemption_type: 'authentication_outage'))
     assert_successful_response(response)
   end
 
@@ -1369,12 +1468,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'One or more fields contains invalid data: c:billTo/c:postalCode', response.message
   end
 
-  def pares
-    <<~PARES
-      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
-    PARES
-  end
-
   def test_successful_verify_with_elo
     response = @gateway.verify(@elo_credit_card, @options)
     assert_successful_response(response)
@@ -1408,6 +1501,59 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
     assert_match '0.00', response.params['amount']
     assert_equal 'Successful transaction', response.message
+  end
+
+  def test_successful_certificate_authorization
+    assert response = @gateway_certificate.authorize(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_certificate_purchase
+    assert response = @gateway_certificate.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_certificate_capture
+    assert auth = @gateway_certificate.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+    assert capture = @gateway_certificate.capture(@amount, auth.authorization, @capture_options)
+    assert_successful_response(capture)
+  end
+
+  def test_successful_certificate_void
+    assert auth = @gateway_certificate.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+    assert void = @gateway_certificate.void(auth.authorization, @options)
+    assert_successful_response(void)
+  end
+
+  def test_successful_certificate_refund
+    assert purchase = @gateway_certificate.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+    assert refund = @gateway_certificate.refund(@amount, purchase.authorization)
+    assert_successful_response(refund)
+  end
+
+  def test_successful_certificate_verify
+    response = @gateway_certificate.verify(@credit_card, @options)
+    assert_successful_response(response)
+  end
+
+  def test_gateway_certificate_transcript_scrubbing
+    transcript = capture_transcript(@gateway_certificate) do
+      @gateway_certificate.purchase(@amount, @credit_card, @options)
+    end
+    signature = transcript.match(/<ds:SignatureValue[^>]*>(.*?)<\/ds:SignatureValue>/)[1]
+    digest = transcript.match(/<ds:DigestValue>\s*(.*?)\s*<\/ds:DigestValue>/)[1]
+
+    transcript = @gateway_certificate.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway_certificate.options[:public_key], transcript)
+    assert_scrubbed(signature, transcript)
+    assert_scrubbed(digest, transcript)
   end
 
   private

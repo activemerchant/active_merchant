@@ -1,7 +1,7 @@
 # coding: utf-8
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # = Redsys Merchant Gateway
     #
     # Gateway support for the Spanish "Redsys" payment gateway system. This is
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency    = 'EUR'
       self.money_format        = :cents
       # Not all card types may be activated by the bank!
-      self.supported_cardtypes = %i[visa master american_express jcb diners_club unionpay]
+      self.supported_cardtypes = %i[visa master american_express jcb diners_club unionpay patagonia_365 tarjeta_sol]
       self.homepage_url        = 'http://www.redsys.es/'
       self.display_name        = 'Redsys (REST)'
 
@@ -240,7 +240,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_action(post, :cancel)
         order_id, amount, currency = split_authorization(authorization)
-        add_amount(post, amount, currency: currency)
+        add_amount(post, amount, currency:)
         add_order(post, order_id)
         add_description(post, options)
 
@@ -280,7 +280,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
+        merchant_parameters = filter_merchant_parameters(transcript)
+
         transcript.
+          gsub(%r((Ds_MerchantParameters=)(\w+)), '\1' + merchant_parameters.to_s + '\3').
           gsub(%r((PAN\"=>\")(\d+)), '\1[FILTERED]').
           gsub(%r((CVV2\"=>\")(\d+)), '\1[FILTERED]')
       end
@@ -338,14 +341,23 @@ module ActiveMerchant #:nodoc:
         post[:DS_MERCHANT_ORDER] = clean_order_id(order_id)
       end
 
-      def add_payment(post, card)
-        name = [card.first_name, card.last_name].join(' ').slice(0, 60)
-        year = sprintf('%.4i', card.year)
-        month = sprintf('%.2i', card.month)
-        post['DS_MERCHANT_TITULAR'] = CGI.escape(name)
-        post['DS_MERCHANT_PAN'] = card.number
-        post['DS_MERCHANT_EXPIRYDATE'] = "#{year[2..3]}#{month}"
-        post['DS_MERCHANT_CVV2'] = card.verification_value if card.verification_value.present?
+      def add_payment(post, payment_method)
+        year = sprintf('%.4i', payment_method.year)
+        month = sprintf('%.2i', payment_method.month)
+
+        if payment_method.is_a?(NetworkTokenizationCreditCard)
+          post[:Ds_Merchant_TokenData] = {
+            tokenCryptogram: payment_method.payment_cryptogram,
+            expirationDate: "#{year[2..3]}#{month}",
+            token: payment_method.number
+          }
+        else
+          name = [payment_method.first_name, payment_method.last_name].join(' ').slice(0, 60)
+          post['DS_MERCHANT_TITULAR'] = CGI.escape(name)
+          post['DS_MERCHANT_PAN'] = payment_method.number
+          post['DS_MERCHANT_EXPIRYDATE'] = "#{year[2..3]}#{month}"
+          post['DS_MERCHANT_CVV2'] = payment_method.verification_value if payment_method.verification_value.present?
+        end
       end
 
       def determine_action(options)
@@ -361,7 +373,12 @@ module ActiveMerchant #:nodoc:
         payload = raw_response['Ds_MerchantParameters']
         return Response.new(false, "#{raw_response['errorCode']} ERROR") unless payload
 
-        response = JSON.parse(Base64.decode64(payload)).transform_keys!(&:downcase).with_indifferent_access
+        begin
+          response = JSON.parse(Base64.decode64(payload)).transform_keys!(&:downcase).with_indifferent_access
+        rescue JSON::ParserError
+          response = JSON.parse(Base64.urlsafe_decode64(payload)).transform_keys!(&:downcase).with_indifferent_access
+        end
+
         return Response.new(false, 'Unable to verify response') unless validate_signature(payload, raw_response['Ds_Signature'], response[:ds_order])
 
         succeeded = success_from(response, options)
@@ -369,7 +386,7 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(response, post, options),
           test: test?,
           error_code: succeeded ? nil : response[:ds_response]
         )
@@ -429,7 +446,7 @@ module ActiveMerchant #:nodoc:
 
         # Need to get updated for 3DS support
         if code = response[:ds_response]
-          (code.to_i < 100) || [400, 481, 500, 900].include?(code.to_i)
+          (code.to_i < 100) || [195, 400, 481, 500, 900].include?(code.to_i)
         else
           false
         end
@@ -448,9 +465,13 @@ module ActiveMerchant #:nodoc:
         Base64.urlsafe_encode64(mac256(key, data)) == signature
       end
 
-      def authorization_from(response)
-        # Need to get updated for 3DS support
-        [response[:ds_order], response[:ds_amount], response[:ds_currency]].join('|')
+      def authorization_from(response, post, options)
+        array_resp = if success_from(response, options) && options[:execute_threed] # 3DS Case
+                       [post[:DS_MERCHANT_AMOUNT], post[:DS_MERCHANT_CURRENCY]]
+                     else
+                       [response[:ds_amount], response[:ds_currency]]
+                     end
+        ([response[:ds_order]] << array_resp).join('|')
       end
 
       def split_authorization(authorization)
@@ -474,7 +495,7 @@ module ActiveMerchant #:nodoc:
         if /^\d{4}/.match?(cleansed)
           cleansed[0..11]
         else
-          '%04d' % [rand(0..9999)] + cleansed[0...8]
+          ('%04d' % [rand(0..9999)]) + cleansed[0...8]
         end
       end
 
@@ -501,6 +522,23 @@ module ActiveMerchant #:nodoc:
 
       def mac256(key, data)
         OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), key, data)
+      end
+
+      def filter_merchant_parameters(transcript)
+        # Enhancement, the gateway response with base64 and it contians sensible data.
+        # Decode + Scrub + Encode the returned sensitive dat.
+        pre_filter_data =  transcript.match(%r(Ds_MerchantParameters=(\w+)))
+        return unless pre_filter_data
+
+        decoded_pre_filter_data = Base64.decode64(pre_filter_data[1])
+
+        filter_data = decoded_pre_filter_data.
+                      gsub(%r((PAN\":\")(\d+)), '\1[FILTERED]').
+                      gsub(%r((CVV2\":\")(\d+)), '\1[FILTERED]').
+                      gsub(%r((token\":\")(\d+)), '\1[FILTERED]').
+                      gsub(%r((tokenCryptogram\":\")([^*]*?")), '\1[FILTERED]"')
+
+        Base64.strict_encode64(filter_data)
       end
     end
   end

@@ -319,7 +319,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'BackendResponseError', response.message
+    assert_equal 'AttributeError', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
   end
 

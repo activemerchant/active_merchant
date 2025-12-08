@@ -39,11 +39,41 @@ class DecidirPlusTest < Test::Unit::TestCase
     }
   end
 
+  def test_supported_card_types
+    assert_equal DecidirPlusGateway.supported_cardtypes, %i[visa master american_express discover diners_club naranja cabal patagonia_365 tarjeta_sol discover]
+  end
+
   def test_successful_purchase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @payment_reference, @options)
     end.check_request do |_action, _endpoint, data, _headers|
       assert_match(/2bf7bffb-1257-4b45-8d42-42d090409b8a/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_tarjeta_sol
+    options = @options.merge(card_brand: 'tarjeta_sol')
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      data = JSON.parse(data)
+      assert_equal(64, data['payment_method_id'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_discover
+    options = @options.merge(card_brand: 'discover')
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      data = JSON.parse(data)
+      assert_equal(139, data['payment_method_id'])
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -187,12 +217,25 @@ class DecidirPlusTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_establishment_name
     establishment_name = 'Heavenly Buffaloes'
-    options = @options.merge(establishment_name: establishment_name)
+    options = @options.merge(establishment_name:)
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @payment_reference, options)
     end.check_request do |_action, _endpoint, data, _headers|
       assert_equal(establishment_name, JSON.parse(data)['establishment_name'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_wallet_id
+    wallet_id = 'moto'
+    options = @options.merge(wallet_id:)
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      assert_equal(wallet_id, JSON.parse(data)['wallet_id'])
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -218,7 +261,7 @@ class DecidirPlusTest < Test::Unit::TestCase
       merchant_email: 'merchant@mail.com',
       merchant_phone: '2678433111'
     }
-    options = @options.merge(aggregate_data: aggregate_data)
+    options = @options.merge(aggregate_data:)
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @payment_reference, options)

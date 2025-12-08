@@ -18,6 +18,10 @@ class BraintreeBlueTest < Test::Unit::TestCase
     $VERBOSE = @old_verbose
   end
 
+  def test_api_version
+    assert_equal '6', @gateway.fetch_version
+  end
+
   def test_refund_legacy_method_signature
     Braintree::TransactionGateway.any_instance.expects(:refund).
       with('transaction_id', nil).
@@ -253,15 +257,33 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.authorize(100, 'fake-paypal-future-nonce', options)
   end
 
+  def test_not_adding_default_payment_method_to_customer
+    options = {
+      prevent_default_payment_method: true,
+      payment_method_nonce: 'fake-paypal-future-nonce',
+      store: true,
+      device_data: 'device_data',
+      paypal: {
+        paypal_flow_type: 'checkout_with_vault'
+      }
+    }
+
+    Braintree::TransactionGateway.any_instance.expects(:sale).returns(braintree_result(paypal: { implicitly_vaulted_payment_method_token: 'abc123' }))
+
+    Braintree::CustomerGateway.any_instance.expects(:update).with(nil, { default_payment_method_token: 'abc123' }).never
+
+    @gateway.authorize(100, 'fake-paypal-future-nonce', options)
+  end
+
   def test_risk_data_can_be_specified
     risk_data = {
       customer_browser: 'User-Agent Header',
       customer_ip: '127.0.0.1'
     }
     Braintree::TransactionGateway.any_instance.expects(:sale).
-      with(has_entries(risk_data: risk_data)).returns(braintree_result)
+      with(has_entries(risk_data:)).returns(braintree_result)
 
-    @gateway.authorize(100, credit_card('4111111111111111'), risk_data: risk_data)
+    @gateway.authorize(100, credit_card('4111111111111111'), risk_data:)
   end
 
   def test_hold_in_escrow_can_be_specified
@@ -304,7 +326,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith'
     )
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
 
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options][:verification_merchant_account_id] == 'merchant_account_id'
@@ -328,7 +350,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith'
     )
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options][:verification_merchant_account_id] == 'value_from_options'
     end.returns(result)
@@ -345,7 +367,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith'
     )
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options].has_key?(:verify_card)
       assert_equal true, params[:credit_card][:options][:verify_card]
@@ -367,7 +389,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith',
       id: '123'
     )
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_equal 'bob@example.com', params[:email]
       params
@@ -386,7 +408,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith',
       id: '123'
     )
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_equal nil, params[:email]
       params
@@ -405,7 +427,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith'
     )
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options].has_key?(:verify_card)
       assert_equal false, params[:credit_card][:options][:verify_card]
@@ -435,7 +457,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     }
     customer = stub(customer_attributes)
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_not_nil params[:credit_card][:billing_address]
       %i[street_address extended_address locality region postal_code country_name].each do |billing_attribute|
@@ -444,7 +466,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       params
     end.returns(result)
 
-    @gateway.store(credit_card('41111111111111111111'), billing_address: billing_address)
+    @gateway.store(credit_card('41111111111111111111'), billing_address:)
   end
 
   def test_store_with_phone_only_billing_address_option
@@ -460,13 +482,13 @@ class BraintreeBlueTest < Test::Unit::TestCase
     }
     customer = stub(customer_attributes)
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_nil params[:credit_card][:billing_address]
       params
     end.returns(result)
 
-    @gateway.store(credit_card('41111111111111111111'), billing_address: billing_address)
+    @gateway.store(credit_card('41111111111111111111'), billing_address:)
   end
 
   def test_store_with_nil_billing_address_options
@@ -490,13 +512,13 @@ class BraintreeBlueTest < Test::Unit::TestCase
     }
     customer = stub(customer_attributes)
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_nil params[:credit_card][:billing_address]
       params
     end.returns(result)
 
-    @gateway.store(credit_card('41111111111111111111'), billing_address: billing_address)
+    @gateway.store(credit_card('41111111111111111111'), billing_address:)
   end
 
   def test_store_with_credit_card_token
@@ -511,7 +533,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     braintree_credit_card = stub_everything(token: 'cctoken')
     customer.stubs(:credit_cards).returns([braintree_credit_card])
 
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_equal 'cctoken', params[:credit_card][:token]
       params
@@ -533,7 +555,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     )
     customer.stubs(:id).returns('customerid')
 
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:find).
       with('customerid').
       raises(Braintree::NotFoundError)
@@ -553,7 +575,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       token: 'cctoken'
     )
 
-    result = Braintree::SuccessfulResult.new(credit_card: credit_card)
+    result = Braintree::SuccessfulResult.new(credit_card:)
     Braintree::CustomerGateway.any_instance.expects(:find).with('customerid')
     Braintree::CreditCardGateway.any_instance.expects(:create).with do |params|
       assert_equal 'customerid', params[:customer_id]
@@ -589,7 +611,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       }
     }
 
-    result = Braintree::SuccessfulResult.new(credit_card: credit_card)
+    result = Braintree::SuccessfulResult.new(credit_card:)
     Braintree::CustomerGateway.any_instance.expects(:find).with('customerid')
     Braintree::CreditCardGateway.any_instance.expects(:create).with do |params|
       assert_equal 'customerid', params[:customer_id]
@@ -611,7 +633,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     Braintree::CustomerGateway.any_instance.stubs(:find).with('vault_id').returns(customer)
     BraintreeBlueGateway.any_instance.stubs(:customer_hash)
 
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:update).with do |vault, params|
       assert_equal '567', params[:credit_card][:cvv]
       assert_equal 'Longbob Longsen', params[:credit_card][:cardholder_name]
@@ -627,7 +649,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     Braintree::CustomerGateway.any_instance.stubs(:find).with('vault_id').returns(customer)
     BraintreeBlueGateway.any_instance.stubs(:customer_hash)
 
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:update).with do |vault, params|
       assert_equal true, params[:credit_card][:options][:verify_card]
       [vault, params]
@@ -661,7 +683,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       country: 'US'
     }
     params = { first_name: 'John' }
-    options = { billing_address: billing_address }
+    options = { billing_address: }
     expected_params = {
       first_name: 'John',
       credit_card: {
@@ -921,7 +943,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     end
   end
 
-  def test_solution_id_is_added_to_create_transaction_parameters
+  def test_channel_is_added_to_create_transaction_parameters
     assert_nil @gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})[:channel]
     ActiveMerchant::Billing::BraintreeBlueGateway.application_id = 'ABC123'
     assert_equal @gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})[:channel], 'ABC123'
@@ -930,6 +952,15 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})[:channel], 'overidden-channel'
   ensure
     ActiveMerchant::Billing::BraintreeBlueGateway.application_id = nil
+  end
+
+  def test_override_application_id_is_sent_to_channel
+    gateway = BraintreeBlueGateway.new(merchant_id: 'test', public_key: 'test', private_key: 'test', channel: 'overidden-channel')
+    gateway_response = gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})
+    assert_equal gateway_response[:channel], 'overidden-channel'
+
+    gateway_response = gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), { override_application_id: 'override-application-id' })
+    assert_equal gateway_response[:channel], 'override-application-id'
   end
 
   def test_successful_purchase_with_descriptor
@@ -1032,6 +1063,42 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'transaction_id', response.authorization
   end
 
+  def test_apple_pay_card_recurring
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(
+        amount: '1.00',
+        order_id: '1',
+        customer: { id: nil, email: nil, phone: nil,
+                    first_name: 'Longbob', last_name: 'Longsen' },
+        options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
+        custom_fields: nil,
+        apple_pay_card: {
+          number: '4111111111111111',
+          expiration_month: '09',
+          expiration_year: (Time.now.year + 1).to_s,
+          cardholder_name: 'Longbob Longsen',
+          cryptogram: 'cryptogram'
+        },
+        external_vault: {
+          status: 'vaulted',
+          previous_network_transaction_id: '123ABC'
+        },
+        transaction_source: 'recurring'
+      ).
+      returns(braintree_result(id: 'transaction_id'))
+
+    apple_pay = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      transaction_id: '123',
+      payment_cryptogram: 'some_other_value',
+      source: :apple_pay
+    )
+
+    response = @gateway.authorize(100, apple_pay, { test: true, order_id: '1', stored_credential: stored_credential(:merchant, :recurring, id: '123ABC') })
+    assert_equal 'transaction_id', response.authorization
+  end
+
   def test_google_pay_card
     Braintree::TransactionGateway.any_instance.expects(:sale).
       with(
@@ -1108,6 +1175,38 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.purchase(100, credit_card('41111111111111111111'))
     refute response.success?
     assert response.authorization.present?
+  end
+
+  def test_unsuccessful_adding_bank_account_to_customer
+    bank_account = check({ account_number: '1000000002', routing_number: '011000015' })
+    options = {
+      billing_address: {
+        address1: '1670',
+        address2: '1670 NW 82ND AVE',
+        city: 'Miami',
+        state: 'FL',
+        zip: '32191'
+      },
+      ach_mandate: 'ACH Mandate',
+      merchant_account_id: 'merchant_account_id'
+    }
+    customer = stub(
+      credit_cards: [stub_everything],
+      email: 'email',
+      phone: '321-654-0987',
+      first_name: 'John',
+      last_name: 'Smith'
+    )
+    customer.stubs(:id).returns('123')
+
+    Braintree::CustomerGateway.any_instance.expects(:create).returns(Braintree::SuccessfulResult.new(customer:))
+    Braintree::ClientTokenGateway.any_instance.expects(:generate).returns('IntcImNsaWVudF90b2tlblwiOlwiMTIzNFwifSI=')
+    ActiveMerchant::Billing::TokenNonce.any_instance.expects(:ssl_request).returns(JSON.generate(token_bank_response))
+    Braintree::PaymentMethodGateway.any_instance.expects(:create).returns(braintree_error_result(message: 'US bank account is not accepted by merchant account.'))
+
+    assert response = @gateway.store(bank_account, options)
+    refute response.success?
+    assert_equal response.message, 'US bank account is not accepted by merchant account.'
   end
 
   def test_unsuccessful_transaction_returns_message_when_available
@@ -1541,6 +1640,10 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal filtered_success_token_nonce, @gateway.scrub(success_create_token_nonce)
   end
 
+  def test_transcript_scrubbing_network_token
+    assert_equal @gateway.scrub(pre_scrub_network_token), post_scrub_network_token
+  end
+
   def test_setup_purchase
     Braintree::ClientTokenGateway.any_instance.expects(:generate).with do |params|
       (params[:merchant_account_id] == 'merchant_account_id')
@@ -1560,7 +1663,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     Braintree::ErrorResult.new(@internal_gateway, { errors: {} }.merge(options))
   end
 
-  def with_braintree_configuration_restoration(&block)
+  def with_braintree_configuration_restoration(&)
     # Remember the wiredump device since we may overwrite it
     existing_wiredump_device = ActiveMerchant::Billing::BraintreeBlueGateway.wiredump_device
 
@@ -1587,6 +1690,24 @@ class BraintreeBlueTest < Test::Unit::TestCase
         expiration_month: '09',
         expiration_year: (Time.now.year + 1).to_s,
         cardholder_name: 'Longbob Longsen'
+      }
+    }
+  end
+
+  def token_bank_response
+    {
+      'data' => {
+        'tokenizeUsBankAccount' => {
+          'paymentMethod' => {
+            'id' => 'tokenusbankacct_bc_zrg45z_7wz95v_nscrks_q4zpjs_5m7',
+            'details' => {
+              'last4' => '0125'
+            }
+          }
+        }
+      },
+      'extensions' => {
+        'requestId' => '769b26d5-27e4-4602-b51d-face8b6ffdd5'
       }
     }
   end
@@ -1722,6 +1843,676 @@ class BraintreeBlueTest < Test::Unit::TestCase
       [Braintree]   <created-at type="datetime">2022-01-24T22:25:12Z</created-at>
       [Braintree]   <updated-at type="datetime">2022-01-24T22:25:12Z</updated-at>
       [Braintree] </us-bank-account>
+    RESPONSE
+  end
+
+  def pre_scrub_network_token
+    <<-RESPONSE
+      [Braintree] <transaction>
+      [Braintree]   <amount>47.70</amount>
+      [Braintree]   <order-id>111111</order-id>
+      [Braintree]   <customer>
+      [Braintree]     <id nil="true"/>
+      [Braintree]     <email>test_transaction@gmail.com</email>
+      [Braintree]     <phone>123341</phone>
+      [Braintree]     <first-name>John</first-name>
+      [Braintree]     <last-name>Smith</last-name>
+      [Braintree]   </customer>
+      [Braintree]   <options>
+      [Braintree]     <store-in-vault type="boolean">false</store-in-vault>
+      [Braintree]     <submit-for-settlement type="boolean">true</submit-for-settlement>
+      [Braintree]     <hold-in-escrow nil="true"/>
+      [Braintree]     <skip-advanced-fraud-checking type="boolean">true</skip-advanced-fraud-checking>
+      [Braintree]   </options>
+      [Braintree]   <custom-fields>
+      [Braintree]     <order-id>111111</order-id>
+      [Braintree]     <quote-id type="integer">11111122233</quote-id>
+      [Braintree]     <checkout-flow>checkout-flow</checkout-flow>
+      [Braintree]     <charge-count type="integer">0</charge-count>
+      [Braintree]   </custom-fields>
+      [Braintree]   <merchant-account-id>Account-12344</merchant-account-id>
+      [Braintree]   <credit-card>
+      [Braintree]     <number>41111111111111</number>
+      [Braintree]     <expiration-month>02</expiration-month>
+      [Braintree]     <expiration-year>2028</expiration-year>
+      [Braintree]     <cardholder-name>John Smith</cardholder-name>
+      [Braintree]     <network-tokenization-attributes>
+      [Braintree]       <cryptogram>/wBBBBBBBPZWYOv4AmbmrruuUDDDD=</cryptogram>
+      [Braintree]       <ecommerce-indicator>07</ecommerce-indicator>
+      [Braintree]     </network-tokenization-attributes>
+      [Braintree]   </credit-card>
+      [Braintree]   <external-vault>
+      [Braintree]     <status>vaulted</status>
+      [Braintree]     <previous-network-transaction-id>312343241232</previous-network-transaction-id>
+      [Braintree]   </external-vault>
+      [Braintree]   <transaction-source>recurring</transaction-source>
+      [Braintree]   <billing>
+      [Braintree]     <street-address>251 Test STree</street-address>
+      [Braintree]     <extended-address nil="true"/>
+      [Braintree]     <company nil="true"/>
+      [Braintree]     <locality>Los Angeles</locality>
+      [Braintree]     <region>CA</region>
+      [Braintree]     <postal-code>57753</postal-code>
+      [Braintree]     <country-code-alpha2>US</country-code-alpha2>
+      [Braintree]     <country-code-alpha3>USA</country-code-alpha3>
+      [Braintree]   </billing>
+      [Braintree]   <shipping>
+      [Braintree]     <street-address>251 Test Street</street-address>
+      [Braintree]     <extended-address></extended-address>
+      [Braintree]     <company nil="true"/>
+      [Braintree]     <locality>Los Angeles</locality>
+      [Braintree]     <region>CA</region>
+      [Braintree]     <postal-code>57753</postal-code>
+      [Braintree]     <country-code-alpha2>US</country-code-alpha2>
+      [Braintree]     <country-code-alpha3>USA</country-code-alpha3>
+      [Braintree]   </shipping>
+      [Braintree]   <risk-data>
+      [Braintree]     <customer-browser></customer-browser>
+      [Braintree]   </risk-data>
+      [Braintree]   <channel>CHANNEL_BT</channel>
+      [Braintree]   <type>sale</type>
+      [Braintree] </transaction>
+
+      I, [2024-08-16T16:36:13.440224 #2217917]  INFO -- : [Braintree] [16/Aug/2024 16:36:13 UTC] POST /merchants/js7myvkvrjt5khpb/transactions 201
+      D, [2024-08-16T16:36:13.440275 #2217917] DEBUG -- : [Braintree] [16/Aug/2024 16:36:13 UTC] 201
+      D, [2024-08-16T16:36:13.440973 #2217917] DEBUG -- : [Braintree] <?xml version="1.0" encoding="UTF-8"?>
+      [Braintree] <transaction>
+      [Braintree]   <id>ftq5rn1j</id>
+      [Braintree]   <status>submitted_for_settlement</status>
+      [Braintree]   <type>sale</type>
+      [Braintree]   <currency-iso-code>USD</currency-iso-code>
+      [Braintree]   <amount>47.70</amount>
+      [Braintree]   <amount-requested>47.70</amount-requested>
+      [Braintree]   <merchant-account-id>CHANNEL</merchant-account-id>
+      [Braintree]   <sub-merchant-account-id nil="true"/>
+      [Braintree]   <master-merchant-account-id nil="true"/>
+      [Braintree]   <order-id>114475310</order-id>
+      [Braintree]   <created-at type="datetime">2024-08-16T16:36:12Z</created-at>
+      [Braintree]   <updated-at type="datetime">2024-08-16T16:36:13Z</updated-at>
+      [Braintree]   <customer>
+      [Braintree]     <id nil="true"/>
+      [Braintree]     <first-name>John</first-name>
+      [Braintree]     <last-name>Smith</last-name>
+      [Braintree]     <company nil="true"/>
+      [Braintree]     <email>test_email@gmail.com</email>
+      [Braintree]     <website nil="true"/>
+      [Braintree]     <phone>8765432432</phone>
+      [Braintree]     <international-phone>
+      [Braintree]       <country-code nil="true"/>
+      [Braintree]       <national-number nil="true"/>
+      [Braintree]     </international-phone>
+      [Braintree]     <fax nil="true"/>
+      [Braintree]   </customer>
+      [Braintree]   <billing>
+      [Braintree]     <id nil="true"/>
+      [Braintree]     <first-name nil="true"/>
+      [Braintree]     <last-name nil="true"/>
+      [Braintree]     <company nil="true"/>
+      [Braintree]     <street-address>251 Test Street</street-address>
+      [Braintree]     <extended-address nil="true"/>
+      [Braintree]     <locality>Los Angeles</locality>
+      [Braintree]     <region>CA</region>
+      [Braintree]     <postal-code>5773</postal-code>
+      [Braintree]     <country-name>United States of America</country-name>
+      [Braintree]     <country-code-alpha2>US</country-code-alpha2>
+      [Braintree]     <country-code-alpha3>USA</country-code-alpha3>
+      [Braintree]     <country-code-numeric>840</country-code-numeric>
+      [Braintree]     <phone-number nil="true"/>
+      [Braintree]     <international-phone>
+      [Braintree]       <country-code nil="true"/>
+      [Braintree]       <national-number nil="true"/>
+      [Braintree]     </international-phone>
+      [Braintree]   </billing>
+      [Braintree]   <refund-id nil="true"/>
+      [Braintree]   <refund-ids type="array"/>
+      [Braintree]   <refunded-transaction-id nil="true"/>
+      [Braintree]   <partial-settlement-transaction-ids type="array"/>
+      [Braintree]   <authorized-transaction-id nil="true"/>
+      [Braintree]   <settlement-batch-id nil="true"/>
+      [Braintree]   <shipping>
+      [Braintree]     <id nil="true"/>
+      [Braintree]     <first-name nil="true"/>
+      [Braintree]     <last-name nil="true"/>
+      [Braintree]     <company nil="true"/>
+      [Braintree]     <street-address>251 Test Street</street-address>
+      [Braintree]     <extended-address nil="true"/>
+      [Braintree]     <locality>Anna Smith</locality>
+      [Braintree]     <region>CA</region>
+      [Braintree]     <postal-code>32343</postal-code>
+      [Braintree]     <country-name>United States of America</country-name>
+      [Braintree]     <country-code-alpha2>US</country-code-alpha2>
+      [Braintree]     <country-code-alpha3>USA</country-code-alpha3>
+      [Braintree]     <country-code-numeric>840</country-code-numeric>
+      [Braintree]     <phone-number nil="true"/>
+      [Braintree]     <international-phone>
+      [Braintree]       <country-code nil="true"/>
+      [Braintree]       <national-number nil="true"/>
+      [Braintree]     </international-phone>
+      [Braintree]     <shipping-method nil="true"/>
+      [Braintree]   </shipping>
+      [Braintree]   <custom-fields>
+      [Braintree]     <order-id>1122334455</order-id>
+      [Braintree]     <quote-id>12356432</quote-id>
+      [Braintree]     <checkout-flow>tbyb-second</checkout-flow>
+      [Braintree]     <charge-count>0</charge-count>
+      [Braintree]   </custom-fields>
+      [Braintree]   <account-funding-transaction type="boolean">false</account-funding-transaction>
+      [Braintree]   <avs-error-response-code nil="true"/>
+      [Braintree]   <avs-postal-code-response-code>M</avs-postal-code-response-code>
+      [Braintree]   <avs-street-address-response-code>M</avs-street-address-response-code>
+      [Braintree]   <cvv-response-code>I</cvv-response-code>
+      [Braintree]   <gateway-rejection-reason nil="true"/>
+      [Braintree]   <processor-authorization-code>796973</processor-authorization-code>
+      [Braintree]   <processor-response-code>1000</processor-response-code>
+      [Braintree]   <processor-response-text>Approved</processor-response-text>
+      [Braintree]   <additional-processor-response nil="true"/>
+      [Braintree]   <voice-referral-number nil="true"/>
+      [Braintree]   <purchase-order-number nil="true"/>
+      [Braintree]   <tax-amount nil="true"/>
+      [Braintree]   <tax-exempt type="boolean">false</tax-exempt>
+      [Braintree]   <sca-exemption-requested nil="true"/>
+      [Braintree]   <processed-with-network-token type="boolean">true</processed-with-network-token>
+      [Braintree]   <credit-card>
+      [Braintree]     <token nil="true"/>
+      [Braintree]     <bin nil="true"/>
+      [Braintree]     <last-4 nil="true"/>
+      [Braintree]     <card-type nil="true"/>
+      [Braintree]     <expiration-month nil="true"/>
+      [Braintree]     <expiration-year nil="true"/>
+      [Braintree]     <customer-location nil="true"/>
+      [Braintree]     <cardholder-name nil="true"/>
+      [Braintree]     <image-url>https://assets.braintreegateway.com/payment_method_logo/unknown.png?environment=production</image-url>
+      [Braintree]     <is-network-tokenized type="boolean">false</is-network-tokenized>
+      [Braintree]     <prepaid>Unknown</prepaid>
+      [Braintree]     <healthcare>Unknown</healthcare>
+      [Braintree]     <debit>Unknown</debit>
+      [Braintree]     <durbin-regulated>Unknown</durbin-regulated>
+      [Braintree]     <commercial>Unknown</commercial>
+      [Braintree]     <payroll>Unknown</payroll>
+      [Braintree]     <issuing-bank>Unknown</issuing-bank>
+      [Braintree]     <country-of-issuance>Unknown</country-of-issuance>
+      [Braintree]     <product-id>Unknown</product-id>
+      [Braintree]     <global-id nil="true"/>
+      [Braintree]     <account-type nil="true"/>
+      [Braintree]     <unique-number-identifier nil="true"/>
+      [Braintree]     <venmo-sdk type="boolean">false</venmo-sdk>
+      [Braintree]     <account-balance nil="true"/>
+      [Braintree]   </credit-card>
+      [Braintree]   <network-token>
+      [Braintree]     <token nil="true"/>
+      [Braintree]     <bin>41111</bin>
+      [Braintree]     <last-4>111</last-4>
+      [Braintree]     <card-type>Visa</card-type>
+      [Braintree]     <expiration-month>02</expiration-month>
+      [Braintree]     <expiration-year>2028</expiration-year>
+      [Braintree]     <customer-location>US</customer-location>
+      [Braintree]     <cardholder-name>John Smith</cardholder-name>
+      [Braintree]     <image-url>https://assets.braintreegateway.com/paymenn</image-url>
+      [Braintree]     <is-network-tokenized type="boolean">true</is-network-tokenized>
+      [Braintree]     <prepaid>No</prepaid>
+      [Braintree]     <healthcare>No</healthcare>
+      [Braintree]     <debit>Yes</debit>
+      [Braintree]     <durbin-regulated>Yes</durbin-regulated>
+      [Braintree]     <commercial>Unknown</commercial>
+      [Braintree]     <payroll>No</payroll>
+      [Braintree]     <issuing-bank>Test Bank Account</issuing-bank>
+      [Braintree]     <country-of-issuance>USA</country-of-issuance>
+      [Braintree]     <product-id>F</product-id>
+      [Braintree]     <global-id nil="true"/>
+      [Braintree]     <account-type>credit</account-type>
+      [Braintree]   </network-token>
+      [Braintree]   <status-history type="array">
+      [Braintree]     <status-event>
+      [Braintree]       <timestamp type="datetime">2024-08-16T16:36:13Z</timestamp>
+      [Braintree]       <status>authorized</status>
+      [Braintree]       <amount>47.70</amount>
+      [Braintree]       <user>testemail@gmail.com</user>
+      [Braintree]       <transaction-source>api</transaction-source>
+      [Braintree]     </status-event>
+      [Braintree]     <status-event>
+      [Braintree]       <timestamp type="datetime">2024-08-16T16:36:13Z</timestamp>
+      [Braintree]       <status>submitted_for_settlement</status>
+      [Braintree]       <amount>47.70</amount>
+      [Braintree]       <user>testemail@gmail.com</user>
+      [Braintree]       <transaction-source>api</transaction-source>
+      [Braintree]     </status-event>
+      [Braintree]   </status-history>
+      [Braintree]   <plan-id nil="true"/>
+      [Braintree]   <subscription-id nil="true"/>
+      [Braintree]   <subscription>
+      [Braintree]     <billing-period-end-date nil="true"/>
+      [Braintree]     <billing-period-start-date nil="true"/>
+      [Braintree]   </subscription>
+      [Braintree]   <add-ons type="array"/>
+      [Braintree]   <discounts type="array"/>
+      [Braintree]   <descriptor>
+      [Braintree]     <name nil="true"/>
+      [Braintree]     <phone nil="true"/>
+      [Braintree]     <url nil="true"/>
+      [Braintree]   </descriptor>
+      [Braintree]   <recurring type="boolean">true</recurring>
+      [Braintree]   <channel>CHANNEL_BT</channel>
+      [Braintree]   <service-fee-amount nil="true"/>
+      [Braintree]   <escrow-status nil="true"/>
+      [Braintree]   <disbursement-details>
+      [Braintree]     <disbursement-date nil="true"/>
+      [Braintree]     <settlement-amount nil="true"/>
+      [Braintree]     <settlement-currency-iso-code nil="true"/>
+      [Braintree]     <settlement-currency-exchange-rate nil="true"/>
+      [Braintree]     <settlement-base-currency-exchange-rate nil="true"/>
+      [Braintree]     <funds-held nil="true"/>
+      [Braintree]     <success nil="true"/>
+      [Braintree]   </disbursement-details>
+      [Braintree]   <disputes type="array"/>
+      [Braintree]   <authorization-adjustments type="array"/>
+      [Braintree]   <payment-instrument-type>network_token</payment-instrument-type>
+      [Braintree]   <processor-settlement-response-code></processor-settlement-response-code>
+      [Braintree]   <processor-settlement-response-text></processor-settlement-response-text>
+      [Braintree]   <network-response-code>00</network-response-code>
+      [Braintree]   <network-response-text>Successful approval/completion or V.I.P. PIN verification is successful</network-response-text>
+      [Braintree]   <merchant-advice-code nil="true"/>
+      [Braintree]   <merchant-advice-code-text nil="true"/>
+      [Braintree]   <three-d-secure-info nil="true"/>
+      [Braintree]   <ships-from-postal-code nil="true"/>
+      [Braintree]   <shipping-amount nil="true"/>
+      [Braintree]   <shipping-tax-amount nil="true"/>
+      [Braintree]   <discount-amount nil="true"/>
+      [Braintree]   <surcharge-amount nil="true"/>
+      [Braintree]   <network-transaction-id>1122334455667786</network-transaction-id>
+      [Braintree]   <processor-response-type>approved</processor-response-type>
+      [Braintree]   <authorization-expires-at type="datetime">2024-08-17T16:36:13Z</authorization-expires-at>
+      [Braintree]   <retry-ids type="array"/>
+      [Braintree]   <retried-transaction-id nil="true"/>
+      [Braintree]   <retried type="boolean">false</retried>
+      [Braintree]   <refund-global-ids type="array"/>
+      [Braintree]   <partial-settlement-transaction-global-ids type="array"/>
+      [Braintree]   <refunded-transaction-global-id nil="true"/>
+      [Braintree]   <authorized-transaction-global-id nil="true"/>
+      [Braintree]   <global-id>ddetwte3DG43GDR</global-id>
+      [Braintree]   <retry-global-ids type="array"/>
+      [Braintree]   <retried-transaction-global-id nil="true"/>
+      [Braintree]   <retrieval-reference-number nil="true"/>
+      [Braintree]   <ach-return-code nil="true"/>
+      [Braintree]   <installment-count nil="true"/>
+      [Braintree]   <installments type="array"/>
+      [Braintree]   <refunded-installments type="array"/>
+      [Braintree]   <response-emv-data nil="true"/>
+      [Braintree]   <acquirer-reference-number nil="true"/>
+      [Braintree]   <merchant-identification-number>112233445566</merchant-identification-number>
+      [Braintree]   <terminal-identification-number></terminal-identification-number>
+      [Braintree]   <merchant-name>CHANNEL_MERCHANT</merchant-name>
+      [Braintree]   <merchant-address>
+      [Braintree]     <street-address></street-address>
+      [Braintree]     <locality>New York</locality>
+      [Braintree]     <region>NY</region>
+      [Braintree]     <postal-code>10012</postal-code>
+      [Braintree]     <phone>551-453-46223</phone>
+      [Braintree]   </merchant-address>
+      [Braintree]   <pin-verified type="boolean">false</pin-verified>
+      [Braintree]   <debit-network nil="true"/>
+      [Braintree]   <processing-mode nil="true"/>
+      [Braintree]   <payment-receipt>
+      [Braintree]     <id>fqq5tm1j</id>
+      [Braintree]     <global-id>dHJhbnNhY3RpE3Gppse33o</global-id>
+      [Braintree]     <amount>47.70</amount>
+      [Braintree]     <currency-iso-code>USD</currency-iso-code>
+      [Braintree]     <processor-response-code>1000</processor-response-code>
+      [Braintree]     <processor-response-text>Approved</processor-response-text>
+      [Braintree]     <processor-authorization-code>755332</processor-authorization-code>
+      [Braintree]     <merchant-name>TEST-STORE</merchant-name>
+      [Braintree]     <merchant-address>
+      [Braintree]       <street-address></street-address>
+      [Braintree]       <locality>New York</locality>
+      [Braintree]       <region>NY</region>
+      [Braintree]       <postal-code>10012</postal-code>
+      [Braintree]       <phone>551-733-45235</phone>
+      [Braintree]     </merchant-address>
+      [Braintree]     <merchant-identification-number>122334553</merchant-identification-number>
+      [Braintree]     <terminal-identification-number></terminal-identification-number>
+      [Braintree]     <type>sale</type>
+      [Braintree]     <pin-verified type="boolean">false</pin-verified>
+      [Braintree]     <processing-mode nil="true"/>
+      [Braintree]     <network-identification-code nil="true"/>
+      [Braintree]     <card-type nil="true"/>
+      [Braintree]     <card-last-4 nil="true"/>
+      [Braintree]     <account-balance nil="true"/>
+      [Braintree]   </payment-receipt>
+      [Braintree] </transaction>
+    RESPONSE
+  end
+
+  def post_scrub_network_token
+    <<-RESPONSE
+      [Braintree] <transaction>
+      [Braintree]   <amount>47.70</amount>
+      [Braintree]   <order-id>111111</order-id>
+      [Braintree]   <customer>
+      [Braintree]     <id nil="true"/>
+      [Braintree]     <email>test_transaction@gmail.com</email>
+      [Braintree]     <phone>123341</phone>
+      [Braintree]     <first-name>John</first-name>
+      [Braintree]     <last-name>Smith</last-name>
+      [Braintree]   </customer>
+      [Braintree]   <options>
+      [Braintree]     <store-in-vault type="boolean">false</store-in-vault>
+      [Braintree]     <submit-for-settlement type="boolean">true</submit-for-settlement>
+      [Braintree]     <hold-in-escrow nil="true"/>
+      [Braintree]     <skip-advanced-fraud-checking type="boolean">true</skip-advanced-fraud-checking>
+      [Braintree]   </options>
+      [Braintree]   <custom-fields>
+      [Braintree]     <order-id>111111</order-id>
+      [Braintree]     <quote-id type="integer">11111122233</quote-id>
+      [Braintree]     <checkout-flow>checkout-flow</checkout-flow>
+      [Braintree]     <charge-count type="integer">0</charge-count>
+      [Braintree]   </custom-fields>
+      [Braintree]   <merchant-account-id>Account-12344</merchant-account-id>
+      [Braintree]   <credit-card>
+      [Braintree]     <number>[FILTERED]</number>
+      [Braintree]     <expiration-month>02</expiration-month>
+      [Braintree]     <expiration-year>2028</expiration-year>
+      [Braintree]     <cardholder-name>John Smith</cardholder-name>
+      [Braintree]     <network-tokenization-attributes>
+      [Braintree]       <cryptogram>[FILTERED]</cryptogram>
+      [Braintree]       <ecommerce-indicator>07</ecommerce-indicator>
+      [Braintree]     </network-tokenization-attributes>
+      [Braintree]   </credit-card>
+      [Braintree]   <external-vault>
+      [Braintree]     <status>vaulted</status>
+      [Braintree]     <previous-network-transaction-id>312343241232</previous-network-transaction-id>
+      [Braintree]   </external-vault>
+      [Braintree]   <transaction-source>recurring</transaction-source>
+      [Braintree]   <billing>
+      [Braintree]     <street-address>251 Test STree</street-address>
+      [Braintree]     <extended-address nil="true"/>
+      [Braintree]     <company nil="true"/>
+      [Braintree]     <locality>Los Angeles</locality>
+      [Braintree]     <region>CA</region>
+      [Braintree]     <postal-code>57753</postal-code>
+      [Braintree]     <country-code-alpha2>US</country-code-alpha2>
+      [Braintree]     <country-code-alpha3>USA</country-code-alpha3>
+      [Braintree]   </billing>
+      [Braintree]   <shipping>
+      [Braintree]     <street-address>251 Test Street</street-address>
+      [Braintree]     <extended-address></extended-address>
+      [Braintree]     <company nil="true"/>
+      [Braintree]     <locality>Los Angeles</locality>
+      [Braintree]     <region>CA</region>
+      [Braintree]     <postal-code>57753</postal-code>
+      [Braintree]     <country-code-alpha2>US</country-code-alpha2>
+      [Braintree]     <country-code-alpha3>USA</country-code-alpha3>
+      [Braintree]   </shipping>
+      [Braintree]   <risk-data>
+      [Braintree]     <customer-browser></customer-browser>
+      [Braintree]   </risk-data>
+      [Braintree]   <channel>CHANNEL_BT</channel>
+      [Braintree]   <type>sale</type>
+      [Braintree] </transaction>
+
+      I, [2024-08-16T16:36:13.440224 #2217917]  INFO -- : [Braintree] [16/Aug/2024 16:36:13 UTC] POST /merchants/js7myvkvrjt5khpb/transactions 201
+      D, [2024-08-16T16:36:13.440275 #2217917] DEBUG -- : [Braintree] [16/Aug/2024 16:36:13 UTC] 201
+      D, [2024-08-16T16:36:13.440973 #2217917] DEBUG -- : [Braintree] <?xml version="1.0" encoding="UTF-8"?>
+      [Braintree] <transaction>
+      [Braintree]   <id>ftq5rn1j</id>
+      [Braintree]   <status>submitted_for_settlement</status>
+      [Braintree]   <type>sale</type>
+      [Braintree]   <currency-iso-code>USD</currency-iso-code>
+      [Braintree]   <amount>47.70</amount>
+      [Braintree]   <amount-requested>47.70</amount-requested>
+      [Braintree]   <merchant-account-id>CHANNEL</merchant-account-id>
+      [Braintree]   <sub-merchant-account-id nil="true"/>
+      [Braintree]   <master-merchant-account-id nil="true"/>
+      [Braintree]   <order-id>114475310</order-id>
+      [Braintree]   <created-at type="datetime">2024-08-16T16:36:12Z</created-at>
+      [Braintree]   <updated-at type="datetime">2024-08-16T16:36:13Z</updated-at>
+      [Braintree]   <customer>
+      [Braintree]     <id nil="true"/>
+      [Braintree]     <first-name>John</first-name>
+      [Braintree]     <last-name>Smith</last-name>
+      [Braintree]     <company nil="true"/>
+      [Braintree]     <email>test_email@gmail.com</email>
+      [Braintree]     <website nil="true"/>
+      [Braintree]     <phone>8765432432</phone>
+      [Braintree]     <international-phone>
+      [Braintree]       <country-code nil="true"/>
+      [Braintree]       <national-number nil="true"/>
+      [Braintree]     </international-phone>
+      [Braintree]     <fax nil="true"/>
+      [Braintree]   </customer>
+      [Braintree]   <billing>
+      [Braintree]     <id nil="true"/>
+      [Braintree]     <first-name nil="true"/>
+      [Braintree]     <last-name nil="true"/>
+      [Braintree]     <company nil="true"/>
+      [Braintree]     <street-address>251 Test Street</street-address>
+      [Braintree]     <extended-address nil="true"/>
+      [Braintree]     <locality>Los Angeles</locality>
+      [Braintree]     <region>CA</region>
+      [Braintree]     <postal-code>5773</postal-code>
+      [Braintree]     <country-name>United States of America</country-name>
+      [Braintree]     <country-code-alpha2>US</country-code-alpha2>
+      [Braintree]     <country-code-alpha3>USA</country-code-alpha3>
+      [Braintree]     <country-code-numeric>840</country-code-numeric>
+      [Braintree]     <phone-number nil="true"/>
+      [Braintree]     <international-phone>
+      [Braintree]       <country-code nil="true"/>
+      [Braintree]       <national-number nil="true"/>
+      [Braintree]     </international-phone>
+      [Braintree]   </billing>
+      [Braintree]   <refund-id nil="true"/>
+      [Braintree]   <refund-ids type="array"/>
+      [Braintree]   <refunded-transaction-id nil="true"/>
+      [Braintree]   <partial-settlement-transaction-ids type="array"/>
+      [Braintree]   <authorized-transaction-id nil="true"/>
+      [Braintree]   <settlement-batch-id nil="true"/>
+      [Braintree]   <shipping>
+      [Braintree]     <id nil="true"/>
+      [Braintree]     <first-name nil="true"/>
+      [Braintree]     <last-name nil="true"/>
+      [Braintree]     <company nil="true"/>
+      [Braintree]     <street-address>251 Test Street</street-address>
+      [Braintree]     <extended-address nil="true"/>
+      [Braintree]     <locality>Anna Smith</locality>
+      [Braintree]     <region>CA</region>
+      [Braintree]     <postal-code>32343</postal-code>
+      [Braintree]     <country-name>United States of America</country-name>
+      [Braintree]     <country-code-alpha2>US</country-code-alpha2>
+      [Braintree]     <country-code-alpha3>USA</country-code-alpha3>
+      [Braintree]     <country-code-numeric>840</country-code-numeric>
+      [Braintree]     <phone-number nil="true"/>
+      [Braintree]     <international-phone>
+      [Braintree]       <country-code nil="true"/>
+      [Braintree]       <national-number nil="true"/>
+      [Braintree]     </international-phone>
+      [Braintree]     <shipping-method nil="true"/>
+      [Braintree]   </shipping>
+      [Braintree]   <custom-fields>
+      [Braintree]     <order-id>1122334455</order-id>
+      [Braintree]     <quote-id>12356432</quote-id>
+      [Braintree]     <checkout-flow>tbyb-second</checkout-flow>
+      [Braintree]     <charge-count>0</charge-count>
+      [Braintree]   </custom-fields>
+      [Braintree]   <account-funding-transaction type="boolean">false</account-funding-transaction>
+      [Braintree]   <avs-error-response-code nil="true"/>
+      [Braintree]   <avs-postal-code-response-code>M</avs-postal-code-response-code>
+      [Braintree]   <avs-street-address-response-code>M</avs-street-address-response-code>
+      [Braintree]   <cvv-response-code>I</cvv-response-code>
+      [Braintree]   <gateway-rejection-reason nil="true"/>
+      [Braintree]   <processor-authorization-code>796973</processor-authorization-code>
+      [Braintree]   <processor-response-code>1000</processor-response-code>
+      [Braintree]   <processor-response-text>Approved</processor-response-text>
+      [Braintree]   <additional-processor-response nil="true"/>
+      [Braintree]   <voice-referral-number nil="true"/>
+      [Braintree]   <purchase-order-number nil="true"/>
+      [Braintree]   <tax-amount nil="true"/>
+      [Braintree]   <tax-exempt type="boolean">false</tax-exempt>
+      [Braintree]   <sca-exemption-requested nil="true"/>
+      [Braintree]   <processed-with-network-token type="boolean">true</processed-with-network-token>
+      [Braintree]   <credit-card>
+      [Braintree]     <token nil="true"/>
+      [Braintree]     <bin nil="true"/>
+      [Braintree]     <last-4 nil="true"/>
+      [Braintree]     <card-type nil="true"/>
+      [Braintree]     <expiration-month nil="true"/>
+      [Braintree]     <expiration-year nil="true"/>
+      [Braintree]     <customer-location nil="true"/>
+      [Braintree]     <cardholder-name nil="true"/>
+      [Braintree]     <image-url>https://assets.braintreegateway.com/payment_method_logo/unknown.png?environment=production</image-url>
+      [Braintree]     <is-network-tokenized type="boolean">false</is-network-tokenized>
+      [Braintree]     <prepaid>Unknown</prepaid>
+      [Braintree]     <healthcare>Unknown</healthcare>
+      [Braintree]     <debit>Unknown</debit>
+      [Braintree]     <durbin-regulated>Unknown</durbin-regulated>
+      [Braintree]     <commercial>Unknown</commercial>
+      [Braintree]     <payroll>Unknown</payroll>
+      [Braintree]     <issuing-bank>Unknown</issuing-bank>
+      [Braintree]     <country-of-issuance>Unknown</country-of-issuance>
+      [Braintree]     <product-id>Unknown</product-id>
+      [Braintree]     <global-id nil="true"/>
+      [Braintree]     <account-type nil="true"/>
+      [Braintree]     <unique-number-identifier nil="true"/>
+      [Braintree]     <venmo-sdk type="boolean">false</venmo-sdk>
+      [Braintree]     <account-balance nil="true"/>
+      [Braintree]   </credit-card>
+      [Braintree]   <network-token>
+      [Braintree]     <token nil="true"/>
+      [Braintree]     <bin>41111</bin>
+      [Braintree]     <last-4>111</last-4>
+      [Braintree]     <card-type>Visa</card-type>
+      [Braintree]     <expiration-month>02</expiration-month>
+      [Braintree]     <expiration-year>2028</expiration-year>
+      [Braintree]     <customer-location>US</customer-location>
+      [Braintree]     <cardholder-name>John Smith</cardholder-name>
+      [Braintree]     <image-url>https://assets.braintreegateway.com/paymenn</image-url>
+      [Braintree]     <is-network-tokenized type="boolean">true</is-network-tokenized>
+      [Braintree]     <prepaid>No</prepaid>
+      [Braintree]     <healthcare>No</healthcare>
+      [Braintree]     <debit>Yes</debit>
+      [Braintree]     <durbin-regulated>Yes</durbin-regulated>
+      [Braintree]     <commercial>Unknown</commercial>
+      [Braintree]     <payroll>No</payroll>
+      [Braintree]     <issuing-bank>Test Bank Account</issuing-bank>
+      [Braintree]     <country-of-issuance>USA</country-of-issuance>
+      [Braintree]     <product-id>F</product-id>
+      [Braintree]     <global-id nil="true"/>
+      [Braintree]     <account-type>credit</account-type>
+      [Braintree]   </network-token>
+      [Braintree]   <status-history type="array">
+      [Braintree]     <status-event>
+      [Braintree]       <timestamp type="datetime">2024-08-16T16:36:13Z</timestamp>
+      [Braintree]       <status>authorized</status>
+      [Braintree]       <amount>47.70</amount>
+      [Braintree]       <user>testemail@gmail.com</user>
+      [Braintree]       <transaction-source>api</transaction-source>
+      [Braintree]     </status-event>
+      [Braintree]     <status-event>
+      [Braintree]       <timestamp type="datetime">2024-08-16T16:36:13Z</timestamp>
+      [Braintree]       <status>submitted_for_settlement</status>
+      [Braintree]       <amount>47.70</amount>
+      [Braintree]       <user>testemail@gmail.com</user>
+      [Braintree]       <transaction-source>api</transaction-source>
+      [Braintree]     </status-event>
+      [Braintree]   </status-history>
+      [Braintree]   <plan-id nil="true"/>
+      [Braintree]   <subscription-id nil="true"/>
+      [Braintree]   <subscription>
+      [Braintree]     <billing-period-end-date nil="true"/>
+      [Braintree]     <billing-period-start-date nil="true"/>
+      [Braintree]   </subscription>
+      [Braintree]   <add-ons type="array"/>
+      [Braintree]   <discounts type="array"/>
+      [Braintree]   <descriptor>
+      [Braintree]     <name nil="true"/>
+      [Braintree]     <phone nil="true"/>
+      [Braintree]     <url nil="true"/>
+      [Braintree]   </descriptor>
+      [Braintree]   <recurring type="boolean">true</recurring>
+      [Braintree]   <channel>CHANNEL_BT</channel>
+      [Braintree]   <service-fee-amount nil="true"/>
+      [Braintree]   <escrow-status nil="true"/>
+      [Braintree]   <disbursement-details>
+      [Braintree]     <disbursement-date nil="true"/>
+      [Braintree]     <settlement-amount nil="true"/>
+      [Braintree]     <settlement-currency-iso-code nil="true"/>
+      [Braintree]     <settlement-currency-exchange-rate nil="true"/>
+      [Braintree]     <settlement-base-currency-exchange-rate nil="true"/>
+      [Braintree]     <funds-held nil="true"/>
+      [Braintree]     <success nil="true"/>
+      [Braintree]   </disbursement-details>
+      [Braintree]   <disputes type="array"/>
+      [Braintree]   <authorization-adjustments type="array"/>
+      [Braintree]   <payment-instrument-type>network_token</payment-instrument-type>
+      [Braintree]   <processor-settlement-response-code></processor-settlement-response-code>
+      [Braintree]   <processor-settlement-response-text></processor-settlement-response-text>
+      [Braintree]   <network-response-code>00</network-response-code>
+      [Braintree]   <network-response-text>Successful approval/completion or V.I.P. PIN verification is successful</network-response-text>
+      [Braintree]   <merchant-advice-code nil="true"/>
+      [Braintree]   <merchant-advice-code-text nil="true"/>
+      [Braintree]   <three-d-secure-info nil="true"/>
+      [Braintree]   <ships-from-postal-code nil="true"/>
+      [Braintree]   <shipping-amount nil="true"/>
+      [Braintree]   <shipping-tax-amount nil="true"/>
+      [Braintree]   <discount-amount nil="true"/>
+      [Braintree]   <surcharge-amount nil="true"/>
+      [Braintree]   <network-transaction-id>1122334455667786</network-transaction-id>
+      [Braintree]   <processor-response-type>approved</processor-response-type>
+      [Braintree]   <authorization-expires-at type="datetime">2024-08-17T16:36:13Z</authorization-expires-at>
+      [Braintree]   <retry-ids type="array"/>
+      [Braintree]   <retried-transaction-id nil="true"/>
+      [Braintree]   <retried type="boolean">false</retried>
+      [Braintree]   <refund-global-ids type="array"/>
+      [Braintree]   <partial-settlement-transaction-global-ids type="array"/>
+      [Braintree]   <refunded-transaction-global-id nil="true"/>
+      [Braintree]   <authorized-transaction-global-id nil="true"/>
+      [Braintree]   <global-id>ddetwte3DG43GDR</global-id>
+      [Braintree]   <retry-global-ids type="array"/>
+      [Braintree]   <retried-transaction-global-id nil="true"/>
+      [Braintree]   <retrieval-reference-number nil="true"/>
+      [Braintree]   <ach-return-code nil="true"/>
+      [Braintree]   <installment-count nil="true"/>
+      [Braintree]   <installments type="array"/>
+      [Braintree]   <refunded-installments type="array"/>
+      [Braintree]   <response-emv-data nil="true"/>
+      [Braintree]   <acquirer-reference-number nil="true"/>
+      [Braintree]   <merchant-identification-number>112233445566</merchant-identification-number>
+      [Braintree]   <terminal-identification-number></terminal-identification-number>
+      [Braintree]   <merchant-name>CHANNEL_MERCHANT</merchant-name>
+      [Braintree]   <merchant-address>
+      [Braintree]     <street-address></street-address>
+      [Braintree]     <locality>New York</locality>
+      [Braintree]     <region>NY</region>
+      [Braintree]     <postal-code>10012</postal-code>
+      [Braintree]     <phone>551-453-46223</phone>
+      [Braintree]   </merchant-address>
+      [Braintree]   <pin-verified type="boolean">false</pin-verified>
+      [Braintree]   <debit-network nil="true"/>
+      [Braintree]   <processing-mode nil="true"/>
+      [Braintree]   <payment-receipt>
+      [Braintree]     <id>fqq5tm1j</id>
+      [Braintree]     <global-id>dHJhbnNhY3RpE3Gppse33o</global-id>
+      [Braintree]     <amount>47.70</amount>
+      [Braintree]     <currency-iso-code>USD</currency-iso-code>
+      [Braintree]     <processor-response-code>1000</processor-response-code>
+      [Braintree]     <processor-response-text>Approved</processor-response-text>
+      [Braintree]     <processor-authorization-code>755332</processor-authorization-code>
+      [Braintree]     <merchant-name>TEST-STORE</merchant-name>
+      [Braintree]     <merchant-address>
+      [Braintree]       <street-address></street-address>
+      [Braintree]       <locality>New York</locality>
+      [Braintree]       <region>NY</region>
+      [Braintree]       <postal-code>10012</postal-code>
+      [Braintree]       <phone>551-733-45235</phone>
+      [Braintree]     </merchant-address>
+      [Braintree]     <merchant-identification-number>122334553</merchant-identification-number>
+      [Braintree]     <terminal-identification-number></terminal-identification-number>
+      [Braintree]     <type>sale</type>
+      [Braintree]     <pin-verified type="boolean">false</pin-verified>
+      [Braintree]     <processing-mode nil="true"/>
+      [Braintree]     <network-identification-code nil="true"/>
+      [Braintree]     <card-type nil="true"/>
+      [Braintree]     <card-last-4 nil="true"/>
+      [Braintree]     <account-balance nil="true"/>
+      [Braintree]   </payment-receipt>
+      [Braintree] </transaction>
     RESPONSE
   end
 end

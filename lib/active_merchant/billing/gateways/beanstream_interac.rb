@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/beanstream/beanstream_core'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BeanstreamInteracResponse < Response
       def redirect
         params['pageContents']

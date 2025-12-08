@@ -4,8 +4,8 @@ rescue LoadError
   # Falls back to an SSL post to TrustCommerce
 end
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # TO USE:
     # First, make sure you have everything setup correctly and all of your dependencies in place with:
     #
@@ -288,7 +288,7 @@ module ActiveMerchant #:nodoc:
 
         parameters = {
           amount: amount(money),
-          cycle: cycle,
+          cycle:,
           verify: options[:verify] || 'y',
           billingid: options[:billingid] || nil,
           payments: options[:payments] || nil

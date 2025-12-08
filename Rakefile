@@ -31,6 +31,7 @@ RuboCop::RakeTask.new
 
 namespace :test do
   Rake::TestTask.new(:units) do |t|
+    ENV['RUNNING_UNIT_TESTS'] = 'true'
     t.pattern = 'test/unit/**/*_test.rb'
     t.libs << 'test'
     t.verbose = false

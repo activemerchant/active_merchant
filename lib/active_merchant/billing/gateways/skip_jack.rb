@@ -1,7 +1,7 @@
 # encoding: utf-8
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SkipJackGateway < Gateway
       API_VERSION = '?.?'
 

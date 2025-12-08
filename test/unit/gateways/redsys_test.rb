@@ -67,7 +67,7 @@ class RedsysTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'unscheduled',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     }
     res = @gateway.purchase(123, credit_card, used_options)
@@ -130,7 +130,7 @@ class RedsysTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'recurring',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     }
     res = @gateway.purchase(123, credit_card, used_options)
@@ -189,7 +189,7 @@ class RedsysTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'recurring',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     }
     res = @gateway.purchase(123, '77bff3a969d6f97b2ec815448cdcff453971f573', used_options)
@@ -360,7 +360,7 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal %i[visa master american_express jcb diners_club unionpay], RedsysGateway.supported_cardtypes
+    assert_equal %i[visa master american_express jcb diners_club unionpay patagonia_365 tarjeta_sol], RedsysGateway.supported_cardtypes
   end
 
   def test_using_test_mode

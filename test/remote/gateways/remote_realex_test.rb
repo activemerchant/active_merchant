@@ -340,7 +340,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     auth_response = @gateway.authorize(
       @amount,
       @visa,
-      order_id: order_id,
+      order_id:,
       description: 'Test Realex Purchase',
       billing_address: {
         zip: '90210',
@@ -364,7 +364,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     auth_response = @gateway.authorize(
       @amount * 115,
       @visa,
-      order_id: order_id,
+      order_id:,
       description: 'Test Realex Purchase',
       billing_address: {
         zip: '90210',
@@ -388,7 +388,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     purchase_response = @gateway.purchase(
       @amount,
       @visa,
-      order_id: order_id,
+      order_id:,
       description: 'Test Realex Purchase',
       billing_address: {
         zip: '90210',
@@ -413,7 +413,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     purchase_response = gateway_with_refund_password.purchase(
       @amount,
       @visa,
-      order_id: order_id,
+      order_id:,
       description: 'Test Realex Purchase',
       billing_address: {
         zip: '90210',

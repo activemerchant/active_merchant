@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class VisanetPeruGateway < Gateway
       include Empty
       self.display_name = 'VisaNet Peru Gateway'
@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
         params[:externalReferenceId] = params.delete(:externalTransactionId)
         _, transaction_id = split_authorization(authorization)
 
-        options.update(transaction_id: transaction_id)
+        options.update(transaction_id:)
         params[:ruc] = options[:ruc]
       end
 

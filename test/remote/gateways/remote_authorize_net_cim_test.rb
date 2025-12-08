@@ -135,7 +135,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         customer_payment_profile_id: @customer_payment_profile_id,
         type: :capture_only,
         amount: @amount,
-        approval_code: approval_code
+        approval_code:
       }
     )
 
@@ -193,7 +193,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response = @gateway.create_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
-      payment_profile: payment_profile
+      payment_profile:
     )
 
     assert response.test?
@@ -301,7 +301,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response = @gateway.delete_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
-      customer_payment_profile_id: customer_payment_profile_id
+      customer_payment_profile_id:
     )
 
     assert response.test?
@@ -321,7 +321,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response = @gateway.delete_customer_shipping_address(
       customer_profile_id: @customer_profile_id,
-      customer_address_id: customer_address_id
+      customer_address_id:
     )
 
     assert response.test?
@@ -341,7 +341,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response = @gateway.get_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
-      customer_payment_profile_id: customer_payment_profile_id
+      customer_payment_profile_id:
     )
 
     assert response.test?
@@ -362,7 +362,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response = @gateway.get_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
-      customer_payment_profile_id: customer_payment_profile_id,
+      customer_payment_profile_id:,
       unmask_expiration_date: true,
       include_issuer_info: true
     )
@@ -387,7 +387,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response = @gateway.get_customer_shipping_address(
       customer_profile_id: @customer_profile_id,
-      customer_address_id: customer_address_id
+      customer_address_id:
     )
 
     assert response.test?
@@ -409,7 +409,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # Get the customerPaymentProfile
     assert response = @gateway.get_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
-      customer_payment_profile_id: customer_payment_profile_id
+      customer_payment_profile_id:
     )
 
     # The value before updating
@@ -419,7 +419,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response = @gateway.update_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
       payment_profile: {
-        customer_payment_profile_id: customer_payment_profile_id,
+        customer_payment_profile_id:,
         payment: {
           credit_card: credit_card('1234123412341234')
         }
@@ -432,7 +432,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # Get the updated payment profile
     assert response = @gateway.get_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
-      customer_payment_profile_id: customer_payment_profile_id
+      customer_payment_profile_id:
     )
 
     # Show that the payment profile was updated
@@ -448,7 +448,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert @gateway.update_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
       payment_profile: {
-        customer_payment_profile_id: customer_payment_profile_id,
+        customer_payment_profile_id:,
         bill_to: new_billing_address,
         payment: {
           credit_card: masked_credit_card
@@ -459,7 +459,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # Get the updated payment profile
     assert response = @gateway.get_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
-      customer_payment_profile_id: customer_payment_profile_id
+      customer_payment_profile_id:
     )
 
     # Show that the billing address on the payment profile was updated
@@ -478,7 +478,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # Get the customerPaymentProfile
     assert response = @gateway.get_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
-      customer_payment_profile_id: customer_payment_profile_id
+      customer_payment_profile_id:
     )
 
     # Card number last 4 digits is 4242
@@ -494,7 +494,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert @gateway.update_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
       payment_profile: {
-        customer_payment_profile_id: customer_payment_profile_id,
+        customer_payment_profile_id:,
         bill_to: new_billing_address,
         payment: {
           credit_card: last_four_credit_card
@@ -505,7 +505,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # Get the updated payment profile
     assert response = @gateway.get_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
-      customer_payment_profile_id: customer_payment_profile_id
+      customer_payment_profile_id:
     )
 
     # Show that the billing address on the payment profile was updated
@@ -524,7 +524,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # Get the customerShippingAddress
     assert response = @gateway.get_customer_shipping_address(
       customer_profile_id: @customer_profile_id,
-      customer_address_id: customer_address_id
+      customer_address_id:
     )
 
     assert address = response.params['address']
@@ -549,7 +549,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # Get the updated shipping address
     assert response = @gateway.get_customer_shipping_address(
       customer_profile_id: @customer_profile_id,
-      customer_address_id: customer_address_id
+      customer_address_id:
     )
 
     # Show that the shipping address was updated

@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information visit {Bank Frick Acquiring Services}[http://www.bankfrickacquiring.com/merchantsolutions_en.html]
     #
     # Written by Piers Chambers (Varyonic.com)

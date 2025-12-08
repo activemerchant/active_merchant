@@ -6,8 +6,8 @@ class RemoteBraintreeTokenNonceTest < Test::Unit::TestCase
     @braintree_backend = @gateway.instance_eval { @braintree_gateway }
 
     ach_mandate = 'By clicking ["Checkout"], I authorize Braintree, a service of PayPal, ' \
-      'on behalf of My Company (i) to verify my bank account information ' \
-      'using bank information and consumer reports and (ii) to debit my bank account.'
+                  'on behalf of My Company (i) to verify my bank account information ' \
+                  'using bank information and consumer reports and (ii) to debit my bank account.'
 
     @options = {
       billing_address: {
@@ -20,7 +20,7 @@ class RemoteBraintreeTokenNonceTest < Test::Unit::TestCase
         zip: '32191',
         phone_number: '693-630-6935'
       },
-      ach_mandate: ach_mandate
+      ach_mandate:
     }
   end
 

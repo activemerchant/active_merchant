@@ -16,7 +16,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
     @failure_amount = 10033
 
     @options = {
-      address: address,
+      address:,
       transaction_product: 'TestProduct',
       email: 'user@aol.com',
       ip: '1.2.3.4',
@@ -233,7 +233,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
     recurring_flag = 1
 
     stub_comms do
-      @gateway.authorize(@success_amount, @credit_card, recurring_flag: recurring_flag)
+      @gateway.authorize(@success_amount, @credit_card, recurring_flag:)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/recurringFlag=#{recurring_flag}&/, data)
     end.respond_with(successful_authorize_response)
@@ -251,7 +251,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
     recurring_flag = 1
 
     stub_comms do
-      @gateway.purchase(@success_amount, @credit_card, recurring_flag: recurring_flag)
+      @gateway.purchase(@success_amount, @credit_card, recurring_flag:)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/recurringFlag=#{recurring_flag}&/, data)
     end.respond_with(successful_purchase_response)

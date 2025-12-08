@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class <%= class_name %>Gateway < Gateway
       self.test_url = 'https://example.com/test'
       self.live_url = 'https://example.com/live'

@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # To learn more about the Moneris gateway, please contact
     # eselectplus@moneris.com for a copy of their integration guide. For
     # information on remote testing, please see "Test Environment Penny Value

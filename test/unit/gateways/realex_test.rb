@@ -5,7 +5,12 @@ class RealexTest < Test::Unit::TestCase
 
   class ActiveMerchant::Billing::RealexGateway
     # For the purposes of testing, lets redefine some protected methods as public.
-    public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request, :build_capture_request, :build_verify_request, :build_credit_request
+    public :build_purchase_or_authorization_request
+    public :build_refund_request
+    public :build_void_request
+    public :build_capture_request
+    public :build_verify_request
+    public :build_credit_request
   end
 
   def setup
@@ -59,8 +64,8 @@ class RealexTest < Test::Unit::TestCase
     gateway = RealexGateway.new(
       login: @login,
       password: @password,
-      rebate_secret: rebate_secret,
-      refund_secret: refund_secret
+      rebate_secret:,
+      refund_secret:
     )
 
     assert gateway.options[:refund_hash] == Digest::SHA1.hexdigest(rebate_secret)

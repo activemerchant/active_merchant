@@ -13,6 +13,14 @@ class EbanxTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @network_token = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      payment_cryptogram: 'network_token_example_cryptogram',
+      month: 12,
+      year: 2030
+    )
   end
 
   def test_successful_purchase
@@ -36,11 +44,233 @@ class EbanxTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_nil_address1
+    @options[:billing_address][:address1] = ''
+    @options[:billing_address][:city] = ''
+    @options[:billing_address][:state] = ''
+    @options[:billing_address][:zip] = ''
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(processing_type: 'local'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"zipcode\":\"\"}, data
+      assert_match %r{"city\":\"\"}, data
+      assert_match %r{"state\":\"\"}, data
+      assert_not_match %r{"address\":\"\"}, data
+      assert_not_match %r{"street_number\":\"\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_soft_descriptor
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: 'ActiveMerchant'))
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match %r{"soft_descriptor\":\"ActiveMerchant\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_without_merchant_payment_code
+    # hexdigest of 1 is c4ca4238a0b923820dcc509a6f75849b
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"merchant_payment_code\":\"1\"}, data
+      assert_match %r{"merchant_payment_code\":\"c4ca4238a0b923820dcc509a6f75849b\"}, data
+      assert_match %r{"order_number\":\"1\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_merchant_payment_code
+    # hexdigest of 2 is c81e728d9d4c2f636f067f89cc14862c
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_payment_code: '2'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"merchant_payment_code\":\"2\"}, data
+      assert_match %r{"merchant_payment_code\":\"c81e728d9d4c2f636f067f89cc14862c\"}, data
+      assert_match %r{"order_number\":\"1\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_notification_url
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(notification_url: 'https://notify.example.com/'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"notification_url\":\"https://notify.example.com/\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_default_payment_type_code
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"payment_type_code\":\"creditcard\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_payment_type_code_override
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ payment_type_code: 'visa' }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"payment_type_code\":\"visa\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_cardholder_recurring
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'cardholder',
+        reason_type: 'recurring',
+        network_transaction_id: nil
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"initial\"}, data
+      assert_match %r{"initiator\":\"CIT\"}, data
+      assert_match %r{"trans_type\":\"SCHEDULED_RECURRING\"}, data
+      assert_not_match %r{"mandate_id\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_cardholder_unscheduled
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'cardholder',
+        reason_type: 'unscheduled',
+        network_transaction_id: nil
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"initial\"}, data
+      assert_match %r{"initiator\":\"CIT\"}, data
+      assert_match %r{"trans_type\":\"CUSTOMER_COF\"}, data
+      assert_not_match %r{"mandate_id\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_cardholder_installment
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'cardholder',
+        reason_type: 'installment',
+        network_transaction_id: nil
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"initial\"}, data
+      assert_match %r{"initiator\":\"CIT\"}, data
+      assert_match %r{"trans_type\":\"INSTALLMENT\"}, data
+      assert_not_match %r{"mandate_id\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_merchant_installment
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'installment',
+        network_transaction_id: '1234'
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"stored\"}, data
+      assert_match %r{"initiator\":\"MIT\"}, data
+      assert_match %r{"trans_type\":\"INSTALLMENT\"}, data
+      assert_match %r{"mandate_id\":\"1234\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_merchant_unscheduled
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'unscheduled',
+        network_transaction_id: '1234'
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"stored\"}, data
+      assert_match %r{"initiator\":\"MIT\"}, data
+      assert_match %r{"trans_type\":\"MERCHANT_COF\"}, data
+      assert_match %r{"mandate_id\":\"1234\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_merchant_recurring
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'recurring',
+        network_transaction_id: '1234'
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"stored\"}, data
+      assert_match %r{"initiator\":\"MIT\"}, data
+      assert_match %r{"trans_type\":\"SCHEDULED_RECURRING\"}, data
+      assert_match %r{"mandate_id\":\"1234\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_cardholder_not_initial
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'cardholder',
+        reason_type: 'unscheduled',
+        network_transaction_id: '1234'
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"stored\"}, data
+      assert_match %r{"initiator\":\"CIT\"}, data
+      assert_match %r{"trans_type\":\"CUSTOMER_COF\"}, data
+      assert_match %r{"mandate_id\":\"1234\"}, data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -189,6 +419,55 @@ class EbanxTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_successful_purchase_with_network_tokenization
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @network_token, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"network_token_pan\":\"#{@network_token.number}\"/, data)
+      assert_match(/"network_token_cryptogram\":\"#{@network_token.payment_cryptogram}\"/, data)
+      assert_match(/"network_token_expire_date\":\"#{@network_token.month}\/#{@network_token.year}\"/, data)
+    end.respond_with(successful_purchase_with_network_token)
+
+    assert_success response
+    assert_equal '66e45f37b6700ed7119469c774a824a006a1da0293ffd204', response.authorization
+  end
+
+  def test_scrub_network_token
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed_network_token), post_scrubbed_network_token
+  end
+
+  def test_supported_countries
+    assert_equal %w[BR MX CO CL AR PE BO EC CR DO GT PA PY UY], EbanxGateway.supported_countries
+  end
+
+  def test_email_is_url_encoded_in_customer_data
+    gateway = EbanxGateway.new(integration_key: 'test_key')
+
+    post = { payment: {} }
+    payment = stub(name: 'John Doe') # You can stub the payment object if needed
+    options = {
+      email: 'john+test@example.com',
+      document: '12345678901',
+      birth_date: '1980-01-01'
+    }
+
+    gateway.send(:add_customer_data, post, payment, options)
+
+    expected_encoded_email = URI.encode_www_form_component('john+test@example.com')
+    assert_equal expected_encoded_email, post[:payment][:email]
+  end
+
+  def test_successful_purchase_with_payment_taxes_iva_co
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(payment_taxes_iva_co: '0.19'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"taxes\":\{\"iva_co\":\"0.19\"\}}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   private
 
   def pre_scrubbed
@@ -200,6 +479,18 @@ class EbanxTest < Test::Unit::TestCase
   def post_scrubbed
     %q(
       request_body={\"integration_key\":\"[FILTERED]\",\"operation\":\"request\",\"payment\":{\"amount_total\":\"1.00\",\"currency_code\":\"USD\",\"merchant_payment_code\":\"2bed75b060e936834e354d944aeaa892\",\"name\":\"Longbob Longsen\",\"email\":\"unspecified@example.com\",\"document\":\"853.513.468-93\",\"payment_type_code\":\"visa\",\"creditcard\":{\"card_number\":\"[FILTERED]\",\"card_name\":\"Longbob Longsen\",\"card_due_date\":\"9/2018\",\"card_cvv\":\"[FILTERED]\"},\"address\":\"Rua E\",\"street_number\":\"1040\",\"city\":\"Maracana\u{fa}\",\"state\":\"CE\",\"zipcode\":\"61919-230\",\"country\":\"BR\",\"phone_number\":\"(555)555-5555\"}}
+    )
+  end
+
+  def pre_scrubbed_network_token
+    %q(
+      request_body={\"payment\":{\"amount_total\":\"1.00\",\"currency_code\":\"USD\",\"merchant_payment_code\":\"dc2df1269619de89d72ca6c8fc1ee52a\",\"instalments\":1,\"order_number\":\"d17a85de6bb15444b82320a7ab0ce846\",\"name\":\"Longbob Longsen\",\"email\":\"neymar@test.com\",\"document\":\"853.513.468-93\",\"payment_type_code\":\"creditcard\",\"creditcard\":{\"network_token_pan\":\"4111111111111111\",\"network_token_expire_date\":\"12/2030\",\"network_token_cryptogram\":\"example+/_cryptogram==\",\"soft_descriptor\":\"ActiveMerchant\"},\"address\":\"Rua E\",\"street_number\":\"1040\",\"city\":\"Maracana\u00FA\",\"state\":\"CE\",\"zipcode\":\"61919-230\",\"country\":\"br\",\"phone_number\":\"(555)555-5555\",\"tags\":[\"Spreedly\"]},\"integration_key\":\"test_ik_Gc1EwnH0ud2UIndICS37lA\",\"operation\":\"request\",\"device_id\":\"34c376b2767\",\"metadata\":{\"metadata_1\":\"test\",\"metadata_2\":\"test2\",\"merchant_payment_code\":\"d17a85de6bb15444b82320a7ab0ce846\"}}
+    )
+  end
+
+  def post_scrubbed_network_token
+    %q(
+      request_body={\"payment\":{\"amount_total\":\"1.00\",\"currency_code\":\"USD\",\"merchant_payment_code\":\"dc2df1269619de89d72ca6c8fc1ee52a\",\"instalments\":1,\"order_number\":\"d17a85de6bb15444b82320a7ab0ce846\",\"name\":\"Longbob Longsen\",\"email\":\"neymar@test.com\",\"document\":\"853.513.468-93\",\"payment_type_code\":\"creditcard\",\"creditcard\":{\"network_token_pan\":\"[FILTERED]\",\"network_token_expire_date\":\"12/2030\",\"network_token_cryptogram\":\"[FILTERED]\",\"soft_descriptor\":\"ActiveMerchant\"},\"address\":\"Rua E\",\"street_number\":\"1040\",\"city\":\"Maracana\u00FA\",\"state\":\"CE\",\"zipcode\":\"61919-230\",\"country\":\"br\",\"phone_number\":\"(555)555-5555\",\"tags\":[\"Spreedly\"]},\"integration_key\":\"[FILTERED]\",\"operation\":\"request\",\"device_id\":\"34c376b2767\",\"metadata\":{\"metadata_1\":\"test\",\"metadata_2\":\"test2\",\"merchant_payment_code\":\"d17a85de6bb15444b82320a7ab0ce846\"}}
     )
   end
 
@@ -296,6 +587,12 @@ class EbanxTest < Test::Unit::TestCase
   def invalid_cred_response
     %(
       {"status":"ERROR","status_code":"DA-1","status_message":"Invalid integration key"}
+    )
+  end
+
+  def successful_purchase_with_network_token
+    %(
+      {"payment":{"hash":"66e45f37b6700ed7119469c774a824a006a1da0293ffd204","country":"br","merchant_payment_code":"dc2df1269619de89d72ca6c8fc1ee52a","order_number":"d17a85de6bb15444b82320a7ab0ce846","status":"CO","status_date":"2024-09-13 15:50:15","open_date":"2024-09-13 15:50:15","confirm_date":"2024-09-13 15:50:15","transfer_date":null,"amount_br":"5.85","amount_ext":"1.00","amount_iof":"0.02","currency_rate":"5.8300","currency_ext":"USD","due_date":"2024-09-16","instalments":"1","payment_type_code":"visa","details":{"billing_descriptor":"SPREEDLY"},"transaction_status":{"acquirer":"EBANX","code":"OK","description":"Accepted","authcode":"87017"},"pre_approved":true,"capture_available":false},"status":"SUCCESS"}
     )
   end
 end

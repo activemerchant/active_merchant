@@ -43,7 +43,7 @@ class TrustCommerceTest < Test::Unit::TestCase
       email: 'cody@example.com',
       billing_address: @valid_address,
       shipping_address: @valid_address,
-      custom_fields: custom_fields
+      custom_fields:
     }
   end
 

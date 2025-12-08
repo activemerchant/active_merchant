@@ -1,8 +1,10 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayArcGateway < Gateway
-      self.test_url = 'https://testapi.payarc.net/v1'
-      self.live_url = 'https://api.payarc.net/v1'
+      version 'v1'
+
+      self.test_url = "https://testapi.payarc.net/#{fetch_version}"
+      self.live_url = "https://api.payarc.net/#{fetch_version}"
 
       self.supported_countries = ['US']
       self.default_currency = 'usd'
@@ -242,7 +244,7 @@ module ActiveMerchant #:nodoc:
         token(creditcard, options)
       end
 
-      #:nodoc:
+      # :nodoc:
       def token(creditcard, options = {})
         post = {}
         post['authorize_card'] = 1
@@ -253,12 +255,12 @@ module ActiveMerchant #:nodoc:
         commit(STANDARD_ACTIONS[:token][:end_point], post)
       end
 
-      def supports_scrubbing? #:nodoc:
+      def supports_scrubbing? # :nodoc:
         true
       end
 
       def scrub(transcript)
-        #:nodoc:
+        # :nodoc:
         transcript.
           gsub(%r((Authorization: Bearer )[^\s]+\s)i, '\1[FILTERED]\2').
           gsub(%r((&?card_number=)[^&]*)i, '\1[FILTERED]').

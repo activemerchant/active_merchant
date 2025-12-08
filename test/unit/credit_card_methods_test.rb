@@ -31,7 +31,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
        501058 501060 501061 501062 501063 501066 501067 501072 501075 501083 501087 501623
        501800 501089 501091 501092 501095 501104 501105 501107 501108 501109 501500 501879
        502000 502113 502301 503175 503645 503800
-       503670 504310 504338 504363 504533 504587 504620 504639 504656 504738 504781 504910
+       503670 504310 504338 504363 504533 504587 504620 504738 504781 504910
        505616
        507001 507002 507004 507082 507090 560014 560565 561033 572402 572610 572626 576904 578614
        585274 585697 586509 588729 588792 589244 589300 589407 589471 589605 589633 589647 589671
@@ -362,6 +362,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'naranja', CreditCard.brand?('5895627823453005')
     assert_equal 'naranja', CreditCard.brand?('5895620000000002')
     assert_equal 'naranja', CreditCard.brand?('5895626746595650')
+    assert_equal 'naranja', CreditCard.brand?('5895628637412581')
+    assert_equal 'naranja', CreditCard.brand?('5895627087232438')
   end
 
   # Alelo BINs beginning with the digit 4 overlap with Visa's range of valid card numbers.
@@ -399,12 +401,18 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'synchrony', CreditCard.brand?('7006000000000000')
   end
 
-  def test_should_detect_routex_card
+  def test_should_detect_routex_card_with_19_digits
     number = '7006760000000000000'
     assert_equal 'routex', CreditCard.brand?(number)
     assert CreditCard.valid_number?(number)
     assert_equal 'routex', CreditCard.brand?('7006789224703725591')
     assert_equal 'routex', CreditCard.brand?('7006740000000000013')
+  end
+
+  def test_should_detect_routex_card_with_18_digits
+    assert_equal 'routex', CreditCard.brand?('700676000000000000')
+    assert_equal 'routex', CreditCard.brand?('700678922470372559')
+    assert_equal 'routex', CreditCard.brand?('700674000000000001')
   end
 
   def test_should_detect_when_an_argument_brand_does_not_match_calculated_brand
@@ -445,9 +453,10 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_matching_valid_naranja
-    number = '5895627823453005'
-    assert_equal 'naranja', CreditCard.brand?(number)
-    assert CreditCard.valid_number?(number)
+    %w[5895627823453005 5895627087232438 5895628637412581].each do |number|
+      assert_equal 'naranja', CreditCard.brand?(number)
+      assert CreditCard.valid_number?(number)
+    end
   end
 
   def test_matching_valid_creditel
@@ -588,6 +597,30 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_false CreditCard.valid_number?('116901000000001')
     assert_false CreditCard.valid_number?('195724000000001')
     assert_false CreditCard.valid_number?('192004000000001')
+  end
+
+  def test_should_detect_patagonia_365_cards
+    assert_equal 'patagonia_365', CreditCard.brand?('5046562602769006')
+  end
+
+  def test_should_validate_patagonia_365_card
+    assert_true CreditCard.valid_number?('5046562602769006')
+  end
+
+  def test_should_detect_invalid_patagonia_365_card
+    assert_false CreditCard.valid_number?('5046562602769005')
+  end
+
+  def test_should_detect_sol_cards
+    assert_equal 'tarjeta_sol', CreditCard.brand?('5046391746825544')
+  end
+
+  def test_should_validate_sol_card
+    assert_true CreditCard.valid_number?('5046391746825544')
+  end
+
+  def test_should_detect_invalid_sol_card
+    assert_false CreditCard.valid_number?('5046390000000001')
   end
 
   def test_credit_card?

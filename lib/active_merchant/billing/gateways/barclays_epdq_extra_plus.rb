@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BarclaysEpdqExtraPlusGateway < OgoneGateway
       self.test_url = 'https://mdepayments.epdq.co.uk/ncol/test/'
       self.live_url = 'https://payments.epdq.co.uk/ncol/prod/'

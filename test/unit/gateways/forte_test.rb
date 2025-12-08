@@ -188,6 +188,15 @@ class ForteTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_api_version
+    assert_equal 'v2', @gateway.fetch_version
+  end
+
+  def test_urls_for_test_and_live_mode
+    assert_equal 'https://sandbox.forte.net/api/v2', @gateway.test_url
+    assert_equal 'https://api.forte.net/v2', @gateway.live_url
+  end
+
   private
 
   class MockedResponse

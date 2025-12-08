@@ -626,7 +626,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
 
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
-                   stored_credential: stored_credential(*args, id: id),
+                   stored_credential: stored_credential(*args, id:),
                    issuer_id: '')
   end
 end

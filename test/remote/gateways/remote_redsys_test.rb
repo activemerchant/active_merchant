@@ -29,10 +29,10 @@ class RemoteRedsysTest < Test::Unit::TestCase
       @credit_card,
       @options.merge(
         three_d_secure: {
-          version: version,
-          ds_transaction_id: ds_transaction_id,
-          three_ds_server_trans_id: three_ds_server_trans_id,
-          eci: eci
+          version:,
+          ds_transaction_id:,
+          three_ds_server_trans_id:,
+          eci:
         }
       )
     )
@@ -51,9 +51,9 @@ class RemoteRedsysTest < Test::Unit::TestCase
       @credit_card,
       @options.merge(
         three_d_secure: {
-          eci: eci,
-          cavv: cavv,
-          xid: xid
+          eci:,
+          cavv:,
+          xid:
         }
       )
     )
@@ -80,7 +80,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'unscheduled',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     response = @gateway.purchase(@amount, @credit_card, used_options)

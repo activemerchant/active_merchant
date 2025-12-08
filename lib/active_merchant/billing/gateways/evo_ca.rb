@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # === EVO Canada payment gateway.
     #
     # EVO returns two different identifiers for most transactions, the

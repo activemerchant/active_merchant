@@ -1,8 +1,9 @@
 require 'active_merchant/billing/gateways/orbital/orbital_soft_descriptors'
 require 'rexml/document'
+require 'active_merchant/billing/gateways/orbital/orbital_codes'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on Orbital, visit the {integration center}[http://download.chasepaymentech.com]
     #
     # ==== Authentication Options
@@ -28,13 +29,14 @@ module ActiveMerchant #:nodoc:
     # Company will automatically be affiliated.
 
     class OrbitalGateway < Gateway
+      include OrbitalCodes
       include Empty
 
-      API_VERSION = '9.5'
+      version '9.5'
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
-        'Content-Type' => "application/PTI#{API_VERSION.delete('.')}",
+        'Content-Type' => "application/PTI#{fetch_version.delete('.')}",
         'Content-transfer-encoding' => 'text',
         'Request-number' => '1',
         'Document-type' => 'Request',
@@ -83,50 +85,6 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
 
       AVS_SUPPORTED_COUNTRIES = %w[US CA UK GB]
-
-      CURRENCY_CODES = {
-        'AUD' => '036',
-        'BRL' => '986',
-        'CAD' => '124',
-        'CLP' => '152',
-        'CZK' => '203',
-        'DKK' => '208',
-        'HKD' => '344',
-        'ICK' => '352',
-        'JPY' => '392',
-        'MXN' => '484',
-        'NZD' => '554',
-        'NOK' => '578',
-        'SGD' => '702',
-        'ZAR' => '710',
-        'SEK' => '752',
-        'CHF' => '756',
-        'GBP' => '826',
-        'USD' => '840',
-        'EUR' => '978'
-      }
-
-      CURRENCY_EXPONENTS = {
-        'AUD' => '2',
-        'BRL' => '2',
-        'CAD' => '2',
-        'CLP' => '2',
-        'CZK' => '2',
-        'DKK' => '2',
-        'HKD' => '2',
-        'ICK' => '2',
-        'JPY' => '0',
-        'MXN' => '2',
-        'NZD' => '2',
-        'NOK' => '2',
-        'SGD' => '2',
-        'ZAR' => '2',
-        'SEK' => '2',
-        'CHF' => '2',
-        'GBP' => '2',
-        'USD' => '2',
-        'EUR' => '2'
-      }
 
       # INDUSTRY TYPES
       ECOMMERCE_TRANSACTION = 'EC'
@@ -214,7 +172,7 @@ module ActiveMerchant #:nodoc:
 
         order = build_new_auth_purchase_order(AUTH_ONLY, money, payment_source, options)
 
-        commit(order, :authorize, options[:retry_logic], options[:trace_number])
+        commit(order, :authorize, options)
       end
 
       def verify(credit_card, options = {})
@@ -230,23 +188,23 @@ module ActiveMerchant #:nodoc:
         action = options[:force_capture] ? FORCE_AUTH_AND_CAPTURE : AUTH_AND_CAPTURE
         order = build_new_auth_purchase_order(action, money, payment_source, options)
 
-        commit(order, :purchase, options[:retry_logic], options[:trace_number])
+        commit(order, :purchase, options)
       end
 
       # MFC - Mark For Capture
       def capture(money, authorization, options = {})
-        commit(build_mark_for_capture_xml(money, authorization, options), :capture, options[:retry_logic], options[:trace_number])
+        commit(build_mark_for_capture_xml(money, authorization, options), :capture, options)
       end
 
       # R – Refund request
       def refund(money, authorization, options = {})
         payment_method = options[:payment_method]
-        order = build_new_order_xml(REFUND, money, payment_method, options.merge(authorization: authorization)) do |xml|
+        order = build_new_order_xml(REFUND, money, payment_method, options.merge(authorization:)) do |xml|
           add_payment_source(xml, payment_method, options)
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
 
-        commit(order, :refund, options[:retry_logic], options[:trace_number])
+        commit(order, :refund, options)
       end
 
       def credit(money, payment_method, options = {})
@@ -254,11 +212,13 @@ module ActiveMerchant #:nodoc:
           add_payment_source(xml, payment_method, options)
         end
 
-        commit(order, :refund, options[:retry_logic], options[:trace_number])
+        commit(order, :refund, options)
       end
 
       # Orbital save a payment method if the TokenTxnType is 'GT', that's why we use this as the default value for store
       def store(creditcard, options = {})
+        options[:exp_date] = expiry_date(creditcard) if creditcard.is_a?(CreditCard)
+
         authorize(0, creditcard, options.merge({ token_txn_type: GET_TOKEN }))
       end
 
@@ -270,7 +230,7 @@ module ActiveMerchant #:nodoc:
 
         order = build_void_request_xml(authorization, options)
 
-        commit(order, :void, options[:retry_logic], options[:trace_number])
+        commit(order, :void, options)
       end
 
       def default_verify_amount(credit_card)
@@ -316,13 +276,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def retrieve_customer_profile(customer_ref_num)
-        options = { customer_profile_action: RETRIEVE, customer_ref_num: customer_ref_num }
+        options = { customer_profile_action: RETRIEVE, customer_ref_num: }
         order = build_customer_request_xml(nil, options)
         commit(order, :retrieve_customer_profile)
       end
 
       def delete_customer_profile(customer_ref_num)
-        options = { customer_profile_action: DELETE, customer_ref_num: customer_ref_num }
+        options = { customer_profile_action: DELETE, customer_ref_num: }
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
       end
@@ -389,8 +349,10 @@ module ActiveMerchant #:nodoc:
         xml.tag! :TxRefNum, split_authorization(authorization).first
       end
 
-      def authorization_string(*args)
-        args.compact.join(';')
+      def authorization_string(options, response)
+        authorization = [response[:tx_ref_num], response[:order_id], response[:safetech_token], response[:card_brand]]
+        authorization << options[:exp_date] if options[:exp_date] && options[:token_txn_type] == GET_TOKEN
+        authorization.compact.join(';')
       end
 
       def split_authorization(authorization)
@@ -574,11 +536,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def billing_name(payment_source, options)
-        if !payment_source.is_a?(String) && payment_source&.name.present?
-          payment_source.name[0..29]
-        elsif options[:billing_address] && options[:billing_address][:name].present?
-          options[:billing_address][:name][0..29]
-        end
+        name =
+          if !payment_source.is_a?(String) && payment_source&.name.present?
+            payment_source.name
+          elsif options[:billing_address] && options[:billing_address][:name].present?
+            options[:billing_address][:name]
+          end
+        name ? format_name(name)[0..29] : nil
       end
 
       def avs_supported?(address)
@@ -594,9 +558,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_safetech_token_data(xml, payment_source, options)
-        payment_source_token = split_authorization(payment_source).values_at(2).first
-        xml.tag! :CardBrand, options[:card_brand]
+        _, _, payment_source_token, card_brand, exp_date = split_authorization(payment_source)
+        xml.tag! :CardBrand, card_brand
         xml.tag! :AccountNum, payment_source_token
+        xml.tag! :Exp, exp_date if exp_date && options[:pass_exp_date]&.to_s == 'true'
       end
 
       #=====PAYMENT SOURCE FIELDS=====
@@ -617,12 +582,12 @@ module ActiveMerchant #:nodoc:
         add_bank_account_type(xml, check)
         xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method]
         xml.tag! :BankPmtDelv, options[:payment_delivery] || 'B'
-        xml.tag! :AVSname, (check&.name ? check.name[0..29] : nil) if get_address(options).blank?
+        xml.tag! :AVSname, (check&.name ? format_name(check.name)[0..29] : nil) if get_address(options).blank?
       end
 
       def add_credit_card(xml, credit_card, options)
         xml.tag! :AccountNum, credit_card.number if credit_card.is_a?(CreditCard)
-        xml.tag! :Exp, expiry_date(credit_card) if credit_card.is_a?(CreditCard)
+        xml.tag! :Exp, options[:override_exp_date] || expiry_date(credit_card) if credit_card.is_a?(CreditCard)
         add_currency_fields(xml, options[:currency])
         add_verification_value(xml, credit_card) if credit_card.is_a?(CreditCard)
       end
@@ -709,10 +674,14 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:XID, three_d_secure[:xid]) if three_d_secure[:xid]
       end
 
+      PYMT_PROGRAM_CODE_BY_BRAND = {
+        'american_express' => 'ASK',
+        'discover' => 'DPB'
+      }.freeze
       def add_pymt_brand_program_code(xml, credit_card, three_d_secure)
-        return unless three_d_secure && credit_card.brand == 'american_express'
+        return unless three_d_secure && (code = PYMT_PROGRAM_CODE_BY_BRAND[credit_card.brand])
 
-        xml.tag!(:PymtBrandProgramCode, 'ASK')
+        xml.tag!(:PymtBrandProgramCode, code)
       end
 
       def mastercard?(payment_source)
@@ -754,21 +723,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mc_ucafind(xml, credit_card, three_d_secure, options)
-        return unless three_d_secure
+        return unless three_d_secure && %w(4 6 7).include?(three_d_secure&.dig(:eci))
 
-        if options[:alternate_ucaf_flow]
-          return unless %w(4 6 7).include?(three_d_secure[:eci])
-
-          xml.tag! :UCAFInd, options[:ucaf_collection_indicator] if options[:ucaf_collection_indicator]
-        else
-          xml.tag! :UCAFInd, options[:ucaf_collection_indicator] || '4'
-        end
+        xml.tag! :UCAFInd, options[:ucaf_collection_indicator] if options[:ucaf_collection_indicator]
       end
 
       #=====SCA (STORED CREDENTIAL) FIELDS=====
 
       def add_stored_credentials(xml, parameters)
-        return unless parameters[:mit_stored_credential_ind] == 'Y' || parameters[:stored_credential] && !parameters[:stored_credential].values.all?(&:nil?)
+        return unless parameters[:mit_stored_credential_ind] == 'Y' || (parameters[:stored_credential] && !parameters[:stored_credential].values.all?(&:nil?))
 
         if msg_type = get_msg_type(parameters)
           xml.tag! :MITMsgType, msg_type
@@ -820,7 +783,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_digital_token_cryptogram(xml, credit_card, three_d_secure)
-        return unless credit_card.is_a?(NetworkTokenizationCreditCard) || three_d_secure && credit_card.brand == 'discover'
+        return unless credit_card.is_a?(NetworkTokenizationCreditCard) || (three_d_secure && credit_card.brand == 'discover')
 
         cryptogram =
           if three_d_secure && credit_card.brand == 'discover'
@@ -919,10 +882,10 @@ module ActiveMerchant #:nodoc:
 
       #=====REQUEST/RESPONSE METHODS=====
 
-      def commit(order, message_type, retry_logic = nil, trace_number = nil)
+      def commit(order, message_type, options = {})
         headers = POST_HEADERS.merge('Content-length' => order.size.to_s)
-        if (@options[:retry_logic] || retry_logic) && trace_number
-          headers['Trace-number'] = trace_number.to_s
+        if (@options[:retry_logic] || options[:retry_logic]) && options[:trace_number]
+          headers['Trace-number'] = options[:trace_number].to_s
           headers['Merchant-Id'] = @options[:merchant_id]
         end
         request = ->(url) { parse(ssl_post(url, order, headers)) }
@@ -937,14 +900,12 @@ module ActiveMerchant #:nodoc:
             request.call(remote_url(:secondary))
           end
 
-        authorization = authorization_string(response[:tx_ref_num], response[:order_id], response[:safetech_token], response[:card_brand])
-
         Response.new(
           success?(response, message_type),
           message_from(response),
           response,
           {
-            authorization: authorization,
+            authorization: authorization_string(options, response),
             test: self.test?,
             avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
             cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])

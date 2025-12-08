@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/first_pay/first_pay_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FirstPayJsonGateway < Gateway
       include FirstPayCommon
 

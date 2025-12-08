@@ -61,12 +61,10 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
       notes: 'Note about customer', # optional
       data: 'Some Data', # optional
       url: 'awesomesite.com', # optional
-      payment_methods: payment_methods # optional
+      payment_methods: # optional
     }
 
-    @payment_options = {
-      payment_method: payment_method
-    }
+    @payment_options = { payment_method: }
 
     @transaction_options = {
       payment_method: @credit_card,

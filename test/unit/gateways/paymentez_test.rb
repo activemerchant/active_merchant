@@ -384,6 +384,11 @@ class PaymentezTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_url
+    assert_equal 'https://ccapi-stg.paymentez.com/v2/', @gateway.test_url
+    assert_equal 'https://ccapi.paymentez.com/v2/', @gateway.live_url
+  end
+
   private
 
   def pre_scrubbed

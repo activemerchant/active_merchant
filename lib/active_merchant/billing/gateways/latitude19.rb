@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Latitude19Gateway < Gateway
       self.display_name = 'Latitude19 Gateway'
       self.homepage_url = 'http://www.l19tech.com'

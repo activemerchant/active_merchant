@@ -51,7 +51,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
-      email: 'wow@example.com'
+      email: 'wow@example.com',
+      ip: '127.0.0.1'
     }
 
     @level_two_data = {
@@ -115,6 +116,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         sub_tax_id: '987-65-4321'
       }
     }
+
     @apple_pay_network_token = network_tokenization_credit_card(
       '4895370015293175',
       month: 10,
@@ -191,6 +193,46 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         }
       }
     }
+
+    @aft_less_options = {
+      account_funding_transaction: true,
+      aft_type: 'A',
+      aft_payment_purpose: '01',
+      aft_sender_account_type: '02',
+      aft_sender_account_reference: '4111111111111112',
+      aft_sender_full_name: {
+        first: 'First',
+        last: 'Sender'
+      },
+      aft_sender_funding_address: {
+        address1: '123 Sender St',
+        postal_code: '12345',
+        city: 'Senderville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_account_type: '03',
+      aft_recipient_account_reference: '4111111111111111',
+      aft_recipient_full_name: {
+        first: 'First',
+        last: 'Recipient'
+      },
+      aft_recipient_funding_address: {
+        address1: '123 Recipient St',
+        postal_code: '12345',
+        city: 'Recipientville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_funding_data: {
+        telephone_number: '123456789',
+        birth_date: {
+          day_of_month: '01',
+          month: '01',
+          year: '1980'
+        }
+      }
+    }
   end
 
   def test_successful_purchase
@@ -201,6 +243,12 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_network_token
     assert response = @gateway.purchase(@amount, @nt_credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_network_token_with_shopper_ip_address
+    assert response = @gateway.purchase(@amount, @nt_credit_card, @options.merge(ip: '127.0.0.1'))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -299,8 +347,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
 
     assert_failure response
-    assert_equal response.error_code, '5'
-    assert_equal "Element 'tokenNumber' must have valid numeric content.", response.message
+    assert_equal response.error_code, '2'
+    assert_match "Missing required elements 'tokenNumber'", response.message
   end
 
   def test_unsucessfull_authorize_with_token_number_as_empty_string_apple_pay
@@ -308,8 +356,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
 
     assert_failure response
-    assert_equal response.error_code, '5'
-    assert_equal "Element 'tokenNumber' must have valid numeric content.", response.message
+    assert_equal response.error_code, '2'
+    assert_match "Missing required elements 'tokenNumber'", response.message
   end
 
   def test_unsucessfull_authorize_with_invalid_token_number_apple_pay
@@ -441,7 +489,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_risk_data
-    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: risk_data })
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: })
     assert response = @gateway.authorize(@amount, @threeDS2_card, options)
     assert_success response
     assert_equal 'SUCCESS', response.message
@@ -532,7 +580,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423'
       }
@@ -555,11 +603,14 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_successful_authorize_with_3ds2_challenge
     session_id = generate_unique_id
     options = @options.merge(
+      # inserted this @aft_otpions for testing during review if desired, did not want to duplicate
+      # this entire test with just this addtion, will remove after review
+      @aft_options,
       {
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1'
       }
     )
@@ -669,6 +720,29 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_recurring_purchase_with_apple_pay_credentials
+    stored_credential_params = stored_credential(:initial, :recurring, :merchant)
+    assert auth = @gateway.authorize(@amount, @apple_pay_network_token, @options.merge({ stored_credential: stored_credential_params }))
+    assert_success auth
+    assert auth.authorization
+    assert auth.params['scheme_response']
+    assert auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
+
+    @options[:order_id] = generate_unique_id
+    @options[:stored_credential] = stored_credential(:used, :recurring, :merchant, network_transaction_id: auth.params['transaction_identifier'])
+
+    assert next_auth = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert next_auth.authorization
+    assert next_auth.params['scheme_response']
+    assert next_auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, next_auth.authorization, authorization_validated: true)
+    assert_success capture
+  end
+
   def test_successful_authorize_with_3ds_with_normalized_stored_credentials
     session_id = generate_unique_id
     stored_credential_params = stored_credential(:initial, :unscheduled, :merchant)
@@ -677,7 +751,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423',
         stored_credential: stored_credential_params
@@ -698,7 +772,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423',
         stored_credential_usage: 'FIRST'
@@ -751,6 +825,20 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_with_custom_string_fields
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_string_fields: { custom_string_field_1: 'testvalue1', custom_string_field_2: 'testvalue2' }))
+    assert_success response
+    assert_equal true, response.params['ok']
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_failed_purchase_with_blank_custom_string_field
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_string_fields: { custom_string_field_1: '' }))
+    assert_failure response
+
+    assert_equal "The tag 'customStringField1' cannot be empty", response.message
+  end
+
   # Fails currently because the sandbox doesn't actually validate the stored_credential options
   # def test_failed_authorize_with_bad_stored_cred_options
   #   assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential_usage: 'FIRST'))
@@ -778,7 +866,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       {
         execute_threed: true,
         accept_header: 'text/html',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423'
       }
@@ -826,6 +914,24 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert response.params['last_event'] || response.params['ok']
   end
 
+  def test_3ds_version_2_parameters_for_nt
+    options = @options.merge(
+      {
+        three_d_secure: {
+          version: '2.1.0',
+          ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+          cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+          eci: '05'
+        }
+      }
+    )
+
+    assert response = @gateway.authorize(@amount, @nt_credit_card, @options.merge(options))
+    assert response.test?
+    assert response.success?
+    assert response.params['last_event'] || response.params['ok']
+  end
+
   def test_failed_capture
     assert response = @gateway.capture(@amount, 'bogus')
     assert_failure response
@@ -841,13 +947,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     billing_address.delete(:address1)
     billing_address.delete(:zip)
     billing_address.delete(:country)
-    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: billing_address))
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address:))
   end
 
   def test_state_omitted
     billing_address = address
     billing_address.delete(:state)
-    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: billing_address))
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address:))
   end
 
   def test_ip_address
@@ -993,35 +1099,79 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal '20', credit.error_code
   end
 
-  # These three fast_fund_credit tests are currently failing with the message: Disbursement transaction not supported
-  # It seems that the current sandbox setup does not support testing this.
+  def test_successful_authorize_visa_account_funding_transfer
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(@aft_options))
+    assert_success auth
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal 'SUCCESS', auth.message
+  end
 
-  # def test_successful_fast_fund_credit_on_cft_gateway
-  #   options = @options.merge({ fast_fund_credit: true })
+  def test_successful_authorize_visa_account_funding_transfer_via_token
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
 
-  #   credit = @cftgateway.credit(@amount, @credit_card, options)
-  #   assert_success credit
-  #   assert_equal 'SUCCESS', credit.message
-  # end
+    auth = @gateway.authorize(@amount, store.authorization, @options.merge(@aft_options))
+    assert_success auth
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal 'SUCCESS', auth.message
+  end
 
-  # def test_successful_fast_fund_credit_with_token_on_cft_gateway
-  #   assert store = @gateway.store(@credit_card, @store_options)
-  #   assert_success store
+  def test_successful_authorize_visa_account_funding_transfer_3ds
+    options = @options.merge(@aft_options, { execute_threed: true, three_ds_version: '2.0' })
+    assert auth = @gateway.authorize(@amount, @threeDS2_card, options)
+    assert_success auth
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal 'SUCCESS', auth.message
+  end
 
-  #   options = @options.merge({ fast_fund_credit: true })
-  #   assert credit = @cftgateway.credit(@amount, store.authorization, options)
-  #   assert_success credit
-  # end
+  def test_failed_authorize_visa_account_funding_transfer
+    auth = @gateway.authorize(@amount, credit_card('4111111111111111', name: 'REFUSED'), @options.merge(@aft_options))
+    assert_failure auth
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal 'REFUSED', auth.message
+  end
 
-  # def test_failed_fast_fund_credit_on_cft_gateway
-  #   options = @options.merge({ fast_fund_credit: true })
-  #   refused_card = credit_card('4444333322221111', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
+  def test_failed_authorize_visa_account_funding_transfer_acquirer_error
+    auth = @gateway.authorize(@amount, credit_card('4111111111111111', name: 'ACQERROR'), @options.merge(@aft_options))
+    assert_failure auth
+    assert_equal 'ACQUIRER ERROR', auth.message
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal '20', auth.error_code
+  end
 
-  #   credit = @cftgateway.credit(@amount, refused_card, options)
-  #   assert_failure credit
-  #   assert_equal '01', credit.params['action_code']
-  #   assert_equal "A transaction status of 'ok' or 'PUSH_APPROVED' is required.", credit.message
-  # end
+  def test_successful_authorize_visa_account_funding_transfer_with_no_middle_name_address2
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(@aft_less_options))
+    assert_success auth
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal 'SUCCESS', auth.message
+  end
+
+  def test_successful_fast_fund_credit_on_cft_gateway
+    options = @options.merge({ fast_fund_credit: true })
+
+    credit = @cftgateway.credit(@amount, @credit_card, options)
+    assert_success credit
+    assert_equal 'SUCCESS', credit.message
+  end
+
+  def test_successful_fast_fund_credit_with_token_on_cft_gateway
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
+
+    options = @options.merge({ fast_fund_credit: true })
+    assert credit = @cftgateway.credit(@amount, store.authorization, options)
+    assert_success credit
+  end
+
+  def test_failed_fast_fund_credit_on_cft_gateway
+    options = @options.merge({ fast_fund_credit: true })
+    refused_card = credit_card('4444333322221111', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
+
+    credit = @cftgateway.credit(@amount, refused_card, options)
+    assert_failure credit
+    assert_equal '01', credit.params['action_code']
+    assert_equal "A transaction status of 'ok' or 'PUSH_APPROVED' is required.", credit.message
+  end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
@@ -1283,6 +1433,25 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert @cftgateway.refund(@amount, response.authorization, authorization_validated: true)
   end
 
+  def test_successful_refund_with_refund_reference_field
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    # There is a delay for a transaction to be recorded by Worldpay. Inquiring
+    # too soon will result in an error "Order not ready"
+    sleep 40
+
+    refund = @gateway.refund(@amount, response.authorization, @options.merge(refund_reference: 12233, authorization_validated: true))
+
+    if refund.message == 'Order not ready'
+      sleep 40
+
+      assert_equal 'SUCCESS', refund.message
+    end
+  end
+
   def test_failed_refund_synchronous_response
     auth = @cftgateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -1298,7 +1467,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     refund = @cftgateway.refund(@amount * 2, auth.authorization, authorization_validated: true)
     assert_failure refund
-    assert_equal 'Refund amount too high', refund.message
+    assert_equal 'Invalid amount: The refund amount should be equal to the captured value', refund.message
   end
 
   def test_successful_purchase_with_options_synchronous_response
@@ -1310,30 +1479,72 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success purchase
   end
 
-  # There is a delay of up to 5 minutes for a transaction to be recorded by Worldpay. Inquiring
-  # too soon will result in an error "Order not ready". Leaving commented out due to included sleeps.
-  # def test_successful_inquire_with_order_id
-  #   order_id = @options[:order_id]
-  #   assert auth = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
-  #   assert auth.authorization
-  #   sleep 60
+  def test_successful_inquire_with_order_id
+    order_id = @options[:order_id]
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert auth.authorization
 
-  #   assert inquire = @gateway.inquire(nil, { order_id: order_id })
-  #   assert_success inquire
-  #   assert auth.authorization == inquire.authorization
-  # end
+    # There is a delay for a transaction to be recorded by Worldpay. Inquiring
+    # too soon will result in an error "Order not ready"
+    sleep 40
 
-  # def test_successful_inquire_with_authorization
-  #   assert auth = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
-  #   assert auth.authorization
-  #   sleep 60
+    assert inquire = @gateway.inquire(nil, { order_id: })
 
-  #   assert inquire = @gateway.inquire(auth.authorization, {})
-  #   assert_success inquire
-  #   assert auth.authorization == inquire.authorization
-  # end
+    if inquire.message == 'Order not ready'
+      sleep 40
+
+      assert inquire = @gateway.inquire(nil, { order_id: })
+    end
+
+    assert auth.authorization == inquire.authorization
+    assert_success inquire
+  end
+
+  def test_successful_inquire_with_authorization
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert auth.authorization
+
+    # There is a delay for a transaction to be recorded by Worldpay. Inquiring
+    # too soon will result in an error "Order not ready"
+    sleep 40
+
+    assert inquire = @gateway.inquire(auth.authorization)
+
+    if inquire.message == 'Order not ready'
+      sleep 40
+
+      assert inquire = @gateway.inquire(auth.authorization)
+    end
+
+    assert_success inquire
+    assert auth.authorization == inquire.authorization
+  end
+
+  def test_failed_inquire_with_authorization
+    @credit_card.first_name = nil
+    @credit_card.last_name = 'REFUSED62'
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure auth
+    assert auth.authorization
+
+    # There is a delay for a transaction to be recorded by Worldpay. Inquiring
+    # too soon will result in an error "Order not ready"
+    sleep 40
+
+    assert inquire = @gateway.inquire(auth.authorization)
+
+    if inquire.message == 'Order not ready'
+      sleep 40
+
+      assert inquire = @gateway.inquire(auth.authorization)
+    end
+
+    assert_failure inquire
+    assert auth.authorization == inquire.authorization
+  end
 
   private
 

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CredoraxGateway < Gateway
       class_attribute :test_url, :live_na_url, :live_eu_url
 
@@ -150,6 +150,12 @@ module ActiveMerchant #:nodoc:
         add_submerchant_id(post, options)
         add_stored_credential(post, options)
         add_processor(post, options)
+        add_crypto_currency_type(post, options)
+
+        if options[:aft]
+          add_recipient(post, options)
+          add_sender(post, options)
+        end
 
         commit(:purchase, post)
       end
@@ -165,8 +171,15 @@ module ActiveMerchant #:nodoc:
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_stored_credential(post, options)
+        add_account_name_inquiry(post, options)
         add_processor(post, options)
         add_authorization_details(post, options)
+        add_crypto_currency_type(post, options)
+
+        if options[:aft]
+          add_recipient(post, options)
+          add_sender(post, options)
+        end
 
         commit(:authorize, post)
       end
@@ -179,6 +192,8 @@ module ActiveMerchant #:nodoc:
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_processor(post, options)
+        add_crypto_currency_type(post, options)
+        add_transaction_type(post, options)
 
         commit(:capture, post)
       end
@@ -191,6 +206,8 @@ module ActiveMerchant #:nodoc:
         add_submerchant_id(post, options)
         post[:a1] = generate_unique_id
         add_processor(post, options)
+        add_crypto_currency_type(post, options)
+        add_transaction_type(post, options)
 
         commit(:void, post, reference_action)
       end
@@ -205,6 +222,8 @@ module ActiveMerchant #:nodoc:
         add_processor(post, options)
         add_email(post, options)
         add_recipient(post, options)
+        add_crypto_currency_type(post, options)
+        add_transaction_type(post, options)
 
         if options[:referral_cft]
           add_customer_name(post, options)
@@ -225,14 +244,16 @@ module ActiveMerchant #:nodoc:
         add_transaction_type(post, options)
         add_processor(post, options)
         add_customer_name(post, options)
+        add_crypto_currency_type(post, options)
 
         commit(:credit, post)
       end
 
-      def verify(credit_card, options = {})
+      def verify(payment_method, options = {})
+        amount = eligible_for_0_auth?(payment_method, options) ? 0 : 100
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment_method, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless eligible_for_0_auth?(payment_method, options)
         end
       end
 
@@ -282,13 +303,17 @@ module ActiveMerchant #:nodoc:
       }
 
       def add_payment_method(post, payment_method, options)
-        post[:c1] = payment_method&.name || ''
+        post[:c1] = payment_method&.name || '' unless options[:account_name_inquiry].to_s == 'true'
         add_network_tokenization_card(post, payment_method, options) if payment_method.is_a? NetworkTokenizationCreditCard
         post[:b2] = CARD_TYPES[payment_method.brand] || ''
         post[:b1] = payment_method.number
         post[:b5] = payment_method.verification_value
         post[:b4] = format(payment_method.year, :two_digits)
         post[:b3] = format(payment_method.month, :two_digits)
+      end
+
+      def eligible_for_0_auth?(payment_method, options = {})
+        payment_method.is_a?(CreditCard) && %w(visa master).include?(payment_method.brand) && options[:zero_dollar_auth]
       end
 
       def add_network_tokenization_card(post, payment_method, options)
@@ -319,12 +344,12 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:d1] = options[:ip] || '127.0.0.1'
         if (billing_address = options[:billing_address])
-          post[:c5]   = billing_address[:address1]  if billing_address[:address1]
-          post[:c7]   = billing_address[:city]      if billing_address[:city]
-          post[:c10]  = billing_address[:zip]       if billing_address[:zip]
-          post[:c8]   = billing_address[:state]     if billing_address[:state]
-          post[:c9]   = billing_address[:country]   if billing_address[:country]
-          post[:c2]   = billing_address[:phone]     if billing_address[:phone]
+          post[:c5]   = billing_address[:address1]      if billing_address[:address1]
+          post[:c7]   = billing_address[:city]          if billing_address[:city]
+          post[:c10]  = billing_address[:zip]           if billing_address[:zip]
+          post[:c8]   = billing_address[:state]         if billing_address[:state]
+          post[:c9]   = billing_address[:country]       if billing_address[:country]
+          post[:c2]   = billing_address[:phone] if billing_address[:phone]
         end
       end
 
@@ -340,19 +365,48 @@ module ActiveMerchant #:nodoc:
         post[:c3] = options[:email] || 'unspecified@example.com'
       end
 
+      def add_sender(post, options)
+        return unless options[:sender_ref_number] || options[:sender_fund_source] || options[:sender_country_code] || options[:sender_street_address] || options[:sender_city] || options[:sender_state] || options[:sender_first_name] || options[:sender_last_name] || options[:sender_birth_date]
+
+        sender_country_code = options[:sender_country_code]&.length == 3 ? options[:sender_country_code] : Country.find(options[:sender_country_code]).code(:alpha3).value if options[:sender_country_code]
+        post[:s15] = sender_country_code
+        post[:s17] = options[:sender_ref_number] if options[:sender_ref_number]
+        post[:s18] = options[:sender_fund_source] if options[:sender_fund_source]
+        post[:s10] = options[:sender_first_name] if options[:sender_first_name]
+        post[:s11] = options[:sender_last_name] if options[:sender_last_name]
+        post[:s12] = options[:sender_street_address] if options[:sender_street_address]
+        post[:s13] = options[:sender_city] if options[:sender_city]
+        post[:s14] = options[:sender_state] if options[:sender_state]
+        post[:s19] = options[:sender_birth_date] if options[:sender_birth_date]
+      end
+
       def add_recipient(post, options)
-        return unless options[:recipient_street_address] || options[:recipient_city] || options[:recipient_province_code] || options[:recipient_country_code]
+        return unless options[:recipient_street_address] || options[:recipient_city] || options[:recipient_province_code] || options[:recipient_country_code] || options[:recipient_first_name] || options[:recipient_last_name] || options[:recipient_postal_code]
 
         recipient_country_code = options[:recipient_country_code]&.length == 3 ? options[:recipient_country_code] : Country.find(options[:recipient_country_code]).code(:alpha3).value if options[:recipient_country_code]
         post[:j6] = options[:recipient_street_address] if options[:recipient_street_address]
         post[:j7] = options[:recipient_city] if options[:recipient_city]
         post[:j8] = options[:recipient_province_code] if options[:recipient_province_code]
+        post[:j12] = options[:recipient_postal_code] if options[:recipient_postal_code]
         post[:j9] = recipient_country_code
+
+        if options[:aft]
+          post[:j5] = options[:recipient_first_name] if options[:recipient_first_name]
+          post[:j13] = options[:recipient_last_name] if options[:recipient_last_name]
+        end
       end
 
       def add_customer_name(post, options)
         post[:j5] = options[:first_name] if options[:first_name]
         post[:j13] = options[:last_name] if options[:last_name]
+      end
+
+      def add_account_name_inquiry(post, options)
+        return unless options[:account_name_inquiry].to_s == 'true'
+
+        post[:c22] = options[:first_name] if options[:first_name]
+        post[:c23] = options[:last_name] if options[:last_name]
+        post[:a9] = '5'
       end
 
       def add_3d_secure(post, options)
@@ -434,7 +488,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction_type(post, options)
-        post[:a9] = options[:transaction_type] if options[:transaction_type]
+        a9 = options[:zero_dollar_auth] ? '5' : options[:transaction_type]
+
+        post[:a9] = a9 if a9
         post[:a2] = '3' if options.dig(:metadata, :manual_entry)
       end
 
@@ -446,6 +502,10 @@ module ActiveMerchant #:nodoc:
       def add_authorization_details(post, options)
         post[:a10] = options[:authorization_type] if options[:authorization_type]
         post[:a11] = options[:multiple_capture_count] if options[:multiple_capture_count]
+      end
+
+      def add_crypto_currency_type(post, options)
+        post[:crypto_currency_type] = options[:crypto_currency_type] if options[:crypto_currency_type]
       end
 
       ACTIONS = {
@@ -486,11 +546,16 @@ module ActiveMerchant #:nodoc:
         Digest::MD5.hexdigest(values.join + @options[:cipher_key])
       end
 
+      def sign_request_with_sha256(params)
+        sorted_params = sort_parameters(params)
+        Digest::SHA256.hexdigest(sorted_params.values.join + @options[:cipher_key])
+      end
+
       def post_data(action, params, reference_action)
         params.keys.each { |key| params[key] = params[key].to_s }
         params[:M] = @options[:merchant_id]
         params[:O] = request_action(action, reference_action)
-        params[:K] = sign_request(params)
+        params[:K] = @options[:use_sha256_signing] ? sign_request_with_sha256(params) : sign_request(params)
         params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
@@ -517,6 +582,32 @@ module ActiveMerchant #:nodoc:
           'Succeeded'
         else
           RESPONSE_MESSAGES[response['Z6']] || response['Z3'] || 'Unable to read error message'
+        end
+      end
+
+      def sort_parameters(parameters)
+        # Character type lookup hash for faster classification
+        char_type_lookup = {}.tap do |lookup|
+          ('0'..'9').each { |c| lookup[c] = 0 }  # Digits
+          ('A'..'Z').each { |c| lookup[c] = 1 }  # Uppercase letters
+          # All other chars default to 2
+        end
+
+        # Memoize sort keys to avoid recalculating for the same string
+        sort_key_cache = {}
+        generate_sort_key = lambda do |str|
+          str = str.to_s
+          sort_key_cache[str] ||= str.chars.map { |char| [char_type_lookup[char] || 2, char] }
+        end
+
+        sanitize_regex = /[<>"'()\\]/
+
+        # Sort keys and build output in one pass
+        parameters.keys.
+          sort_by(&generate_sort_key).
+          each_with_object({}) do |key, sorted_params|
+          value = parameters[key]
+          sorted_params[key] = value.is_a?(String) ? value.gsub(sanitize_regex, ' ').strip : value
         end
       end
     end

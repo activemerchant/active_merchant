@@ -1,8 +1,10 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WepayGateway < Gateway
-      self.test_url = 'https://stage.wepayapi.com/v2'
-      self.live_url = 'https://wepayapi.com/v2'
+      version 'v2'
+
+      self.test_url = "https://stage.wepayapi.com/#{fetch_version}"
+      self.live_url = "https://wepayapi.com/#{fetch_version}"
 
       self.supported_countries = %w[US CA]
       self.supported_cardtypes = %i[visa master american_express discover]

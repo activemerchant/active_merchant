@@ -117,7 +117,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_order_id_is_truncated
     order_id = "SecureNet doesn't like order_ids greater than 25 characters."
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, order_id: order_id)
+      @gateway.purchase(@amount, @credit_card, order_id:)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/ORDERID>SecureNet doesn't like or</, data)
     end.respond_with(successful_purchase_response)

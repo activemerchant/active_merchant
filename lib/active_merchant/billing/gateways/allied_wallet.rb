@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class AlliedWalletGateway < Gateway
       self.display_name = 'Allied Wallet'
       self.homepage_url = 'https://www.alliedwallet.com'

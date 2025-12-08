@@ -1,7 +1,7 @@
 require 'digest/md5'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class NetaxeptGateway < Gateway
       self.test_url = 'https://epayment-test.bbs.no/'
       self.live_url = 'https://epayment.bbs.no/'
@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
           message,
           raw,
           test: test?,
-          authorization: authorization
+          authorization:
         )
       end
 
@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
           doc = REXML::Document.new(result)
           extract_xml(doc.root).merge(container: doc.root.name)
         else
-          { result: result }
+          { result: }
         end
       end
 

@@ -378,7 +378,7 @@ class MonerisTest < Test::Unit::TestCase
 
     billing_address = address(address1: '1234 Anystreet', address2: '')
     stub_comms(gateway) do
-      gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: '1')
+      gateway.purchase(@amount, @credit_card, billing_address:, order_id: '1')
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r{avs_street_number>1234<}, data)
       assert_match(%r{avs_street_name>Anystreet<}, data)
@@ -401,7 +401,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_avs_disabled_and_provided
     billing_address = address(address1: '1234 Anystreet', address2: '')
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: '1')
+      @gateway.purchase(@amount, @credit_card, billing_address:, order_id: '1')
     end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{avs_street_number>}, data)
       assert_no_match(%r{avs_street_name>}, data)
@@ -642,7 +642,7 @@ class MonerisTest < Test::Unit::TestCase
       description: 'AM test',
       currency: 'CAD',
       customer: '123',
-      stored_credential: stored_credential(*args, id: id),
+      stored_credential: stored_credential(*args, id:),
       issuer_id: ''
     }
   end

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DeepstackGateway < Gateway
       self.test_url = 'https://api.sandbox.deepstack.io'
       self.live_url = 'https://api.deepstack.io'

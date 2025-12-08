@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class JetpayGateway < Gateway
       class_attribute :live_us_url, :live_ca_url
 

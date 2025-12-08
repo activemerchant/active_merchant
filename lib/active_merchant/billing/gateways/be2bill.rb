@@ -1,7 +1,7 @@
 require 'digest/sha2'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Be2billGateway < Gateway
       self.test_url = 'https://secure-test.be2bill.com/front/service/rest/process.php'
       self.live_url = 'https://secure-magenta1.be2bill.com/front/service/rest/process.php'

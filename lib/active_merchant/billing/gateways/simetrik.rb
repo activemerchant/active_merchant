@@ -1,15 +1,18 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SimetrikGateway < Gateway
-      self.test_url = 'https://payments.sta.simetrik.com/v1'
-      self.live_url = 'https://payments.simetrik.com/v1'
+      version 'v1'
+      version 'v2', :audience_api
+
+      self.test_url = "https://payments.sta.simetrik.com/#{fetch_version}"
+      self.live_url = "https://payments.simetrik.com/#{fetch_version}"
 
       class_attribute :test_auth_url, :live_auth_url, :test_audience, :live_audience
       self.test_auth_url = 'https://tenant-payments-dev.us.auth0.com/oauth/token'
       self.live_auth_url = 'https://tenant-payments-prod.us.auth0.com/oauth/token'
 
-      self.test_audience = 'https://tenant-payments-dev.us.auth0.com/api/v2/'
-      self.live_audience = 'https://tenant-payments-prod.us.auth0.com/api/v2/'
+      self.test_audience = "https://tenant-payments-dev.us.auth0.com/api/#{fetch_version(:audience_api)}/"
+      self.live_audience = "https://tenant-payments-prod.us.auth0.com/api/#{fetch_version(:audience_api)}/"
 
       self.supported_countries = %w(PE AR)
       self.default_currency = 'USD'

@@ -107,7 +107,7 @@ class BorgunTest < Test::Unit::TestCase
       'PassengerName' => 'Jane Doe'
     }
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, { passenger_itinerary_data: passenger_itinerary_data })
+      @gateway.authorize(@amount, @credit_card, { passenger_itinerary_data: })
     end.check_request do |_endpoint, data, _headers|
       assert_match('PassengerItineraryData', data)
     end.respond_with(successful_authorize_response)

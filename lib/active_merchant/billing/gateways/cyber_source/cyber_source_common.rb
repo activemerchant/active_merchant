@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     module CyberSourceCommon
       def check_billing_field_value(default, submitted)
         if submitted.nil?

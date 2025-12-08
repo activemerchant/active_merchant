@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Bogus Gateway
     class BogusGateway < Gateway
       AUTHORIZATION = '53433'

@@ -34,7 +34,7 @@ class RemoteVposWithoutKeyTest < Test::Unit::TestCase
     assert_success purchase
     authorization = purchase.authorization
 
-    assert refund = @gateway.refund(@amount, authorization, @options.merge(shop_process_id: shop_process_id))
+    assert refund = @gateway.refund(@amount, authorization, @options.merge(shop_process_id:))
     assert_success refund
     assert_equal 'Transaccion aprobada', refund.message
   end
@@ -42,7 +42,7 @@ class RemoteVposWithoutKeyTest < Test::Unit::TestCase
   def test_successful_refund_using_shop_process_id
     shop_process_id = SecureRandom.random_number(10**15)
 
-    assert purchase = @gateway.purchase(@amount, @credit_card, @options.merge(shop_process_id: shop_process_id))
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options.merge(shop_process_id:))
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, nil, original_shop_process_id: shop_process_id) # 315300749110268, 21611732218038
@@ -64,7 +64,7 @@ class RemoteVposWithoutKeyTest < Test::Unit::TestCase
 
   def test_successful_void
     shop_process_id = SecureRandom.random_number(10**15)
-    options = @options.merge({ shop_process_id: shop_process_id })
+    options = @options.merge({ shop_process_id: })
 
     purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_success purchase
@@ -76,7 +76,7 @@ class RemoteVposWithoutKeyTest < Test::Unit::TestCase
 
   def test_duplicate_void_fails
     shop_process_id = SecureRandom.random_number(10**15)
-    options = @options.merge({ shop_process_id: shop_process_id })
+    options = @options.merge({ shop_process_id: })
 
     purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_success purchase

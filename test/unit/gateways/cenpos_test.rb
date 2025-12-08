@@ -25,6 +25,19 @@ class CenposTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_purchase_order_number
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, { purchase_order_number: 'abcede12345' })
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<acr1:PurchaseOrderNumber>abcede12345<\/acr1:PurchaseOrderNumber>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '1609995363|4242|1.00', response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase_cvv_result
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)

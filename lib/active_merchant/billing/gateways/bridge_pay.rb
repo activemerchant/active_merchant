@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BridgePayGateway < Gateway
       self.display_name = 'BridgePay'
       self.homepage_url = 'http://www.bridgepaynetwork.com/'

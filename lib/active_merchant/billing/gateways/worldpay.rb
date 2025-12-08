@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WorldpayGateway < Gateway
       self.test_url = 'https://secure-test.worldpay.com/jsp/merchant/xml/paymentService.jsp'
       self.live_url = 'https://secure.worldpay.com/jsp/merchant/xml/paymentService.jsp'
@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
                                     OM PA PE PF PH PK PL PN PR PT PW PY QA RE RO RS RU RW SA SB SC SE SG SI SK SL SM SN ST SV
                                     SZ TC TD TF TG TH TJ TK TM TO TR TT TV TW TZ UA UG US UY UZ VA VC VE VI VN VU WF WS YE YT
                                     ZA ZM)
-      self.supported_cardtypes = %i[visa master american_express discover jcb maestro elo naranja cabal unionpay]
+      self.supported_cardtypes = %i[visa master american_express discover jcb maestro elo naranja cabal unionpay patagonia_365 tarjeta_sol]
       self.currencies_without_fractions = %w(HUF IDR JPY KRW BEF XOF XAF XPF GRD GNF ITL LUF MGA MGF PYG PTE RWF ESP TRL VND KMF)
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR TND LYD JOD IQD)
       self.homepage_url = 'http://www.worldpay.com/'
@@ -133,7 +133,10 @@ module ActiveMerchant #:nodoc:
 
       def inquire(authorization, options = {})
         order_id = order_id_from_authorization(authorization.to_s) || options[:order_id]
-        commit('direct_inquiry', build_order_inquiry_request(order_id, options), :ok, options)
+        failure_criteria = %w(REFUSED CANCELLED)
+        failure_criteria.delete('CANCELLED') if options[:original_request] == 'verification'
+
+        commit('direct_inquiry', build_order_inquiry_request(order_id, options), *failure_criteria, options)
       end
 
       def supports_scrubbing
@@ -165,7 +168,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize_request(money, payment_method, options)
-        commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', 'CAPTURED', options)
+        if options[:account_funding_transaction]
+          aft_request(money, payment_method, options)
+        else
+          commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', 'CAPTURED', options)
+        end
       end
 
       def capture_request(money, authorization, options)
@@ -237,6 +244,7 @@ module ActiveMerchant #:nodoc:
               add_order_content(xml, options)
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
+              add_fraud_sight_data(xml, options)
               add_statement_narrative(xml, options)
               add_risk_data(xml, options[:risk_data]) if options[:risk_data]
               add_sub_merchant_data(xml, options[:sub_merchant_data]) if options[:sub_merchant_data]
@@ -358,6 +366,10 @@ module ActiveMerchant #:nodoc:
           if options[:cancel_or_refund]
             # Worldpay docs claim amount must be passed. This causes an error.
             xml.cancelOrRefund # { add_amount(xml, money, options.merge(debit_credit_indicator: 'credit')) }
+          elsif options[:refund_reference]
+            xml.refund 'reference' => options[:refund_reference] do
+              add_amount(xml, money, options.merge(debit_credit_indicator: 'credit'))
+            end
           else
             xml.refund do
               add_amount(xml, money, options.merge(debit_credit_indicator: 'credit'))
@@ -401,7 +413,12 @@ module ActiveMerchant #:nodoc:
               add_amount(xml, money, options)
               add_order_content(xml, options)
               add_payment_details_for_ff_credit(xml, payment_method, options)
-              add_shopper_id(xml, options)
+
+              if options[:email]
+                xml.shopper do
+                  xml.shopperEmailAddress options[:email]
+                end
+              end
             end
           end
         end
@@ -417,6 +434,8 @@ module ActiveMerchant #:nodoc:
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
               add_sub_merchant_data(xml, options[:sub_merchant_data]) if options[:sub_merchant_data]
+              add_additional_3ds_data(xml, options) if options[:execute_threed] && options[:three_ds_version] && options[:three_ds_version] =~ /^2/
+              add_3ds_exemption(xml, options) if options[:exemption_type]
               add_aft_data(xml, payment_method, options)
             end
           end
@@ -430,37 +449,37 @@ module ActiveMerchant #:nodoc:
             xml.accountReference options[:aft_sender_account_reference], 'accountType' => options[:aft_sender_account_type]
             xml.fullName do
               xml.first options.dig(:aft_sender_full_name, :first)
-              xml.middle options.dig(:aft_sender_full_name, :middle)
+              xml.middle options.dig(:aft_sender_full_name, :middle) if options.dig(:aft_sender_full_name, :middle)
               xml.last options.dig(:aft_sender_full_name, :last)
             end
             xml.fundingAddress do
-              xml.address1 options.dig(:aft_sender_funding_address, :address1)
-              xml.address2 options.dig(:aft_sender_funding_address, :address2)
-              xml.postalCode options.dig(:aft_sender_funding_address, :postal_code)
-              xml.city options.dig(:aft_sender_funding_address, :city)
-              xml.state options.dig(:aft_sender_funding_address, :state)
-              xml.countryCode options.dig(:aft_sender_funding_address, :country_code)
+              xml.address1 options.dig(:aft_sender_funding_address, :address1) if options.dig(:aft_sender_funding_address, :address1)
+              xml.address2 options.dig(:aft_sender_funding_address, :address2) if options.dig(:aft_sender_funding_address, :address2)
+              xml.postalCode options.dig(:aft_sender_funding_address, :postal_code) if options.dig(:aft_sender_funding_address, :postal_code)
+              xml.city options.dig(:aft_sender_funding_address, :city) if options.dig(:aft_sender_funding_address, :city)
+              xml.state options.dig(:aft_sender_funding_address, :state) if options.dig(:aft_sender_funding_address, :state)
+              xml.countryCode options.dig(:aft_sender_funding_address, :country_code) if options.dig(:aft_sender_funding_address, :country_code)
             end
           end
           xml.fundingParty 'type' => 'recipient' do
             xml.accountReference options[:aft_recipient_account_reference], 'accountType' => options[:aft_recipient_account_type]
             xml.fullName do
               xml.first options.dig(:aft_recipient_full_name, :first)
-              xml.middle options.dig(:aft_recipient_full_name, :middle)
+              xml.middle options.dig(:aft_recipient_full_name, :middle) if options.dig(:aft_recipient_full_name, :middle)
               xml.last options.dig(:aft_recipient_full_name, :last)
             end
             xml.fundingAddress do
-              xml.address1 options.dig(:aft_recipient_funding_address, :address1)
-              xml.address2 options.dig(:aft_recipient_funding_address, :address2)
-              xml.postalCode options.dig(:aft_recipient_funding_address, :postal_code)
-              xml.city options.dig(:aft_recipient_funding_address, :city)
-              xml.state options.dig(:aft_recipient_funding_address, :state)
-              xml.countryCode options.dig(:aft_recipient_funding_address, :country_code)
+              xml.address1 options.dig(:aft_recipient_funding_address, :address1) if options.dig(:aft_recipient_funding_address, :address1)
+              xml.address2 options.dig(:aft_recipient_funding_address, :address2) if options.dig(:aft_recipient_funding_address, :address2)
+              xml.postalCode options.dig(:aft_recipient_funding_address, :postal_code) if options.dig(:aft_recipient_funding_address, :postal_code)
+              xml.city options.dig(:aft_recipient_funding_address, :city) if options.dig(:aft_recipient_funding_address, :city)
+              xml.state options.dig(:aft_recipient_funding_address, :state) if options.dig(:aft_recipient_funding_address, :state)
+              xml.countryCode options.dig(:aft_recipient_funding_address, :country_code) if options.dig(:aft_recipient_funding_address, :country_code)
             end
             if options[:aft_recipient_funding_data]
               xml.fundingData do
-                add_date_element(xml, 'birthDate', options[:aft_recipient_funding_data][:birth_date])
-                xml.telephoneNumber options.dig(:aft_recipient_funding_data, :telephone_number)
+                add_date_element(xml, 'birthDate', options[:aft_recipient_funding_data][:birth_date]) if options[:aft_recipient_funding_data][:birth_date]
+                xml.telephoneNumber options.dig(:aft_recipient_funding_data, :telephone_number) if options.dig(:aft_recipient_funding_data, :telephone_number)
               end
             end
           end
@@ -476,6 +495,7 @@ module ActiveMerchant #:nodoc:
               add_token_for_ff_credit(xml, payment_method, options)
             end
           end
+          add_shopper_id(xml, options)
         end
       end
 
@@ -629,6 +649,8 @@ module ActiveMerchant #:nodoc:
         case options[:payment_type]
         when :pay_as_order
           add_amount_for_pay_as_order(xml, amount, payment_method, options)
+        when :encrypted_wallet
+          add_encrypted_wallet(xml, payment_method)
         when :network_token
           add_network_tokenization_card(xml, payment_method, options)
         else
@@ -663,12 +685,55 @@ module ActiveMerchant #:nodoc:
             end
             name = card_holder_name(payment_method, options)
             xml.cardHolderName name if name.present?
-            xml.cryptogram payment_method.payment_cryptogram unless options[:wallet_type] == :google_pay
+            xml.cryptogram payment_method.payment_cryptogram unless should_send_payment_cryptogram?(options, payment_method)
             eci = eci_value(payment_method, options)
             xml.eciIndicator eci if eci.present?
           end
           add_stored_credential_options(xml, options)
+          add_shopper_id(xml, options, false)
+          add_three_d_secure(xml, options)
         end
+      end
+
+      def should_send_payment_cryptogram?(options, payment_method)
+        wallet_type_google_pay?(options) ||
+          (payment_method_apple_pay?(payment_method) &&
+            merchant_initiated?(options))
+      end
+
+      def merchant_initiated?(options)
+        options.dig(:stored_credential, :initiator) == 'merchant'
+      end
+
+      def add_encrypted_wallet(xml, payment_method)
+        source = encrypted_wallet_source(payment_method.source)
+
+        xml.paymentDetails do
+          xml.tag! "#{source}-SSL" do
+            if source == 'APPLEPAY'
+              add_encrypted_apple_pay(xml, payment_method)
+            else
+              add_encrypted_google_pay(xml, payment_method)
+            end
+          end
+        end
+      end
+
+      def add_encrypted_apple_pay(xml, payment_method)
+        xml.header do
+          xml.ephemeralPublicKey payment_method.payment_data.dig(:header, :ephemeralPublicKey)
+          xml.publicKeyHash payment_method.payment_data.dig(:header, :publicKeyHash)
+          xml.transactionId payment_method.payment_data.dig(:header, :transactionId)
+        end
+        xml.signature payment_method.payment_data[:signature]
+        xml.version payment_method.payment_data[:version]
+        xml.data payment_method.payment_data[:data]
+      end
+
+      def add_encrypted_google_pay(xml, payment_method)
+        xml.protocolVersion payment_method.payment_data[:version]
+        xml.signature payment_method.payment_data[:signature]
+        xml.signedMessage payment_method.payment_data[:signed_message]
       end
 
       def add_card_or_token(xml, payment_method, options)
@@ -696,13 +761,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_shopper_id(xml, options)
-        if options[:ip] && options[:session_id]
-          xml.session 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
-        else
-          xml.session 'shopperIPAddress' => options[:ip] if options[:ip]
-          xml.session 'id' => options[:session_id] if options[:session_id]
-        end
+      def add_shopper_id(xml, options, with_session_id = true)
+        session_params = {
+          'shopperIPAddress' => options[:ip],
+          'id' => with_session_id ? options[:session_id] : nil
+        }.compact
+
+        xml.session session_params if session_params.present?
       end
 
       def add_three_d_secure(xml, options)
@@ -738,7 +803,7 @@ module ActiveMerchant #:nodoc:
       def add_stored_credential_options(xml, options = {})
         if options[:stored_credential]
           add_stored_credential_using_normalized_fields(xml, options)
-        else
+        elsif options[:stored_credential_usage]
           add_stored_credential_using_gateway_specific_fields(xml, options)
         end
       end
@@ -750,22 +815,24 @@ module ActiveMerchant #:nodoc:
                  when 'unscheduled' then 'UNSCHEDULED'
                  end
         is_initial_transaction = options[:stored_credential][:initial_transaction]
-        stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason)
+        stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason, options[:stored_credential][:initiator])
 
         xml.storedCredentials stored_credential_params do
-          xml.schemeTransactionIdentifier network_transaction_id(options) if network_transaction_id(options) && !is_initial_transaction
+          xml.schemeTransactionIdentifier network_transaction_id(options) if send_network_transaction_id?(options)
         end
       end
 
       def add_stored_credential_using_gateway_specific_fields(xml, options)
-        return unless options[:stored_credential_usage]
-
         is_initial_transaction = options[:stored_credential_usage] == 'FIRST'
         stored_credential_params = generate_stored_credential_params(is_initial_transaction, options[:stored_credential_initiated_reason])
 
         xml.storedCredentials stored_credential_params do
           xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id] && !is_initial_transaction
         end
+      end
+
+      def send_network_transaction_id?(options)
+        network_transaction_id(options) && !options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) != 'cardholder'
       end
 
       def add_shopper(xml, options)
@@ -777,6 +844,20 @@ module ActiveMerchant #:nodoc:
           xml.browser do
             xml.acceptHeader options[:accept_header]
             xml.userAgentHeader options[:user_agent]
+          end
+        end
+      end
+
+      def add_fraud_sight_data(xml, options)
+        return unless options[:custom_string_fields].is_a?(Hash)
+
+        xml.tag! 'FraudSightData' do
+          xml.tag! 'customStringFields' do
+            options[:custom_string_fields].each do |key, value|
+              # transform custom_string_field_1 into customStringField1, etc.
+              formatted_key = key.to_s.camelize(:lower).to_sym
+              xml.tag! formatted_key, value
+            end
           end
         end
       end
@@ -849,7 +930,7 @@ module ActiveMerchant #:nodoc:
         xml = xml.strip.gsub(/\&/, '&amp;')
         doc = Nokogiri::XML(xml, &:strict)
         doc.remove_namespaces!
-        resp_params = { action: action }
+        resp_params = { action: }
 
         parse_elements(doc.root, resp_params)
         extract_issuer_response(doc.root, resp_params)
@@ -880,7 +961,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options)
-        idempotency_key = options[:idempotency_key]
+        @idempotency_key ||= options[:idempotency_key]
 
         headers = {
           'Content-Type' => 'text/xml',
@@ -893,11 +974,16 @@ module ActiveMerchant #:nodoc:
         cookie = options[:cookie] || cookie
         headers['Cookie'] = cookie if cookie
 
-        headers['Idempotency-Key'] = idempotency_key if idempotency_key
+        # Required because Worldpay does not accept duplicate idempotency keys
+        # for different transactions, such as in the case of an authorize => capture flow.
+        if @idempotency_key
+          headers['Idempotency-Key'] = @idempotency_key
+          @idempotency_key = SecureRandom.uuid
+        end
         headers
       end
 
-      def commit(action, request, *success_criteria, options)
+      def commit(action, request, *success_or_failure_criteria, options)
         xml = ssl_post(url, request, headers(options))
         raw = parse(action, xml)
 
@@ -906,8 +992,9 @@ module ActiveMerchant #:nodoc:
           raw[:session_id] = options[:session_id]
           raw[:is3DSOrder] = true
         end
-        success = success_from(action, raw, success_criteria)
-        message = message_from(success, raw, success_criteria, action)
+
+        success = success_from(action, raw, success_or_failure_criteria)
+        message = message_from(success, raw, success_or_failure_criteria, action)
 
         Response.new(
           success,
@@ -952,32 +1039,37 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def success_from(action, raw, success_criteria)
-        success_criteria_success?(raw, success_criteria) || action_success?(action, raw)
+      def success_from(action, raw, success_or_failure_criteria)
+        if action == 'direct_inquiry'
+          return if raw[:error]
+
+          # for direct_inquiry we are looking for failed last_event
+          !success_or_failure_criteria.include?(raw[:last_event])
+        else
+          success_criteria_success?(raw, success_or_failure_criteria) || action_success?(action, raw)
+        end
       end
 
-      def message_from(success, raw, success_criteria, action)
+      def message_from(success, raw, success_or_failure_criteria, action)
         return 'SUCCESS' if success
 
-        raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria, action) || raw[:issuer_response_description]
+        raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_or_failure_criteria, action) || raw[:issuer_response_description]
       end
 
-      # success_criteria can be:
+      # success_or_failure_criteria can be:
       #   - a string or an array of strings (if one of many responses)
       #   - An array of strings if one of many responses could be considered a
       #     success.
-      def success_criteria_success?(raw, success_criteria)
+      def success_criteria_success?(raw, success_or_failure_criteria)
         return if raw[:error]
 
-        raw[:ok].present? || (success_criteria.include?(raw[:last_event]) if raw[:last_event])
+        raw[:ok].present? || (success_or_failure_criteria.include?(raw[:last_event]) if raw[:last_event])
       end
 
       def action_success?(action, raw)
         case action
         when 'store'
           raw[:token].present?
-        when 'direct_inquiry'
-          raw[:last_event].present?
         else
           false
         end
@@ -987,11 +1079,11 @@ module ActiveMerchant #:nodoc:
         raw[:iso8583_return_code_code] || raw[:error_code] || nil unless success == 'SUCCESS'
       end
 
-      def required_status_message(raw, success_criteria, action)
-        return if success_criteria.include?(raw[:last_event])
+      def required_status_message(raw, success_or_failure_criteria, action)
+        return if success_or_failure_criteria.include?(raw[:last_event])
         return unless %w[cancel refund inquiry credit fast_credit].include?(action)
 
-        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(' or ')} is required."
+        "A transaction status of #{success_or_failure_criteria.collect { |c| "'#{c}'" }.join(' or ')} is required."
       end
 
       def authorization_from(action, raw, options)
@@ -1000,7 +1092,7 @@ module ActiveMerchant #:nodoc:
         case action
         when 'store'
           authorization_from_token_details(
-            order_id: order_id,
+            order_id:,
             token_id: raw[:payment_token_id],
             token_scope: 'shopper',
             customer: options[:customer]
@@ -1040,16 +1132,27 @@ module ActiveMerchant #:nodoc:
         when String
           token_type_and_details(payment_method)
         else
-          type = network_token?(payment_method) || options[:wallet_type] == :google_pay ? :network_token : :credit
-
-          { payment_type: type }
+          payment_method_type(payment_method, options)
         end
       end
 
-      def network_token?(payment_method)
-        payment_method.respond_to?(:source) &&
-          payment_method.respond_to?(:payment_cryptogram) &&
-          payment_method.respond_to?(:eci)
+      def payment_method_type(payment_method, options)
+        type = if payment_method.is_a?(NetworkTokenizationCreditCard)
+                 payment_method.encrypted_wallet? ? :encrypted_wallet : :network_token
+               else
+                 wallet_type_google_pay?(options) ? :network_token : :credit
+               end
+        { payment_type: type }
+      end
+
+      def payment_method_apple_pay?(payment_method)
+        return false unless payment_method.is_a?(NetworkTokenizationCreditCard)
+
+        payment_method.source == :apple_pay
+      end
+
+      def wallet_type_google_pay?(options)
+        options[:wallet_type] == :google_pay
       end
 
       def token_type_and_details(token)
@@ -1085,13 +1188,27 @@ module ActiveMerchant #:nodoc:
         test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
       end
 
-      def generate_stored_credential_params(is_initial_transaction, reason = nil)
-        customer_or_merchant = reason == 'RECURRING' && is_initial_transaction ? 'customerInitiatedReason' : 'merchantInitiatedReason'
+      def generate_stored_credential_params(is_initial_transaction, reason = nil, initiator = nil)
+        customer_or_merchant = initiator == 'cardholder' ? 'customerInitiatedReason' : 'merchantInitiatedReason'
 
         stored_credential_params = {}
         stored_credential_params['usage'] = is_initial_transaction ? 'FIRST' : 'USED'
+
+        return stored_credential_params if customer_or_merchant == 'customerInitiatedReason' && stored_credential_params['usage'] == 'USED'
+
         stored_credential_params[customer_or_merchant] = reason if reason
         stored_credential_params
+      end
+
+      def encrypted_wallet_source(source)
+        case source
+        when :apple_pay
+          'APPLEPAY'
+        when :google_pay
+          'PAYWITHGOOGLE'
+        else
+          raise ArgumentError, 'Invalid encrypted wallet source'
+        end
       end
     end
   end

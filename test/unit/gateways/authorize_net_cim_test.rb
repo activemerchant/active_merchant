@@ -168,7 +168,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         customer_payment_profile_id: @customer_payment_profile_id,
         type: :prior_auth_capture,
         amount: @amount,
-        trans_id: trans_id
+        trans_id:
       }
     )
     assert_instance_of Response, response
@@ -209,7 +209,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         customer_payment_profile_id: @customer_payment_profile_id,
         type: :capture_only,
         amount: @amount,
-        approval_code: approval_code
+        approval_code:
       }
     )
     assert_instance_of Response, response

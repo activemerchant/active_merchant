@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class EfsnetGateway < Gateway
       self.supported_countries = ['US']
       self.supported_cardtypes = %i[visa master american_express discover]
@@ -83,8 +83,8 @@ module ActiveMerchant #:nodoc:
         {
           reference_number: format_reference_number(options[:order_id]),
           transaction_amount: amount(money),
-          original_transaction_amount: original_transaction_amount,
-          original_transaction_id: original_transaction_id,
+          original_transaction_amount:,
+          original_transaction_id:,
           client_ip_address: options[:ip]
         }
       end

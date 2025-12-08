@@ -4,8 +4,8 @@ require 'digest/md5'
 require 'active_merchant/billing/gateways/quickpay/quickpay_v10'
 require 'active_merchant/billing/gateways/quickpay/quickpay_v4to7'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class QuickpayGateway < Gateway
       self.abstract_class = true
 

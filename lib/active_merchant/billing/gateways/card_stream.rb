@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CardStreamGateway < Gateway
       THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE = 'Specifying the :threeDSRequired initialization option is deprecated. Please use the `:threeds_required => true` *transaction* option instead.'
 
@@ -329,12 +329,13 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         parameters.update(
           merchantID: @options[:login],
-          action: action
+          action:
         )
         # adds a signature to the post hash/array
         add_hmac(parameters)
 
-        response = parse(ssl_post(self.live_url, post_data(action, parameters)))
+        api_url = @options[:custom_api_url] || self.live_url
+        response = parse(ssl_post(api_url, post_data(action, parameters)))
 
         Response.new(
           response[:responseCode] == '0',
@@ -362,9 +363,9 @@ module ActiveMerchant #:nodoc:
                end
 
         AVSResult.new({
-          code: code,
-          postal_match: postal_match,
-          street_match: street_match
+          code:,
+          postal_match:,
+          street_match:
         })
       end
 

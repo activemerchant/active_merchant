@@ -86,7 +86,7 @@ class RemoteBorgunTest < Test::Unit::TestCase
       'TicketNumber' => '900.123.222'
     }
 
-    options = @options.merge(passenger_itinerary_data: passenger_itinerary_data)
+    options = @options.merge(passenger_itinerary_data:)
     auth = @gateway.authorize(@amount, @credit_card, options)
     assert_success auth
   end

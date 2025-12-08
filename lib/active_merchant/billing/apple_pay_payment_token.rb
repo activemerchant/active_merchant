@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ApplePayPaymentToken < PaymentToken
       # This is a representation of the token object specified here:
       # https://developer.apple.com/library/ios/documentation/PassKit/Reference/PKPaymentToken_Ref/

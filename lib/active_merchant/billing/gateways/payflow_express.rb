@@ -2,8 +2,8 @@ require 'active_merchant/billing/gateways/payflow/payflow_common_api'
 require 'active_merchant/billing/gateways/payflow/payflow_express_response'
 require 'active_merchant/billing/gateways/paypal_express_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # ==General Parameters
     # The following parameters are supported for #setup_authorization, #setup_purchase, #authorize and #purchase transactions. I've read
     # in the docs that they recommend you pass the exact same parameters to both setup and authorize/purchase.

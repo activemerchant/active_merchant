@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class GarantiGateway < Gateway
       self.live_url = 'https://sanalposprov.garanti.com.tr/VPServlet'
       self.test_url = 'https://sanalposprovtest.garanti.com.tr/VPServlet'

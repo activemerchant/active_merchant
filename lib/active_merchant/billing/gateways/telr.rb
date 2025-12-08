@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class TelrGateway < Gateway
       self.display_name = 'Telr'
       self.homepage_url = 'http://www.telr.com/'
@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         _, amount, currency = split_authorization(authorization)
         commit(:void) do |doc|
-          add_invoice(doc, 'void', amount.to_i, authorization, options.merge(currency: currency))
+          add_invoice(doc, 'void', amount.to_i, authorization, options.merge(currency:))
         end
       end
 

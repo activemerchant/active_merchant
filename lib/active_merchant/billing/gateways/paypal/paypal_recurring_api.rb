@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/paypal/paypal_common_api'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This module is included in both PaypalGateway and PaypalExpressGateway
     module PaypalRecurringApi
       PAYPAL_NAMESPACE = ActiveMerchant::Billing::PaypalCommonAPI::PAYPAL_NAMESPACE

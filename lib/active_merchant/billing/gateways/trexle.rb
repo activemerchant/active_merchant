@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class TrexleGateway < Gateway
       self.test_url = 'https://core.trexle.com/api/v1'
       self.live_url = 'https://core.trexle.com/api/v1'

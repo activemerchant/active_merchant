@@ -116,6 +116,17 @@ class XpayTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_base_urls_include_version
+    assert_includes @gateway.test_url, '/v1/'
+    assert_includes @gateway.live_url, '/v1/'
+  end
+
+  def test_default_version_in_endpoint_url
+    action = :purchase
+    url = @gateway.send(:build_request_url, action)
+    assert_match(%r{/v1/orders/3steps/payment\z}, url)
+  end
+
   def successful_preauth_response
     <<-RESPONSE
       {

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ReachGateway < Gateway
       self.test_url = 'https://checkout.rch.how/'
       self.live_url = 'https://checkout.rch.io/'
@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Reach'
       self.currencies_without_fractions = %w(BIF BYR CLF CLP CVE DJF GNF ISK JPY KMF KRW PYG RWF UGX UYI VND VUV XAF XOF XPF IDR MGA MRO)
 
-      API_VERSION = 'v2.22'.freeze
+      version 'v2.22'
       STANDARD_ERROR_CODE_MAPPING = {}
       PAYMENT_METHOD_MAP = {
         american_express: 'AMEX',
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
         add_custom_fields_data(request, options)
         add_customer_data(request, options, payment)
         add_stored_credentials(request, options)
-        post = { request: request, card: add_payment(payment, options) }
+        post = { request:, card: add_payment(payment, options) }
         if options[:stored_credential]
           MultiResponse.run(:use_first_response) do |r|
             r.process { commit('checkout', post) }
@@ -277,7 +277,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        "#{test? ? test_url : live_url}#{API_VERSION}/#{action}"
+        "#{test? ? test_url : live_url}#{fetch_version}/#{action}"
       end
     end
   end

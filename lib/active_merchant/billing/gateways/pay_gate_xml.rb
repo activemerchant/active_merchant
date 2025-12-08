@@ -1,7 +1,7 @@
 require 'digest/md5'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This gateway accepts the following arguments:
     #   :login    => your PayJunction username
     #   :password => your PayJunction pass

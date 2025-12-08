@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class OpenpayGateway < Gateway
       class_attribute :mx_live_url, :mx_test_url
       class_attribute :co_live_url, :co_test_url

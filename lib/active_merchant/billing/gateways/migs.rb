@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/migs/migs_codes'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MigsGateway < Gateway
       include MigsCodes
 

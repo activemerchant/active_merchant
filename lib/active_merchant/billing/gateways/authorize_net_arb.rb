@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on the Authorize.Net Gateway please visit their {Integration Center}[http://developer.authorize.net/]
     #
     # The login and password are not the username and password you use to
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>subscription_id</tt> -- A string containing the +subscription_id+ of the recurring payment already in place
       #   for a given credit card. (REQUIRED)
       def cancel_recurring(subscription_id)
-        request = build_recurring_request(:cancel, subscription_id: subscription_id)
+        request = build_recurring_request(:cancel, subscription_id:)
         recurring_commit(:cancel, request)
       end
 
@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>subscription_id</tt> -- A string containing the +subscription_id+ of the recurring payment already in place
       #   for a given credit card. (REQUIRED)
       def status_recurring(subscription_id)
-        request = build_recurring_request(:status, subscription_id: subscription_id)
+        request = build_recurring_request(:status, subscription_id:)
         recurring_commit(:status, request)
       end
 

@@ -18,7 +18,7 @@ class RemoteShift4V2Test < RemoteSecurionPayTest
     auth = @gateway.store(@credit_card, @options)
     token = auth.params['defaultCardId']
     customer_id = auth.params['id']
-    response = @gateway.purchase(@amount, token, @options.merge!(customer_id: customer_id))
+    response = @gateway.purchase(@amount, token, @options.merge!(customer_id:))
     assert_success response
     assert_equal 'Transaction approved', response.message
     assert_equal 'foo@example.com', response.params['metadata']['email']
@@ -28,7 +28,7 @@ class RemoteShift4V2Test < RemoteSecurionPayTest
   def test_unsuccessful_purchase_third_party_token
     auth = @gateway.store(@credit_card, @options)
     customer_id = auth.params['id']
-    response = @gateway.purchase(@amount, @invalid_token, @options.merge!(customer_id: customer_id))
+    response = @gateway.purchase(@amount, @invalid_token, @options.merge!(customer_id:))
     assert_failure response
     assert_equal "Token 'tok_invalid' does not exist", response.message
   end
@@ -98,7 +98,7 @@ class RemoteShift4V2Test < RemoteSecurionPayTest
     assert_success store
     assert card_id = store.params['defaultCardId']
     assert customer_id = store.params['cards'][0]['customerId']
-    unstore = @gateway.unstore(card_id, customer_id: customer_id)
+    unstore = @gateway.unstore(card_id, customer_id:)
     assert_success unstore
     assert_equal unstore.params['id'], card_id
   end
@@ -107,7 +107,7 @@ class RemoteShift4V2Test < RemoteSecurionPayTest
     store = @gateway.store(@credit_card, @options)
     assert_success store
     assert customer_id = store.params['cards'][0]['customerId']
-    unstore = @gateway.unstore(nil, customer_id: customer_id)
+    unstore = @gateway.unstore(nil, customer_id:)
     assert_failure unstore
     assert_equal unstore.params['error']['type'], 'invalid_request'
   end

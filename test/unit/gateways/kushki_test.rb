@@ -9,6 +9,22 @@ class KushkiTest < Test::Unit::TestCase
     @credit_card = credit_card
   end
 
+  def test_successful_purchase_with_version_endpoint_header
+    # Set up expected version
+    expected_version = 'v1'
+
+    # Simulate versioning using the Versionable module
+    @gateway.class.version(expected_version)
+
+    # Stub communication to intercept and validate the request
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, {})
+    end.check_request do |endpoint, _data, _headers|
+      # Check that the endpoint includes the correct version
+      assert_match %r{/#{expected_version}/}, endpoint, 'Endpoint should include the correct version'
+    end.respond_with(successful_charge_response)
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_charge_response)
     @gateway.expects(:ssl_post).returns(successful_token_response)
