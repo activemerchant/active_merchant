@@ -34,6 +34,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def pal_details
+        commit 'GetPalDetails', build_get_pal_details_request
+      end
+
       def express
         @express ||= PaypalExpressGateway.new(@options)
       end
@@ -130,6 +134,16 @@ module ActiveMerchant #:nodoc:
 
       def build_response(success, message, response, options = {})
         Response.new(success, message, response, options)
+      end
+
+      def build_get_pal_details_request
+        xml = Builder::XmlMarkup.new indent: 2
+        xml.tag! 'GetPalDetailsReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'GetPalDetailsRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+          end
+        end
+        xml.target!
       end
     end
   end
