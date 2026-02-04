@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   s.add_dependency('i18n', '>= 0.6.9')
   s.add_dependency('nokogiri', '~> 1.4')
   s.add_dependency('rexml', '~> 3.3', '>= 3.3.8')
+  s.add_dependency('benchmark', '>= 0.5.0')
 
   s.add_development_dependency('mocha', '~> 1')
   s.add_development_dependency('pry')
