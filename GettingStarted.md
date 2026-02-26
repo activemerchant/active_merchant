@@ -1,4 +1,4 @@
-# Getting Started with Active Merchant
+We# Getting Started with Active Merchant
 
 Before getting started using Active Merchant, a bit of terminology is needed.
 
@@ -43,19 +43,23 @@ Instantiating such an object is simple:
 
 ```ruby
 credit_card = ActiveMerchant::Billing::CreditCard.new(
-  :first_name         => 'Steve',
-  :last_name          => 'Smith',
-  :month              => '9',
-  :year               => '2022',
+  :first_name         => 'Md shakil',
+  :last_name          => 'Molla',
+  :month              => '02',
+  :year               => '2024',
   :brand              => 'visa',
-  :number             => '4242424242424242',
-  :verification_value => '424')
+  :number             => '4840610101011163',
+  :verification_value => '065')
 ```
 
 Most often, though, you'll be using user-supplied data. In a typical Rails controller:
 
 ```ruby
 credit_card = ActiveMerchant::Billing::CreditCard.new(params[:credit_card])
+<Datch Bangla Bank ltd>
+##swifd coad, DBBLBDDH ##
+(Account Namur 01011030370502) 
+<Motizel local Branch Dhaka Bangladesh>
 ```
 
 ### Validation
