@@ -261,6 +261,39 @@ class PayTheFlyTest < Test::Unit::TestCase
     assert_equal '1', PayTheFlyGateway::EIP712_DOMAIN_VERSION
   end
 
+  def test_keccak256_not_sha3_256
+    # Keccak-256 and SHA3-256 differ in padding (Keccak uses 0x01, SHA3 uses 0x06).
+    # The empty-string digest for Keccak-256 is the well-known constant below.
+    # If this test fails, the gateway is using SHA3-256 instead of Keccak-256,
+    # which would produce invalid EIP-712 signatures.
+    expected_empty_hash = 'c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470'
+    actual = Digest::Keccak.new(256).hexdigest('')
+    assert_equal expected_empty_hash, actual, 'keccak256 of empty string must match Ethereum Keccak-256, not NIST SHA3-256'
+  end
+
+  def test_payment_signature_deterministic
+    # With fixed inputs, the EIP-712 signature should be deterministic
+    # (same private key + same message → same signature every time).
+    response1 = @gateway.purchase(@amount, nil, @options)
+    response2 = @gateway.purchase(@amount, nil, @options)
+
+    assert_success response1
+    assert_success response2
+    assert_equal response1.params['signature'], response2.params['signature'],
+      'EIP-712 signature must be deterministic for identical inputs'
+  end
+
+  def test_withdrawal_signature_differs_from_payment
+    user_address = '0xAbCdEf0123456789AbCdEf0123456789AbCdEf01'
+    payment_response = @gateway.purchase(@amount, nil, @options)
+    withdrawal_response = @gateway.withdraw(@amount, user_address, @options)
+
+    assert_success payment_response
+    assert_success withdrawal_response
+    assert_not_equal payment_response.params['signature'], withdrawal_response.params['signature'],
+      'Payment and withdrawal signatures must differ (different EIP-712 type hashes)'
+  end
+
   def test_human_readable_amount_bsc
     # BSC has 18 decimals
     response = @gateway.purchase(1, nil, @options) # 1 cent = 0.01 USDT
