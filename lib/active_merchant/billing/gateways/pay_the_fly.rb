@@ -1,3 +1,5 @@
+require 'digest/keccak'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayTheFlyGateway < Gateway
@@ -308,7 +310,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def keccak256(data)
-        OpenSSL::Digest.new('SHA3-256').digest(data.b)
+        Digest::Keccak.new(256).digest(data.b)
       end
 
       def sign_hash(msg_hash)
