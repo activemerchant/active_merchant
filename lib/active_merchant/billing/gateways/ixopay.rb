@@ -110,7 +110,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def parse(body)
-        xml = Nokogiri::XML(body)
+        xml = Nokogiri::XML(body.strip)
         response = Hash.from_xml(xml.to_s)['result']
 
         response.deep_transform_keys(&:underscore).transform_keys(&:to_sym)

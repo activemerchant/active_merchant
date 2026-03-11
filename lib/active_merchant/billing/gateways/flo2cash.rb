@@ -160,7 +160,7 @@ module ActiveMerchant # :nodoc:
 
       def parse(body, action)
         response = {}
-        xml = REXML::Document.new(body)
+        xml = REXML::Document.new(body.strip)
         root = (REXML::XPath.first(xml, "//#{action}Response") || REXML::XPath.first(xml, '//detail'))
 
         root.elements.to_a.each do |node|

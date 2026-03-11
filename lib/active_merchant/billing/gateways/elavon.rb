@@ -456,7 +456,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def parse(body)
-        xml = Nokogiri::XML(body)
+        xml = Nokogiri::XML(body.strip)
         response = Hash.from_xml(xml.to_s)['txn']
 
         response.deep_transform_keys { |key| key.gsub('ssl_', '').to_sym }

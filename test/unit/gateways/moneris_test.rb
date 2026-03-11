@@ -734,8 +734,7 @@ class MonerisTest < Test::Unit::TestCase
 
   def successful_first_cof_purchase_response
     <<~RESPONSE
-      <?xml version=\"1.0\" standalone=\"yes\"?>
-      <?xml version=“1.0” standalone=“yes”?>
+      <?xml version="1.0" standalone="yes"?>
       <response>
        <receipt>
          <ReceiptId>a33ba7edd448b91ef8d2f85fea614b8d</ReceiptId>
