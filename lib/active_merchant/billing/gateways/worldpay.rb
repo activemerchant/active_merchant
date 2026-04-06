@@ -246,12 +246,12 @@ module ActiveMerchant # :nodoc:
               add_shopper(xml, options)
               add_fraud_sight_data(xml, options)
               add_statement_narrative(xml, options)
-              add_risk_data(xml, options[:risk_data]) if options[:risk_data]
               add_sub_merchant_data(xml, options[:sub_merchant_data]) if options[:sub_merchant_data]
               add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
               add_instalments_data(xml, options) if options[:instalments]
               add_additional_data(xml, money, options) if options[:level_2_data] || options[:level_3_data]
               add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
+              add_risk_data(xml, options[:risk_data]) if options[:risk_data]
               add_additional_3ds_data(xml, options) if options[:execute_threed] && options[:three_ds_version] && options[:three_ds_version] =~ /^2/
               add_3ds_exemption(xml, options) if options[:exemption_type]
             end

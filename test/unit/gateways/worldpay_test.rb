@@ -440,6 +440,30 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_moto_flag_in_request
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(metadata: { manual_entry: true }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<dynamicInteractionType type="MOTO"/>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_moto_flag_precedes_risk_data_in_xml
+    options = @options.merge(metadata: { manual_entry: true }, risk_data:)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      # Worldpay DTD requires dynamicInteractionType before riskData
+      moto_pos = data.index('dynamicInteractionType')
+      risk_pos = data.index('riskData')
+      assert moto_pos, 'dynamicInteractionType element should be present'
+      assert risk_pos, 'riskData element should be present'
+      assert moto_pos < risk_pos, "dynamicInteractionType (pos #{moto_pos}) must precede riskData (pos #{risk_pos}) per Worldpay DTD"
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_reference_transaction_authorize_with_merchant_code
     response = stub_comms do
       @gateway.authorize(@amount, @options[:order_id].to_s, @options.merge({ merchant_code: 'testlogin2' }))
