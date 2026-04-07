@@ -170,6 +170,7 @@ module ActiveMerchant # :nodoc:
           add_merchant_category_code(post, options)
           add_partner_solution_id(post)
           add_stored_credentials(post, payment, options)
+          add_commerce_indicator(post, options)
           add_three_ds(post, payment, options)
           add_level_2_data(post, options)
           add_level_3_data(post, options)
@@ -359,6 +360,12 @@ module ActiveMerchant # :nodoc:
         else
           'internet'
         end
+      end
+
+      def add_commerce_indicator(post, options)
+        return unless options[:commerce_indicator]
+
+        post[:processingInformation][:commerceIndicator] = options[:commerce_indicator]
       end
 
       def add_authorization_options(post, payment, options)

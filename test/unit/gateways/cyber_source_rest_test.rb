@@ -403,6 +403,32 @@ class CyberSourceRestTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_commerce_indicator_override
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(commerce_indicator: 'moto'))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'moto', request['processingInformation']['commerceIndicator']
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_commerce_indicator_override_with_stored_credentials
+    options = @options.merge(
+      commerce_indicator: 'moto',
+      stored_credential: stored_credential(:merchant, :unscheduled)
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'moto', request['processingInformation']['commerceIndicator']
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_credit_card_purchase_single_request_ignore_avs
     stub_comms do
       options = @options.merge(ignore_avs: true)
