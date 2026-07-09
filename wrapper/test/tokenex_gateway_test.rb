@@ -5,6 +5,36 @@ require 'rack/test'
 require 'json'
 require_relative '../lib/tokenex_gateway'
 
+# IXOONE-3: lightweight fake gateway used only by wallet tests. Echoes the
+# constructed payment object's class/source/cryptogram/eci back via the
+# AM Response params so tests can assert what the wrapper actually built.
+# Lives in the standard ActiveMerchant::Billing namespace so the wrapper's
+# `"ActiveMerchant::Billing::#{name}".constantize` lookup resolves it.
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
+    class WalletCaptureGateway < Gateway
+      def authorize(_money, paysource, _options = {})
+        Response.new(true, 'OK', _capture_payment_metadata(paysource))
+      end
+
+      def purchase(_money, paysource, _options = {})
+        Response.new(true, 'OK', _capture_payment_metadata(paysource))
+      end
+
+      private
+
+      def _capture_payment_metadata(paysource)
+        {
+          payment_class: paysource.class.name,
+          source:        (paysource.source.to_s if paysource.respond_to?(:source)),
+          cryptogram:    (paysource.payment_cryptogram if paysource.respond_to?(:payment_cryptogram)),
+          eci:           (paysource.eci if paysource.respond_to?(:eci))
+        }
+      end
+    end
+  end
+end
+
 class TokenExGatewayTest < Minitest::Test
   include Rack::Test::Methods
 
@@ -230,5 +260,98 @@ class TokenExGatewayTest < Minitest::Test
     source = File.read(File.expand_path('../lib/tokenex_gateway.rb', __dir__))
     assert_match(/additional_options\[:credit_card\] = am_payment/, source,
                  'Capture/refund should pass am_payment via options[:credit_card]')
+  end
+
+  # ---------- IXOONE-3 wallet support tests ------------------------------
+  # These use WalletCaptureGateway (defined at the top of this file) which
+  # echoes the constructed payment object's class/source/cryptogram/eci into
+  # response params so we can assert the wallet branch did what it should.
+
+  def _wallet_payload(action:, source:, with_cvv: true, cryptogram: 'X', eci: '05', transaction_id: nil)
+    cc = {
+      'first_name' => 'Test', 'last_name' => 'User',
+      'number'     => '1', 'month' => '9', 'year' => (Time.now.year + 1).to_s
+    }
+    cc['verification_value'] = '123' if with_cvv
+    cc['source']             = source             unless source.nil?
+    cc['payment_cryptogram'] = cryptogram         unless cryptogram.nil?
+    cc['eci']                = eci                unless eci.nil?
+    cc['transaction_id']     = transaction_id     unless transaction_id.nil?
+
+    {
+      'gateway'     => { 'name' => 'WalletCaptureGateway' },
+      'transaction' => { 'action' => action, 'amount' => 100 },
+      'credit_card' => cc
+    }
+  end
+
+  def test_wallet_apple_pay_builds_network_tokenization_credit_card
+    # AC: source=apple_pay → NetworkTokenizationCreditCard
+    payload = _wallet_payload(action: 'authorize', source: 'apple_pay',
+                              cryptogram: 'AP_CRYPTO_1', eci: '05', transaction_id: 'AP_TXID_1')
+    post '/process', payload.to_json, { 'CONTENT_TYPE' => 'application/json' }
+    assert last_response.ok?
+    result = JSON.parse(last_response.body)
+
+    assert result['success'], "expected success; got: #{result.inspect}"
+    assert_equal 'ActiveMerchant::Billing::NetworkTokenizationCreditCard', result['params']['payment_class']
+    assert_equal 'apple_pay',   result['params']['source']
+    assert_equal 'AP_CRYPTO_1', result['params']['cryptogram']
+    assert_equal '05',          result['params']['eci']
+  end
+
+  def test_wallet_google_pay_maps_to_android_pay
+    # AC: source=google_pay → NetworkTokenizationCreditCard, with the wrapper
+    # translating the public product name to the gem's internal :android_pay symbol.
+    payload = _wallet_payload(action: 'purchase', source: 'google_pay',
+                              cryptogram: 'GP_CRYPTO_1', eci: '07')
+    post '/process', payload.to_json, { 'CONTENT_TYPE' => 'application/json' }
+    assert last_response.ok?
+    result = JSON.parse(last_response.body)
+
+    assert result['success']
+    assert_equal 'ActiveMerchant::Billing::NetworkTokenizationCreditCard', result['params']['payment_class']
+    assert_equal 'android_pay', result['params']['source']  # the wallet_source_map translation worked
+  end
+
+  def test_wallet_invalid_source_rejected
+    # Plan addition: invalid source rejected loudly rather than silently falling
+    # back to :apple_pay (which is what the gem's source getter would do).
+    payload = _wallet_payload(action: 'authorize', source: 'paypal',
+                              cryptogram: 'X', eci: '05')
+    post '/process', payload.to_json, { 'CONTENT_TYPE' => 'application/json' }
+    assert last_response.ok?
+    result = JSON.parse(last_response.body)
+
+    refute result['success'], "expected failure for unknown wallet source; got: #{result.inspect}"
+    assert_match(/Unsupported wallet source/, result['additional_details'].to_s)
+  end
+
+  def test_no_source_builds_standard_credit_card
+    # AC: source absent → standard CreditCard (regression guard for the
+    # non-wallet path).
+    payload = _wallet_payload(action: 'authorize', source: nil,
+                              cryptogram: nil, eci: nil)
+    post '/process', payload.to_json, { 'CONTENT_TYPE' => 'application/json' }
+    assert last_response.ok?
+    result = JSON.parse(last_response.body)
+
+    assert result['success']
+    assert_equal 'ActiveMerchant::Billing::CreditCard', result['params']['payment_class']
+  end
+
+  def test_wallet_purchase_without_verification_value
+    # AC: missing verification_value with wallet source → no error.
+    # Network-tokenized payments authenticate via cryptogram + ECI, not CVV.
+    payload = _wallet_payload(action: 'purchase', source: 'apple_pay',
+                              with_cvv: false,
+                              cryptogram: 'AP_CRYPTO_NO_CVV', eci: '05')
+    post '/process', payload.to_json, { 'CONTENT_TYPE' => 'application/json' }
+    assert last_response.ok?
+    result = JSON.parse(last_response.body)
+
+    assert result['success'], "expected success without CVV; got: #{result.inspect}"
+    assert_equal 'ActiveMerchant::Billing::NetworkTokenizationCreditCard', result['params']['payment_class']
+    assert_equal 'apple_pay', result['params']['source']
   end
 end
