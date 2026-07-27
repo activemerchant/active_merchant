@@ -61,6 +61,79 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal CheckoutV2Gateway.supported_cardtypes, %i[visa master american_express diners_club maestro discover jcb mada bp_plus patagonia_365 tarjeta_sol]
   end
 
+  def test_apply_prefix_injects_prefix_as_first_dns_label
+    gateway = CheckoutV2Gateway.new(secret_key: '1111111111111', prefix: 'abc123')
+
+    assert_equal 'https://abc123.api.checkout.com', gateway.send(:apply_prefix, 'https://api.checkout.com')
+    assert_equal 'https://abc123.api.sandbox.checkout.com', gateway.send(:apply_prefix, 'https://api.sandbox.checkout.com')
+    assert_equal 'https://abc123.access.checkout.com/connect/token', gateway.send(:apply_prefix, 'https://access.checkout.com/connect/token')
+    assert_equal 'https://abc123.access.sandbox.checkout.com/connect/token', gateway.send(:apply_prefix, 'https://access.sandbox.checkout.com/connect/token')
+  end
+
+  def test_apply_prefix_returns_url_unchanged_when_prefix_missing
+    assert_equal 'https://api.checkout.com', @gateway.send(:apply_prefix, 'https://api.checkout.com')
+  end
+
+  def test_apply_prefix_returns_url_unchanged_when_prefix_blank_or_whitespace
+    blank_gateway = CheckoutV2Gateway.new(secret_key: '1111111111111', prefix: '')
+    whitespace_gateway = CheckoutV2Gateway.new(secret_key: '1111111111111', prefix: '   ')
+
+    assert_equal 'https://api.checkout.com', blank_gateway.send(:apply_prefix, 'https://api.checkout.com')
+    assert_equal 'https://api.checkout.com', whitespace_gateway.send(:apply_prefix, 'https://api.checkout.com')
+  end
+
+  def test_base_url_includes_prefix_in_test_and_live_modes
+    gateway = CheckoutV2Gateway.new(secret_key: '1111111111111', prefix: 'abc123')
+
+    gateway.stubs(:test?).returns(true)
+    assert_equal 'https://abc123.api.sandbox.checkout.com', gateway.send(:base_url)
+
+    gateway.stubs(:test?).returns(false)
+    assert_equal 'https://abc123.api.checkout.com', gateway.send(:base_url)
+  end
+
+  def test_access_token_url_includes_prefix_in_test_and_live_modes
+    gateway = CheckoutV2Gateway.new(client_id: 'abcd', client_secret: '1234', prefix: 'abc123')
+
+    gateway.stubs(:test?).returns(true)
+    assert_equal 'https://abc123.access.sandbox.checkout.com/connect/token', gateway.send(:access_token_url)
+
+    gateway.stubs(:test?).returns(false)
+    assert_equal 'https://abc123.access.checkout.com/connect/token', gateway.send(:access_token_url)
+  end
+
+  def test_base_url_without_prefix_falls_back_to_default_hosts
+    @gateway.stubs(:test?).returns(true)
+    assert_equal 'https://api.sandbox.checkout.com', @gateway.send(:base_url)
+
+    @gateway.stubs(:test?).returns(false)
+    assert_equal 'https://api.checkout.com', @gateway.send(:base_url)
+  end
+
+  def test_purchase_request_uses_prefixed_endpoint
+    gateway = CheckoutV2Gateway.new(secret_key: '1111111111111', prefix: 'abc123')
+
+    stub_comms(gateway, :ssl_request) do
+      gateway.purchase(@amount, @credit_card)
+    end.check_request do |_method, endpoint, _data, _headers|
+      assert_match %r{\Ahttps://abc123\.api\.sandbox\.checkout\.com/payments\z}, endpoint
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_oauth_token_and_payment_requests_use_prefixed_endpoints
+    gateway = CheckoutV2Gateway.new(client_id: 'abcd', client_secret: '1234', prefix: 'abc123')
+
+    stub_comms(gateway, :ssl_request) do
+      gateway.purchase(@amount, @credit_card)
+    end.check_request do |_method, endpoint, _data, _headers|
+      if endpoint.match?(/token/)
+        assert_equal 'https://abc123.access.sandbox.checkout.com/connect/token', endpoint
+      else
+        assert_match %r{\Ahttps://abc123\.api\.sandbox\.checkout\.com/payments\z}, endpoint
+      end
+    end.respond_with(successful_access_token_response, successful_purchase_response)
+  end
+
   def test_setup_access_token_should_rise_an_exception_under_bad_request
     error = assert_raises(ActiveMerchant::OAuthResponseError) do
       @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 400, 'Bad Request'))

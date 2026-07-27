@@ -16,6 +16,14 @@ module ActiveMerchant # :nodoc:
       LIVE_ACCESS_TOKEN_URL = 'https://access.checkout.com/connect/token'
       TEST_ACCESS_TOKEN_URL = 'https://access.sandbox.checkout.com/connect/token'
 
+      # Options:
+      # * <tt>:secret_key</tt> - The merchant's secret key (or use :client_id + :client_secret for OAuth).
+      # * <tt>:client_id</tt> / <tt>:client_secret</tt> - OAuth credentials, used when :secret_key is not provided.
+      # * <tt>:prefix</tt> - (optional) Account-specific hostname prefix supplied by Checkout.com.
+      #   When present, it is injected as the first DNS label of the API host, e.g.
+      #   https://{prefix}.api.checkout.com (production) or
+      #   https://{prefix}.api.sandbox.checkout.com (sandbox). When omitted, the
+      #   default non-prefixed hosts are used.
       def initialize(options = {})
         options.has_key?(:secret_key) ? requires!(options, :secret_key) : requires!(options, :client_id, :client_secret)
 
@@ -600,7 +608,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def access_token_url
-        test? ? TEST_ACCESS_TOKEN_URL : LIVE_ACCESS_TOKEN_URL
+        apply_prefix(test? ? TEST_ACCESS_TOKEN_URL : LIVE_ACCESS_TOKEN_URL)
       end
 
       def expires_date_with_extra_range(expires_in)
@@ -728,7 +736,21 @@ module ActiveMerchant # :nodoc:
       end
 
       def base_url
-        test? ? test_url : live_url
+        apply_prefix(test? ? test_url : live_url)
+      end
+
+      # Checkout.com supports account-specific hostnames in the form
+      # https://{prefix}.api.checkout.com (production) and
+      # https://{prefix}.api.sandbox.checkout.com (sandbox), as well as the
+      # equivalent access/token hosts. When the merchant provides a `:prefix`
+      # option we inject it as the first DNS label of the host.
+      def apply_prefix(base)
+        prefix = @options[:prefix].to_s.strip
+        return base if prefix.empty?
+
+        uri = URI.parse(base)
+        uri.host = "#{prefix}.#{uri.host}"
+        uri.to_s
       end
 
       def avs_result(response)
