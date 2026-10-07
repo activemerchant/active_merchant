@@ -25,20 +25,18 @@ module ActiveMerchant # :nodoc:
 
       def authorize(money, creditcard, options = {})
         post = {}
-        add_customer_data(post, options)
         add_creditcard(post, creditcard)
+        add_customer_data(post, creditcard, options)
         add_address(post, creditcard, options)
-        add_customer_data(post, options)
         add_amount(post, money, options)
         commit('auth', money, post)
       end
 
       def purchase(money, creditcard, options = {})
         post = {}
-        add_customer_data(post, options)
         add_creditcard(post, creditcard)
+        add_customer_data(post, creditcard, options)
         add_address(post, creditcard, options)
-        add_customer_data(post, options)
         add_amount(post, money, options)
         commit('sale', money, post)
       end
@@ -56,9 +54,10 @@ module ActiveMerchant # :nodoc:
 
       private
 
-      def add_customer_data(post, options)
-        post['firstname'] = options[:billing_address][:first_name]
-        post['lastname'] = options[:billing_address][:last_name]
+      def add_customer_data(post, creditcard, options)
+        billing_address = options[:billing_address] || {}
+        post['firstname'] = billing_address[:first_name] || creditcard.first_name
+        post['lastname'] = billing_address[:last_name] || creditcard.last_name
       end
 
       def add_amount(post, money, options)
@@ -66,11 +65,12 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_address(post, creditcard, options)
-        post['address1'] = options[:billing_address][:address1]
-        post['city'] = options[:billing_address][:city]
-        post['state'] = options[:billing_address][:state]
-        post['zip'] = options[:billing_address][:zip]
-        post['country'] = options[:billing_address][:country]
+        billing_address = options[:billing_address] || {}
+        post['address1'] = billing_address[:address1]
+        post['city'] = billing_address[:city]
+        post['state'] = billing_address[:state]
+        post['zip'] = billing_address[:zip]
+        post['country'] = billing_address[:country]
       end
 
       def add_creditcard(post, creditcard)
