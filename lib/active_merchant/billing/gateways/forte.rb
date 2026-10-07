@@ -52,6 +52,7 @@ module ActiveMerchant # :nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
+        add_amount(post, money, options)
         post[:transaction_id] = transaction_id_from(authorization)
         post[:authorization_code] = authorization_code_from(authorization) || ''
         post[:action] = 'capture'
