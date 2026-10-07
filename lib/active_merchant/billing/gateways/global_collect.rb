@@ -338,9 +338,8 @@ module ActiveMerchant # :nodoc:
         post['order']['customer']['merchantCustomerId'] = options[:customer] if options[:customer]
         post['order']['customer']['companyInformation']['name'] = options[:company] if options[:company]
         post['order']['customer']['contactDetails']['emailAddress'] = options[:email] if options[:email]
-        if address = options[:billing_address] || (options[:address] && (address[:phone]))
-          post['order']['customer']['contactDetails']['phoneNumber'] = address[:phone]
-        end
+        address = options[:billing_address] || options[:address]
+        post['order']['customer']['contactDetails']['phoneNumber'] = address[:phone] if address && address[:phone]
       end
 
       def add_refund_customer_data(post, options)
@@ -349,9 +348,7 @@ module ActiveMerchant # :nodoc:
             'countryCode' => address[:country]
           }
           post['customer']['contactDetails']['emailAddress'] = options[:email] if options[:email]
-          if address = options[:billing_address] || (options[:address] && (address[:phone]))
-            post['customer']['contactDetails']['phoneNumber'] = address[:phone]
-          end
+          post['customer']['contactDetails']['phoneNumber'] = address[:phone] if address[:phone]
         end
       end
 

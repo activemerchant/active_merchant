@@ -164,6 +164,7 @@ module ActiveMerchant # :nodoc:
         first_name, last_name = split_names(address[:name])
         post[:shipping_address][:first_name] = first_name if first_name
         post[:shipping_address][:last_name] = last_name if last_name
+        post[:shipping_address][:physical_address] = {}
         post[:shipping_address][:physical_address][:street_line1] = address[:address1] if address[:address1]
         post[:shipping_address][:physical_address][:street_line2] = address[:address2] if address[:address2]
         post[:shipping_address][:physical_address][:postal_code] = address[:zip] if address[:zip]
