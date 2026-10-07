@@ -41,7 +41,7 @@ module ActiveMerchant
 
       # Currency Codes
       CURRENCY_CODES = {
-        'AUD' => 036,
+        'AUD' => 36,
         'GBP' => 826,
         'USD' => 840
       }

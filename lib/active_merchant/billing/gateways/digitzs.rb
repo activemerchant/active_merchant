@@ -120,7 +120,7 @@ module ActiveMerchant # :nodoc:
             city: address[:city] || '',
             state: address[:state] || '',
             zip: address[:zip] || '',
-            country: address['country'] || 'USA'
+            country: address[:country] || 'USA'
           }
         end
       end

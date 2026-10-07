@@ -1462,7 +1462,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def build_transaction_field_array(soap, options)
-        soap.Fields 'SOAP-ENC:arryType' => "xsd:string[#{options[:fields].length}]", 'xsi:type' => 'ns1:stringArray' do
+        soap.Fields 'SOAP-ENC:arrayType' => "xsd:string[#{options[:fields].length}]", 'xsi:type' => 'ns1:stringArray' do
           options[:fields].each do |field|
             build_tag soap, :string, 'item', field
           end
@@ -1494,9 +1494,13 @@ module ActiveMerchant # :nodoc:
       end
 
       def build_field_value_array(soap, tag_name, type, custom_data, fields)
-        soap.tag! tag_name, 'SOAP-ENC:arryType' => "xsd:#{type}[#{options.length}]", 'xsi:type' => "ns1:#{type}Array" do
-          custom_data.each do |k, v|
-            build_field_value soap, fields[k][1], v, fields[k][0] if fields.key?(k)
+        field_values = custom_data.each_with_object([]) do |(key, value), values|
+          values << [fields[key], value] if fields.key?(key)
+        end
+
+        soap.tag! tag_name, 'SOAP-ENC:arrayType' => "xsd:#{type}[#{field_values.length}]", 'xsi:type' => "ns1:#{type}Array" do
+          field_values.each do |field, value|
+            build_field_value soap, field[1], value, field[0]
           end
         end
       end

@@ -265,7 +265,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def shipping_zip_from(options)
-        options[:ship_to_zip] || options.dig(:shipping_addres, :zip) || options.dig(:billing_address, :zip)
+        options[:ship_to_zip] || options.dig(:shipping_address, :zip) || options.dig(:billing_address, :zip)
       end
 
       def payment_token(authorization)
