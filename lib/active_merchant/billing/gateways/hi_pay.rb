@@ -61,7 +61,7 @@ module ActiveMerchant # :nodoc:
         end
       end
 
-      def capture(money, authorization, options)
+      def capture(money, authorization, options = {})
         reference_operation(money, authorization, options.merge({ operation: 'capture' }))
       end
 
@@ -75,11 +75,11 @@ module ActiveMerchant # :nodoc:
         commit('unstore', { card_token: }, options, :delete)
       end
 
-      def refund(money, authorization, options)
+      def refund(money, authorization, options = {})
         reference_operation(money, authorization, options.merge({ operation: 'refund' }))
       end
 
-      def void(authorization, options)
+      def void(authorization, options = {})
         reference_operation(nil, authorization, options.merge({ operation: 'cancel' }))
       end
 
