@@ -46,14 +46,15 @@ module ActiveMerchant # :nodoc:
       def capture(money, authorization, options = {})
         return Response.new(false, 'Não é possível capturar uma transação sem uma prévia autorização.') if authorization.nil?
 
-        post = {}
+        post = { amount: amount(money) }
         commit(:post, "transactions/#{authorization}/capture", post)
       end
 
       def refund(money, authorization, options = {})
         return Response.new(false, 'Não é possível estornar uma transação sem uma prévia captura.') if authorization.nil?
 
-        void(authorization, options)
+        post = { amount: amount(money) }
+        commit(:post, "transactions/#{authorization}/refund", post)
       end
 
       def void(authorization, options = {})
