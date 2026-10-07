@@ -18,6 +18,7 @@ module ActiveMerchant # :nodoc:
 
       def initialize(options = {})
         self.merchant_name = options[:merchant_name]
+        self.product_description = options[:product_description]
         self.merchant_city = options[:merchant_city]
         self.merchant_phone = options[:merchant_phone]
         self.merchant_url = options[:merchant_url]
@@ -26,9 +27,10 @@ module ActiveMerchant # :nodoc:
 
       def validate
         errors = []
+        merchant_name = self.merchant_name.to_s
 
-        errors << [:merchant_name, 'is required'] if self.merchant_name.blank?
-        errors << [:merchant_name, 'is required to be 25 bytes or less'] if self.merchant_name.bytesize > 25
+        errors << [:merchant_name, 'is required'] if merchant_name.blank?
+        errors << [:merchant_name, 'is required to be 25 bytes or less'] if merchant_name.bytesize > 25
 
         errors << [:merchant_phone, 'is required to follow "NNN-NNN-NNNN" or "NNN-AAAAAAA" format'] if !empty?(self.merchant_phone) && !self.merchant_phone.match(PHONE_FORMAT_1) && !self.merchant_phone.match(PHONE_FORMAT_2)
 
