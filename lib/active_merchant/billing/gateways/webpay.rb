@@ -21,15 +21,15 @@ module ActiveMerchant # :nodoc:
       end
 
       def refund(money, identification, options = {})
+        refund_fee_amount = options[:refund_fee_amount]
+        if refund_fee_amount.present? && !Float(refund_fee_amount).zero?
+          raise NotImplementedError, 'Webpay does not support application fee refunds'
+        end
+
         post = {}
         add_amount(post, money, options)
         MultiResponse.run do |r|
           r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options) }
-
-          return r unless options[:refund_fee_amount]
-
-          r.process { fetch_application_fees(identification, options) }
-          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), options) }
         end
       end
 
