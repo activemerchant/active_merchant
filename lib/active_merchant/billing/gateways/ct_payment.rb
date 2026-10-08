@@ -173,7 +173,7 @@ module ActiveMerchant # :nodoc:
       def add_address(post, creditcard, options)
         if address = options[:billing_address] || options[:address]
           post[:CardHolderAddress] = "#{address[:address1]} #{address[:address2]} #{address[:city]} #{address[:state]}".rjust(20, ' ')
-          post[:CardHolderPostalCode] = address[:zip].to_s.gsub(/\s+/, '').rjust(9, ' ')
+          post[:CardHolderPostalCode] = address[:zip].gsub(/\s+/, '').rjust(9, ' ')
         end
       end
 
