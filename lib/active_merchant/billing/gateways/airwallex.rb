@@ -375,7 +375,7 @@ module ActiveMerchant # :nodoc:
         status = response['status']
         return status == 'CANCELLED' if action == :void
 
-        %w(SUCCEEDED RECEIVED REQUIRES_CAPTURE).include?(status)
+        %w(REQUIRES_PAYMENT_METHOD SUCCEEDED RECEIVED REQUIRES_CAPTURE CANCELLED).include?(status)
       end
 
       def message_from(response)
