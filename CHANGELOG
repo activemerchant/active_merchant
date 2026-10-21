@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Connection: Update the bundled CA file to the Mozilla root store as of 2026-10-20, removing emSign ECC Root CA - G3 and Comodo AAA Services root [Ginja] #5600
 * Efsnet, Flo2cash: Fix parsing with rexml 3.4.2 and later, and repair unit tests broken by rexml 3.4.2 and NMI test stubs [Ginja] #5601
 * Mercury, TransFirst: Repair gateways following updates to `rexml` [aenand] #5206
 * NMI: Fix Decrypted indicator for Google/Apple pay [javierpedrozaing] #5196
