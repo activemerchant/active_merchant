@@ -238,4 +238,20 @@ class ConnectionTest < Test::Unit::TestCase
       @connection.wiredump_device = transcript
     end
   end
+
+  def test_ca_file_excludes_distrusted_roots
+    distrusted_fingerprints = {
+      'emSign ECC Root CA - G3' => '86a1ecba089c4a8d3bbe2734c612ba341d813e043cf9e8a862cd5c57a36bbe6b',
+      'emSign Root CA - C1' => '125609aa301da0a249b97a8239cb6a34216f44dcac9f3954b14292f2e8c8608f',
+      'emSign ECC Root CA - C3' => 'bc4d809b15189d78db3e1d8cf4f9726a795da1643ca5f1358e1ddb0edc0d7eb3',
+      'Comodo AAA Services root' => 'd7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4'
+    }
+    bundled_fingerprints = OpenSSL::X509::Certificate.load_file(ActiveMerchant::Connection::CA_FILE).map do |cert|
+      OpenSSL::Digest::SHA256.hexdigest(cert.to_der)
+    end
+
+    distrusted_fingerprints.each do |name, fingerprint|
+      assert_not_includes bundled_fingerprints, fingerprint, "#{name} must not be in the bundled CA file"
+    end
+  end
 end
