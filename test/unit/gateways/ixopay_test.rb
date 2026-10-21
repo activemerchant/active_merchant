@@ -454,7 +454,7 @@ class IxopayTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="utf-8"?>
       <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
         <success>true</success>
@@ -478,7 +478,7 @@ class IxopayTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="utf-8"?>
       <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
         <success>false</success>
@@ -509,7 +509,7 @@ class IxopayTest < Test::Unit::TestCase
   end
 
   def failed_authentication_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="utf-8"?>
       <result xmlns="http://gateway/Schema/V2/TransactionWithCard">
         <success>false</success>
@@ -525,7 +525,7 @@ class IxopayTest < Test::Unit::TestCase
   end
 
   def successful_authorize_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="utf-8"?>
       <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
         <success>true</success>
@@ -548,7 +548,7 @@ class IxopayTest < Test::Unit::TestCase
   end
 
   def failed_authorize_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="utf-8"?>
       <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
         <success>false</success>
@@ -579,7 +579,7 @@ class IxopayTest < Test::Unit::TestCase
   end
 
   def successful_capture_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="utf-8"?>
       <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
         <success>true</success>
@@ -602,7 +602,7 @@ class IxopayTest < Test::Unit::TestCase
   end
 
   def failed_capture_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="utf-8"?>
       <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
         <success>false</success>

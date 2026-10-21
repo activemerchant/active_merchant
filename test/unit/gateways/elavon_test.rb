@@ -892,48 +892,48 @@ class ElavonTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-      <txn>
-        <ssl_issuer_response>00</ssl_issuer_response>
-        <ssl_last_name>Longsen</ssl_last_name>
-        <ssl_company>Widgets Inc</ssl_company>
-        <ssl_phone>(555)555-5555</ssl_phone>
-        <ssl_card_number>41**********9990</ssl_card_number>
-        <ssl_departure_date></ssl_departure_date>
-        <ssl_oar_data>010012318808182231420000047554200000000000093840023122123188</ssl_oar_data>
-        <ssl_result>0</ssl_result>
-        <ssl_txn_id>180820AD3-27AEE6EF-8CA7-4811-8D1F-E420C3B5041E</ssl_txn_id>
-        <ssl_avs_response>M</ssl_avs_response>
-        <ssl_approval_code>093840</ssl_approval_code>
-        <ssl_email>paul@domain.com</ssl_email>
-        <ssl_amount>100.00</ssl_amount>
-        <ssl_avs_zip>K1C2N6</ssl_avs_zip>
-        <ssl_txn_time>08/18/2020 06:31:42 PM</ssl_txn_time>
-        <ssl_exp_date>0921</ssl_exp_date>
-        <ssl_card_short_description>VISA</ssl_card_short_description>
-        <ssl_completion_date></ssl_completion_date>
-        <ssl_address2>Apt 1</ssl_address2>
-        <ssl_country>CA</ssl_country>
-        <ssl_card_type>CREDITCARD</ssl_card_type>
-        <ssl_transaction_type>AUTHONLY</ssl_transaction_type>
-        <ssl_salestax></ssl_salestax>
-        <ssl_avs_address>456 My Street</ssl_avs_address>
-        <ssl_account_balance>0.00</ssl_account_balance>
-        <ssl_ps2000_data>A8181831435010530042VE</ssl_ps2000_data>
-        <ssl_state>ON</ssl_state>
-        <ssl_city>Ottawa</ssl_city>
-        <ssl_result_message>APPROVAL</ssl_result_message>
-        <ssl_first_name>Longbob</ssl_first_name>
-        <ssl_invoice_number></ssl_invoice_number>
-        <ssl_cvv2_response>M</ssl_cvv2_response>
-        <ssl_partner_app_id>VM</ssl_partner_app_id>
-      </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+        <txn>
+          <ssl_issuer_response>00</ssl_issuer_response>
+          <ssl_last_name>Longsen</ssl_last_name>
+          <ssl_company>Widgets Inc</ssl_company>
+          <ssl_phone>(555)555-5555</ssl_phone>
+          <ssl_card_number>41**********9990</ssl_card_number>
+          <ssl_departure_date></ssl_departure_date>
+          <ssl_oar_data>010012318808182231420000047554200000000000093840023122123188</ssl_oar_data>
+          <ssl_result>0</ssl_result>
+          <ssl_txn_id>180820AD3-27AEE6EF-8CA7-4811-8D1F-E420C3B5041E</ssl_txn_id>
+          <ssl_avs_response>M</ssl_avs_response>
+          <ssl_approval_code>093840</ssl_approval_code>
+          <ssl_email>paul@domain.com</ssl_email>
+          <ssl_amount>100.00</ssl_amount>
+          <ssl_avs_zip>K1C2N6</ssl_avs_zip>
+          <ssl_txn_time>08/18/2020 06:31:42 PM</ssl_txn_time>
+          <ssl_exp_date>0921</ssl_exp_date>
+          <ssl_card_short_description>VISA</ssl_card_short_description>
+          <ssl_completion_date></ssl_completion_date>
+          <ssl_address2>Apt 1</ssl_address2>
+          <ssl_country>CA</ssl_country>
+          <ssl_card_type>CREDITCARD</ssl_card_type>
+          <ssl_transaction_type>AUTHONLY</ssl_transaction_type>
+          <ssl_salestax></ssl_salestax>
+          <ssl_avs_address>456 My Street</ssl_avs_address>
+          <ssl_account_balance>0.00</ssl_account_balance>
+          <ssl_ps2000_data>A8181831435010530042VE</ssl_ps2000_data>
+          <ssl_state>ON</ssl_state>
+          <ssl_city>Ottawa</ssl_city>
+          <ssl_result_message>APPROVAL</ssl_result_message>
+          <ssl_first_name>Longbob</ssl_first_name>
+          <ssl_invoice_number></ssl_invoice_number>
+          <ssl_cvv2_response>M</ssl_cvv2_response>
+          <ssl_partner_app_id>VM</ssl_partner_app_id>
+        </txn>
     XML
   end
 
   def successful_purchase_with_multi_currency_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <txn>
         <ssl_issuer_response>00</ssl_issuer_response>
@@ -972,200 +972,200 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def successful_refund_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <ssl_issuer_response>00</ssl_issuer_response>
-      <ssl_last_name>Longsen</ssl_last_name>
-      <ssl_company>Widgets Inc</ssl_company>
-      <ssl_phone>(555)555-5555    </ssl_phone>
-      <ssl_card_number>41**********9990</ssl_card_number>
-      <ssl_departure_date></ssl_departure_date>
-      <ssl_result>0</ssl_result>
-      <ssl_txn_id>180820AD3-4BACDE38-63F3-427D-BFC1-1B3EB046056B</ssl_txn_id>
-      <ssl_avs_response></ssl_avs_response>
-      <ssl_approval_code>094012</ssl_approval_code>
-      <ssl_email>paul@domain.com</ssl_email>
-      <ssl_amount>100.00</ssl_amount>
-      <ssl_avs_zip>K1C2N6</ssl_avs_zip>
-      <ssl_txn_time>08/18/2020 07:04:49 PM</ssl_txn_time>
-      <ssl_exp_date>0921</ssl_exp_date>
-      <ssl_card_short_description>VISA</ssl_card_short_description>
-      <ssl_completion_date></ssl_completion_date>
-      <ssl_address2>Apt 1</ssl_address2>
-      <ssl_customer_code></ssl_customer_code>
-      <ssl_country>CA</ssl_country>
-      <ssl_card_type>CREDITCARD</ssl_card_type>
-      <ssl_transaction_type>RETURN</ssl_transaction_type>
-      <ssl_salestax></ssl_salestax>
-      <ssl_avs_address>456 My Street</ssl_avs_address>
-      <ssl_account_balance>0.00</ssl_account_balance>
-      <ssl_state>ON</ssl_state>
-      <ssl_city>Ottawa</ssl_city>
-      <ssl_result_message>APPROVAL</ssl_result_message>
-      <ssl_first_name>Longbob</ssl_first_name>
-      <ssl_invoice_number></ssl_invoice_number>
-      <ssl_cvv2_response></ssl_cvv2_response>
-      <ssl_partner_app_id>VM</ssl_partner_app_id>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <ssl_issuer_response>00</ssl_issuer_response>
+        <ssl_last_name>Longsen</ssl_last_name>
+        <ssl_company>Widgets Inc</ssl_company>
+        <ssl_phone>(555)555-5555    </ssl_phone>
+        <ssl_card_number>41**********9990</ssl_card_number>
+        <ssl_departure_date></ssl_departure_date>
+        <ssl_result>0</ssl_result>
+        <ssl_txn_id>180820AD3-4BACDE38-63F3-427D-BFC1-1B3EB046056B</ssl_txn_id>
+        <ssl_avs_response></ssl_avs_response>
+        <ssl_approval_code>094012</ssl_approval_code>
+        <ssl_email>paul@domain.com</ssl_email>
+        <ssl_amount>100.00</ssl_amount>
+        <ssl_avs_zip>K1C2N6</ssl_avs_zip>
+        <ssl_txn_time>08/18/2020 07:04:49 PM</ssl_txn_time>
+        <ssl_exp_date>0921</ssl_exp_date>
+        <ssl_card_short_description>VISA</ssl_card_short_description>
+        <ssl_completion_date></ssl_completion_date>
+        <ssl_address2>Apt 1</ssl_address2>
+        <ssl_customer_code></ssl_customer_code>
+        <ssl_country>CA</ssl_country>
+        <ssl_card_type>CREDITCARD</ssl_card_type>
+        <ssl_transaction_type>RETURN</ssl_transaction_type>
+        <ssl_salestax></ssl_salestax>
+        <ssl_avs_address>456 My Street</ssl_avs_address>
+        <ssl_account_balance>0.00</ssl_account_balance>
+        <ssl_state>ON</ssl_state>
+        <ssl_city>Ottawa</ssl_city>
+        <ssl_result_message>APPROVAL</ssl_result_message>
+        <ssl_first_name>Longbob</ssl_first_name>
+        <ssl_invoice_number></ssl_invoice_number>
+        <ssl_cvv2_response></ssl_cvv2_response>
+        <ssl_partner_app_id>VM</ssl_partner_app_id>
+      </txn>
     XML
   end
 
   def successful_void_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <ssl_last_name>Longsen</ssl_last_name>
-      <ssl_service_fee_amount></ssl_service_fee_amount>
-      <ssl_company>Widgets Inc</ssl_company>
-      <ssl_phone>(555)555-5555</ssl_phone>
-      <ssl_card_number>41**********9990</ssl_card_number>
-      <ssl_result>0</ssl_result>
-      <ssl_txn_id>180820AD3-2E02E02D-A1FB-4926-A957-3930D3F7B869</ssl_txn_id>
-      <ssl_email>paul@domain.com</ssl_email>
-      <ssl_amount>100.00</ssl_amount>
-      <ssl_avs_zip>K1C2N6</ssl_avs_zip>
-      <ssl_txn_time>08/18/2020 06:56:27 PM</ssl_txn_time>
-      <ssl_exp_date>0921</ssl_exp_date>
-      <ssl_card_short_description>VISA</ssl_card_short_description>
-      <ssl_address2>Apt 1</ssl_address2>
-      <ssl_credit_surcharge_amount></ssl_credit_surcharge_amount>
-      <ssl_country>CA</ssl_country>
-      <ssl_card_type>CREDITCARD</ssl_card_type>
-      <ssl_transaction_type>DELETE</ssl_transaction_type>
-      <ssl_salestax></ssl_salestax>
-      <ssl_avs_address>456 My Street</ssl_avs_address>
-      <ssl_state>ON</ssl_state>
-      <ssl_city>Ottawa</ssl_city>
-      <ssl_result_message>APPROVAL</ssl_result_message>
-      <ssl_first_name>Longbob</ssl_first_name>
-      <ssl_invoice_number></ssl_invoice_number>
-      <ssl_partner_app_id>VM</ssl_partner_app_id>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <ssl_last_name>Longsen</ssl_last_name>
+        <ssl_service_fee_amount></ssl_service_fee_amount>
+        <ssl_company>Widgets Inc</ssl_company>
+        <ssl_phone>(555)555-5555</ssl_phone>
+        <ssl_card_number>41**********9990</ssl_card_number>
+        <ssl_result>0</ssl_result>
+        <ssl_txn_id>180820AD3-2E02E02D-A1FB-4926-A957-3930D3F7B869</ssl_txn_id>
+        <ssl_email>paul@domain.com</ssl_email>
+        <ssl_amount>100.00</ssl_amount>
+        <ssl_avs_zip>K1C2N6</ssl_avs_zip>
+        <ssl_txn_time>08/18/2020 06:56:27 PM</ssl_txn_time>
+        <ssl_exp_date>0921</ssl_exp_date>
+        <ssl_card_short_description>VISA</ssl_card_short_description>
+        <ssl_address2>Apt 1</ssl_address2>
+        <ssl_credit_surcharge_amount></ssl_credit_surcharge_amount>
+        <ssl_country>CA</ssl_country>
+        <ssl_card_type>CREDITCARD</ssl_card_type>
+        <ssl_transaction_type>DELETE</ssl_transaction_type>
+        <ssl_salestax></ssl_salestax>
+        <ssl_avs_address>456 My Street</ssl_avs_address>
+        <ssl_state>ON</ssl_state>
+        <ssl_city>Ottawa</ssl_city>
+        <ssl_result_message>APPROVAL</ssl_result_message>
+        <ssl_first_name>Longbob</ssl_first_name>
+        <ssl_invoice_number></ssl_invoice_number>
+        <ssl_partner_app_id>VM</ssl_partner_app_id>
+      </txn>
     XML
   end
 
   def successful_verify_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <ssl_issuer_response>85</ssl_issuer_response>
-      <ssl_transaction_type>CARDVERIFICATION</ssl_transaction_type>
-      <ssl_card_number>41**********9990</ssl_card_number>
-      <ssl_oar_data>010012309508182257450000047554200000000000093964023122123095</ssl_oar_data>
-      <ssl_result>0</ssl_result>
-      <ssl_txn_id>180820ED4-85DA9146-51AB-4FEC-8004-91C607047E5C</ssl_txn_id>
-      <ssl_avs_response>M</ssl_avs_response>
-      <ssl_approval_code>093964</ssl_approval_code>
-      <ssl_avs_address>456 My Street</ssl_avs_address>
-      <ssl_avs_zip>K1C2N6</ssl_avs_zip>
-      <ssl_txn_time>08/18/2020 06:57:45 PM</ssl_txn_time>
-      <ssl_account_balance>0.00</ssl_account_balance>
-      <ssl_ps2000_data>A8181857455011610042VE</ssl_ps2000_data>
-      <ssl_exp_date>0921</ssl_exp_date>
-      <ssl_result_message>APPROVAL</ssl_result_message>
-      <ssl_card_short_description>VISA</ssl_card_short_description>
-      <ssl_card_type>CREDITCARD</ssl_card_type>
-      <ssl_cvv2_response>M</ssl_cvv2_response>
-      <ssl_partner_app_id>VM</ssl_partner_app_id>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <ssl_issuer_response>85</ssl_issuer_response>
+        <ssl_transaction_type>CARDVERIFICATION</ssl_transaction_type>
+        <ssl_card_number>41**********9990</ssl_card_number>
+        <ssl_oar_data>010012309508182257450000047554200000000000093964023122123095</ssl_oar_data>
+        <ssl_result>0</ssl_result>
+        <ssl_txn_id>180820ED4-85DA9146-51AB-4FEC-8004-91C607047E5C</ssl_txn_id>
+        <ssl_avs_response>M</ssl_avs_response>
+        <ssl_approval_code>093964</ssl_approval_code>
+        <ssl_avs_address>456 My Street</ssl_avs_address>
+        <ssl_avs_zip>K1C2N6</ssl_avs_zip>
+        <ssl_txn_time>08/18/2020 06:57:45 PM</ssl_txn_time>
+        <ssl_account_balance>0.00</ssl_account_balance>
+        <ssl_ps2000_data>A8181857455011610042VE</ssl_ps2000_data>
+        <ssl_exp_date>0921</ssl_exp_date>
+        <ssl_result_message>APPROVAL</ssl_result_message>
+        <ssl_card_short_description>VISA</ssl_card_short_description>
+        <ssl_card_type>CREDITCARD</ssl_card_type>
+        <ssl_cvv2_response>M</ssl_cvv2_response>
+        <ssl_partner_app_id>VM</ssl_partner_app_id>
+      </txn>
     XML
   end
 
   def failed_purchase_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <errorCode>5000</errorCode>
-      <errorName>Credit Card Number Invalid</errorName>
-      <errorMessage>The Credit Card Number supplied in the authorization request appears to be invalid.</errorMessage>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <errorCode>5000</errorCode>
+        <errorName>Credit Card Number Invalid</errorName>
+        <errorMessage>The Credit Card Number supplied in the authorization request appears to be invalid.</errorMessage>
+      </txn>
     XML
   end
 
   def failed_refund_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <errorCode>5091</errorCode>
-      <errorName>Invalid amount</errorName>
-      <errorMessage>The amount exceeded the original transaction amount. Amount must be equal or lower than the original transaction amount.</errorMessage>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <errorCode>5091</errorCode>
+        <errorName>Invalid amount</errorName>
+        <errorMessage>The amount exceeded the original transaction amount. Amount must be equal or lower than the original transaction amount.</errorMessage>
+      </txn>
     XML
   end
 
   def failed_void_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <errorCode>5040</errorCode>
-      <errorName>Invalid Transaction ID</errorName>
-      <errorMessage>The transaction ID is invalid for this transaction type</errorMessage>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <errorCode>5040</errorCode>
+        <errorName>Invalid Transaction ID</errorName>
+        <errorMessage>The transaction ID is invalid for this transaction type</errorMessage>
+      </txn>
     XML
   end
 
   def failed_verify_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <errorCode>5000</errorCode>
-      <errorName>Credit Card Number Invalid</errorName>
-      <errorMessage>The Credit Card Number supplied in the authorization request appears to be invalid.</errorMessage>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <errorCode>5000</errorCode>
+        <errorName>Credit Card Number Invalid</errorName>
+        <errorMessage>The Credit Card Number supplied in the authorization request appears to be invalid.</errorMessage>
+      </txn>
     XML
   end
 
   def invalid_login_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <errorCode>4025</errorCode>
-      <errorName>Invalid Credentials</errorName>
-      <errorMessage>The credentials supplied in the authorization request are invalid.</errorMessage>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <errorCode>4025</errorCode>
+        <errorName>Invalid Credentials</errorName>
+        <errorMessage>The credentials supplied in the authorization request are invalid.</errorMessage>
+      </txn>
     XML
   end
 
   def successful_authorization_response
-    <<-XML
-    <?xml version=\"1.0\" encoding=\"UTF-8\"?>
-    <txn>
-      <ssl_issuer_response>00</ssl_issuer_response>
-      <ssl_transaction_type>AUTHONLY</ssl_transaction_type>
-      <ssl_card_number>41**********9990</ssl_card_number>
-      <ssl_departure_date></ssl_departure_date>
-      <ssl_oar_data>010012312309152159540000047554200000000000259404025921123123</ssl_oar_data>
-      <ssl_result>0</ssl_result>
-      <ssl_txn_id>150920ED4-3EB7A2DF-A5A7-48E6-97B6-D98A9DC0BD59</ssl_txn_id>
-      <ssl_avs_response>M</ssl_avs_response>
-      <ssl_approval_code>259404</ssl_approval_code>
-      <ssl_salestax></ssl_salestax>
-      <ssl_amount>100.00</ssl_amount>
-      <ssl_txn_time>09/15/2020 05:59:54 PM</ssl_txn_time>
-      <ssl_account_balance>0.00</ssl_account_balance>
-      <ssl_ps2000_data>A9151759546571260030VE</ssl_ps2000_data>
-      <ssl_exp_date>0921</ssl_exp_date>
-      <ssl_result_message>APPROVAL</ssl_result_message>
-      <ssl_card_short_description>VISA</ssl_card_short_description>
-      <ssl_completion_date></ssl_completion_date>
-      <ssl_eci_ind>3</ssl_eci_ind>
-      <ssl_card_type>CREDITCARD</ssl_card_type>
-      <ssl_invoice_number></ssl_invoice_number>
-      <ssl_cvv2_response>M</ssl_cvv2_response>
-      <ssl_partner_app_id>01</ssl_partner_app_id>
-    </txn>
+    <<~XML
+      <?xml version=\"1.0\" encoding=\"UTF-8\"?>
+      <txn>
+        <ssl_issuer_response>00</ssl_issuer_response>
+        <ssl_transaction_type>AUTHONLY</ssl_transaction_type>
+        <ssl_card_number>41**********9990</ssl_card_number>
+        <ssl_departure_date></ssl_departure_date>
+        <ssl_oar_data>010012312309152159540000047554200000000000259404025921123123</ssl_oar_data>
+        <ssl_result>0</ssl_result>
+        <ssl_txn_id>150920ED4-3EB7A2DF-A5A7-48E6-97B6-D98A9DC0BD59</ssl_txn_id>
+        <ssl_avs_response>M</ssl_avs_response>
+        <ssl_approval_code>259404</ssl_approval_code>
+        <ssl_salestax></ssl_salestax>
+        <ssl_amount>100.00</ssl_amount>
+        <ssl_txn_time>09/15/2020 05:59:54 PM</ssl_txn_time>
+        <ssl_account_balance>0.00</ssl_account_balance>
+        <ssl_ps2000_data>A9151759546571260030VE</ssl_ps2000_data>
+        <ssl_exp_date>0921</ssl_exp_date>
+        <ssl_result_message>APPROVAL</ssl_result_message>
+        <ssl_card_short_description>VISA</ssl_card_short_description>
+        <ssl_completion_date></ssl_completion_date>
+        <ssl_eci_ind>3</ssl_eci_ind>
+        <ssl_card_type>CREDITCARD</ssl_card_type>
+        <ssl_invoice_number></ssl_invoice_number>
+        <ssl_cvv2_response>M</ssl_cvv2_response>
+        <ssl_partner_app_id>01</ssl_partner_app_id>
+      </txn>
     XML
   end
 
   def failed_authorization_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <errorCode>5000</errorCode>
-      <errorName>Credit Card Number Invalid</errorName>
-      <errorMessage>The Credit Card Number supplied in the authorization request appears to be invalid.</errorMessage>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <errorCode>5000</errorCode>
+        <errorName>Credit Card Number Invalid</errorName>
+        <errorMessage>The Credit Card Number supplied in the authorization request appears to be invalid.</errorMessage>
+      </txn>
     XML
   end
 
@@ -1207,56 +1207,56 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def failed_capture_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <errorCode>5004</errorCode>
-      <errorName>Invalid Approval Code</errorName>
-      <errorMessage>The FORCE Approval Code supplied in the authorization request appears to be invalid or blank.  The FORCE Approval Code must be 6 or less alphanumeric characters.</errorMessage>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <errorCode>5004</errorCode>
+        <errorName>Invalid Approval Code</errorName>
+        <errorMessage>The FORCE Approval Code supplied in the authorization request appears to be invalid or blank.  The FORCE Approval Code must be 6 or less alphanumeric characters.</errorMessage>
+      </txn>
     XML
   end
 
   def successful_store_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <txn>
-      <ssl_last_name>Longsen</ssl_last_name>
-      <ssl_company>Widgets Inc</ssl_company>
-      <ssl_phone>(555)555-5555</ssl_phone>
-      <ssl_card_number>41**********9990</ssl_card_number>
-      <ssl_result>0</ssl_result>
-      <ssl_txn_id></ssl_txn_id>
-      <ssl_avs_response></ssl_avs_response>
-      <ssl_approval_code></ssl_approval_code>
-      <ssl_email>paul@domain.com</ssl_email>
-      <ssl_avs_zip>K1C2N6</ssl_avs_zip>
-      <ssl_txn_time>08/18/2020 07:01:16 PM</ssl_txn_time>
-      <ssl_exp_date>0921</ssl_exp_date>
-      <ssl_card_short_description>VISA</ssl_card_short_description>
-      <ssl_address2>Apt 1</ssl_address2>
-      <ssl_token_response>SUCCESS</ssl_token_response>
-      <ssl_country>CA</ssl_country>
-      <ssl_card_type>CREDITCARD</ssl_card_type>
-      <ssl_transaction_type>GETTOKEN</ssl_transaction_type>
-      <ssl_salestax></ssl_salestax>
-      <ssl_avs_address>456 My Street</ssl_avs_address>
-      <ssl_customer_id></ssl_customer_id>
-      <ssl_account_balance>0.00</ssl_account_balance>
-      <ssl_state>ON</ssl_state>
-      <ssl_city>Ottawa</ssl_city>
-      <ssl_result_message></ssl_result_message>
-      <ssl_first_name>Longbob</ssl_first_name>
-      <ssl_invoice_number></ssl_invoice_number>
-      <ssl_cvv2_response></ssl_cvv2_response>
-      <ssl_token>4421912014039990</ssl_token>
-      <ssl_add_token_response>Card Updated</ssl_add_token_response>
-    </txn>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <txn>
+        <ssl_last_name>Longsen</ssl_last_name>
+        <ssl_company>Widgets Inc</ssl_company>
+        <ssl_phone>(555)555-5555</ssl_phone>
+        <ssl_card_number>41**********9990</ssl_card_number>
+        <ssl_result>0</ssl_result>
+        <ssl_txn_id></ssl_txn_id>
+        <ssl_avs_response></ssl_avs_response>
+        <ssl_approval_code></ssl_approval_code>
+        <ssl_email>paul@domain.com</ssl_email>
+        <ssl_avs_zip>K1C2N6</ssl_avs_zip>
+        <ssl_txn_time>08/18/2020 07:01:16 PM</ssl_txn_time>
+        <ssl_exp_date>0921</ssl_exp_date>
+        <ssl_card_short_description>VISA</ssl_card_short_description>
+        <ssl_address2>Apt 1</ssl_address2>
+        <ssl_token_response>SUCCESS</ssl_token_response>
+        <ssl_country>CA</ssl_country>
+        <ssl_card_type>CREDITCARD</ssl_card_type>
+        <ssl_transaction_type>GETTOKEN</ssl_transaction_type>
+        <ssl_salestax></ssl_salestax>
+        <ssl_avs_address>456 My Street</ssl_avs_address>
+        <ssl_customer_id></ssl_customer_id>
+        <ssl_account_balance>0.00</ssl_account_balance>
+        <ssl_state>ON</ssl_state>
+        <ssl_city>Ottawa</ssl_city>
+        <ssl_result_message></ssl_result_message>
+        <ssl_first_name>Longbob</ssl_first_name>
+        <ssl_invoice_number></ssl_invoice_number>
+        <ssl_cvv2_response></ssl_cvv2_response>
+        <ssl_token>4421912014039990</ssl_token>
+        <ssl_add_token_response>Card Updated</ssl_add_token_response>
+      </txn>
     XML
   end
 
   def failed_store_response
-    <<-XML
+    <<~XML
       <?xml version=\"1.0\" encoding=\"UTF-8\"?>
       <txn>
         <errorCode>5000</errorCode>
@@ -1267,7 +1267,7 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def successful_update_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <txn>
         <ssl_token>4421912014039990</ssl_token>
@@ -1295,7 +1295,7 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def failed_update_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <txn>
         <ssl_token>4421912014039990</ssl_token>
