@@ -1951,7 +1951,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def failed_force_capture_with_echeck_prenote_response
-    '<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><QuickResp><ProcStatus>19784</ProcStatus><StatusMsg> EWS: Invalid Action Code [W7], For Transaction Type [A].</StatusMsg></QuickResp></Response>'
+    '<?xml version="1.0" encoding="UTF-8"?><Response><QuickResp><ProcStatus>19784</ProcStatus><StatusMsg> EWS: Invalid Action Code [W7], For Transaction Type [A].</StatusMsg></QuickResp></Response>'
   end
 
   def failed_echeck_for_invalid_routing_response
@@ -1983,7 +1983,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def failed_refund_response
-    '<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><QuickResp><ProcStatus>881</ProcStatus><StatusMsg>The LIDM you supplied (3F3F3F) does not match with any existing transaction</StatusMsg></QuickResp></Response>'
+    '<?xml version="1.0" encoding="UTF-8"?><Response><QuickResp><ProcStatus>881</ProcStatus><StatusMsg>The LIDM you supplied (3F3F3F) does not match with any existing transaction</StatusMsg></QuickResp></Response>'
   end
 
   def not_approved_refund_response
@@ -1995,7 +1995,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def failed_credit_response
-    '<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><QuickResp><ProcStatus>881</ProcStatus><StatusMsg>The LIDM you supplied (3F3F3F) does not match with any existing transaction</StatusMsg></QuickResp></Response>'
+    '<?xml version="1.0" encoding="UTF-8"?><Response><QuickResp><ProcStatus>881</ProcStatus><StatusMsg>The LIDM you supplied (3F3F3F) does not match with any existing transaction</StatusMsg></QuickResp></Response>'
   end
 
   def not_approved_credit_response

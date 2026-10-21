@@ -307,15 +307,15 @@ class RemotePinTest < Test::Unit::TestCase
     start_date = (today - 30).strftime('%Y-%m-%d')
     end_date = today.strftime('%Y-%m-%d')
 
-    response = @gateway.transaction_search(start_date: start_date, end_date: end_date)
+    response = @gateway.transaction_search(start_date:, end_date:)
     assert_success response
     assert response.params['response'].is_a?(Array)
 
     # Verify all returned transactions are within the date range
     response.params['response'].each do |charge|
       charge_date = Date.parse(charge['created_at'])
-      assert charge_date >= Date.parse(start_date), "Charge date should be on or after start date"
-      assert charge_date <= Date.parse(end_date), "Charge date should be on or before end date"
+      assert charge_date >= Date.parse(start_date), 'Charge date should be on or after start date'
+      assert charge_date <= Date.parse(end_date), 'Charge date should be on or before end date'
     end
   end
 
@@ -334,7 +334,7 @@ class RemotePinTest < Test::Unit::TestCase
     if response.params['response'].length > 1
       # Verify ascending order
       dates = response.params['response'].map { |charge| Time.parse(charge['created_at']) }
-      assert_equal dates, dates.sort, "Results should be sorted in ascending order by created_at"
+      assert_equal dates, dates.sort, 'Results should be sorted in ascending order by created_at'
     end
   end
 
@@ -345,7 +345,7 @@ class RemotePinTest < Test::Unit::TestCase
     if response.params['response'].length > 1
       # Verify descending order
       dates = response.params['response'].map { |charge| Time.parse(charge['created_at']) }
-      assert_equal dates, dates.sort.reverse, "Results should be sorted in descending order by created_at"
+      assert_equal dates, dates.sort.reverse, 'Results should be sorted in descending order by created_at'
     end
   end
 
@@ -356,7 +356,7 @@ class RemotePinTest < Test::Unit::TestCase
     if response.params['response'].length > 1
       # Verify descending order by amount
       amounts = response.params['response'].map { |charge| charge['amount'] }
-      assert_equal amounts, amounts.sort.reverse, "Results should be sorted in descending order by amount"
+      assert_equal amounts, amounts.sort.reverse, 'Results should be sorted in descending order by amount'
     end
   end
 
@@ -366,7 +366,7 @@ class RemotePinTest < Test::Unit::TestCase
 
     response = @gateway.transaction_search(
       query: @options[:email],
-      start_date: start_date,
+      start_date:,
       sort: 'created_at',
       direction: -1
     )

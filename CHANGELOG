@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Efsnet, Flo2cash: Fix parsing with rexml 3.4.2 and later, and repair unit tests broken by rexml 3.4.2 and NMI test stubs [Ginja] #5601
 * Mercury, TransFirst: Repair gateways following updates to `rexml` [aenand] #5206
 * NMI: Fix Decrypted indicator for Google/Apple pay [javierpedrozaing] #5196
 * FlexCharge: add more descriptives error messages [gasb150] #5199

@@ -83,7 +83,7 @@ class NmiTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture_using_security_key
     @credit_card.number = '4111111111111111'
-    response = stub_comms do
+    response = stub_comms(@gateway_secure) do
       @gateway_secure.authorize(@amount, @credit_card)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/security_key=#{@gateway_secure.options[:security_key]}/, data)
@@ -94,7 +94,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
     end.respond_with(successful_authorization_response)
     assert_success response
-    capture = stub_comms do
+    capture = stub_comms(@gateway_secure) do
       @gateway_secure.capture(@amount, response.authorization)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/security_key=#{@gateway_secure.options[:security_key]}/, data)
@@ -106,7 +106,7 @@ class NmiTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize_using_security_key
-    response = stub_comms do
+    response = stub_comms(@gateway_secure) do
       @gateway_secure.authorize(@amount, @credit_card)
     end.respond_with(failed_authorization_response)
 
@@ -117,7 +117,7 @@ class NmiTest < Test::Unit::TestCase
 
   def test_successful_purchase_using_security_key
     @credit_card.number = '4111111111111111'
-    response = stub_comms do
+    response = stub_comms(@gateway_secure) do
       @gateway_secure.purchase(@amount, @credit_card)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/security_key=#{@gateway_secure.options[:security_key]}/, data)
@@ -133,7 +133,7 @@ class NmiTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_using_security_key
-    response = stub_comms do
+    response = stub_comms(@gateway_secure) do
       @gateway_secure.purchase(@amount, @credit_card)
     end.respond_with(failed_purchase_response)
     assert_failure response

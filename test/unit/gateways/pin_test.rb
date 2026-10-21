@@ -241,7 +241,6 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_successful_inquire
-    post_data = {}
     headers = {}
     token = 'ch_Kw_JxmVqMeSOQU19_krRdw'
     @gateway.stubs(:headers).returns(headers)
@@ -277,7 +276,7 @@ class PinTest < Test::Unit::TestCase
     end_date = '2025-01-31'
     @gateway.expects(:ssl_request).with(:get, "https://test-api.pinpayments.com/1/charges/search?end_date=#{end_date}&start_date=#{start_date}", nil, instance_of(Hash)).returns(successful_transaction_search_response)
 
-    assert response = @gateway.transaction_search(start_date: start_date, end_date: end_date)
+    assert response = @gateway.transaction_search(start_date:, end_date:)
     assert_success response
     assert response.test?
   end
