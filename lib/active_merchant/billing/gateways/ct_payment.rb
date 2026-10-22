@@ -262,7 +262,8 @@ module ActiveMerchant # :nodoc:
       end
 
       def error_code_from(response)
-        STANDARD_ERROR_CODE_MAPPING[response['returnCode'].strip || response['recurReturnCode'.strip]] unless success_from(response)
+        error_code = response['returnCode'] || response['recurReturnCode']
+        STANDARD_ERROR_CODE_MAPPING[error_code&.strip] unless success_from(response)
       end
     end
   end
