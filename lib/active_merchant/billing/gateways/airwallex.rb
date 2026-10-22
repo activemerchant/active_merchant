@@ -347,7 +347,7 @@ module ActiveMerchant # :nodoc:
         response = parse(ssl_post(url, post_data(post), post_headers))
 
         Response.new(
-          success_from(response),
+          success_from(response, action),
           message_from(response),
           response,
           authorization: authorization_from(response),
@@ -371,8 +371,11 @@ module ActiveMerchant # :nodoc:
         post.to_json
       end
 
-      def success_from(response)
-        %w(REQUIRES_PAYMENT_METHOD SUCCEEDED RECEIVED REQUIRES_CAPTURE CANCELLED).include?(response['status'])
+      def success_from(response, action)
+        status = response['status']
+        return status == 'CANCELLED' if action == :void
+
+        %w(REQUIRES_PAYMENT_METHOD SUCCEEDED RECEIVED REQUIRES_CAPTURE CANCELLED).include?(status)
       end
 
       def message_from(response)
