@@ -85,7 +85,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def refund(amount, authorization, options = {})
-        currency = options[:currency] || currency(options[:amount])
+        currency = options[:currency] || currency(amount)
         post = {
           request: {
             MerchantId: @options[:merchant_id],
@@ -118,7 +118,7 @@ module ActiveMerchant # :nodoc:
       private
 
       def build_checkout_request(amount, payment, options)
-        currency = options[:currency] || currency(options[:amount])
+        currency = options[:currency] || currency(amount)
         {
           MerchantId: @options[:merchant_id],
           ReferenceId: options[:order_id],
