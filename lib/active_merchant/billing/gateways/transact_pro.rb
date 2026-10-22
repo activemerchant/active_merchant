@@ -124,7 +124,7 @@ module ActiveMerchant # :nodoc:
         end
 
         if address = options[:shipping_address]
-          post[:shipping_name]    = "#{address.first_name} #{address.last_name}"
+          post[:shipping_name]    = address[:name] || [address[:first_name], address[:last_name]].compact.join(' ')
           post[:shipping_street]  = address[:address1].to_s
           post[:shipping_phone]   = address[:phone].to_s
           post[:shipping_zip]     = address[:zip].to_s

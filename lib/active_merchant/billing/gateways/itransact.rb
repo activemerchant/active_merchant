@@ -267,7 +267,7 @@ module ActiveMerchant # :nodoc:
       private
 
       def add_customer_data(xml, payment_source, options)
-        billing_address = options[:billing_address] || options[:address]
+        billing_address = options[:billing_address] || options[:address] || {}
         shipping_address = options[:shipping_address] || options[:address]
 
         xml.CustomerData {
