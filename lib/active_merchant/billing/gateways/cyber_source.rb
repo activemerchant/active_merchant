@@ -726,7 +726,7 @@ module ActiveMerchant # :nodoc:
           xml.tag! 'postalCode',            address[:zip]
           xml.tag! 'country',               lookup_country_code(address[:country]) unless address[:country].blank?
           xml.tag! 'company',               address[:company]                 unless address[:company].blank?
-          xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
+          xml.tag! 'companyTaxID',          address[:company_tax_id]          unless address[:company_tax_id].blank?
           xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
           xml.tag! 'email',                 options[:email].presence || 'null@cybersource.com'
           xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].blank? || shipTo
