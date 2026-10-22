@@ -73,12 +73,15 @@ module ActiveMerchant # :nodoc:
       end
 
       def valid_routing_number?
-        digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
+        number = routing_number.to_s
+        return false unless number.match?(/\A[0-9]{8,9}\z/)
+
+        digits = number.split('').map(&:to_i)
         case digits.size
         when 9
-          return checksum(digits) == 0 || CAN_INSTITUTION_NUMBERS.include?(routing_number[1..3])
+          return checksum(digits) == 0 || CAN_INSTITUTION_NUMBERS.include?(number[1..3])
         when 8
-          return CAN_INSTITUTION_NUMBERS.include?(routing_number[5..7])
+          return CAN_INSTITUTION_NUMBERS.include?(number[5..7])
         end
 
         false
