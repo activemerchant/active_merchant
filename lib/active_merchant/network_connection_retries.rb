@@ -56,12 +56,12 @@ module ActiveMerchant
         retries -= 1
 
         log_with_retry_details(options[:logger], initial_retries - retries, Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start, e.message, options[:tag])
-        retry unless retries.zero?
+        retry if retries.positive?
         raise ActiveMerchant::ConnectionError.new(e.message, e)
       rescue ActiveMerchant::ConnectionError, ActiveMerchant::InvalidResponseError => e
         retries -= 1
         log_with_retry_details(options[:logger], initial_retries - retries, Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start, e.message, options[:tag])
-        retry if (options[:retry_safe] || retry_safe) && !retries.zero?
+        retry if (options[:retry_safe] || retry_safe) && retries.positive?
         raise
       end
     end
