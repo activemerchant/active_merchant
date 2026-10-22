@@ -846,6 +846,24 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_stored_credentials_ds_transaction_id_survives_top_level_ntid
+    ds_transaction_id = 'f879ea1c-aa2c-4441-806d-e30406466d79'
+    options = @options.merge(
+      network_transaction_id: @network_transaction_id,
+      stored_credential: {
+        network_transaction_id: '1078784111114777',
+        ds_transaction_id: ds_transaction_id
+      }
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{@network_transaction_id}}, data)
+      assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=#{ds_transaction_id}}, data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_successful_off_session_intent_creation_when_claim_without_transaction_id_present
     [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
       stub_comms(@gateway, :ssl_request) do

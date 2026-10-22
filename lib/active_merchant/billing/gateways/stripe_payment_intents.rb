@@ -765,7 +765,10 @@ module ActiveMerchant # :nodoc:
 
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
-        post[:payment_method_options][:card][:mit_exemption] = {}
+        # Only the network_transaction_id itself is overridden here; keep any
+        # other mit_exemption fields (e.g. ds_transaction_id) that
+        # add_stored_credentials already populated.
+        post[:payment_method_options][:card][:mit_exemption] ||= {}
 
         post[:payment_method_options][:card][:mit_exemption][:network_transaction_id] = options[:network_transaction_id]
       end
