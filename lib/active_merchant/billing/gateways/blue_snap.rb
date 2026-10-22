@@ -396,7 +396,7 @@ module ActiveMerchant
       end
 
       def add_echeck_company(doc, check)
-        doc.send('company-name', truncate(check.name, 50)) if check.account_holder_type = 'business'
+        doc.send('company-name', truncate(check.name, 50)) if check.account_holder_type == 'business'
       end
 
       def add_echeck(doc, check)
