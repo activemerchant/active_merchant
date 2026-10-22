@@ -64,6 +64,7 @@ module ActiveMerchant # :nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
+        add_amount(post, money)
         add_reference(post, authorization)
         commit(:capture, post)
       end

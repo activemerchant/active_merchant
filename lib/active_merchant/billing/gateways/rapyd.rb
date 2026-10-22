@@ -45,6 +45,7 @@ module ActiveMerchant # :nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
+        post[:amount] = localized_amount(money, options[:currency] || currency(money))
         add_idempotency(options)
         commit(:post, "payments/#{add_reference(authorization)}/capture", post)
       end
