@@ -27,6 +27,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @apple_pay_master = network_tokenization_credit_card('6011111111111117', brand: 'master', transaction_id: '123', eci: '05', payment_cryptogram: '111111111100cryptogram', source: :apple_pay)
     @google_pay = network_tokenization_credit_card('4242424242424242', source: :google_pay)
     @check = check()
+    @transient_token = 'DPTYPH08ECSPPNWRRDCXG5YBRIMHO01SHLRS8E8X0K3C1R6D34MI06KX6ECHISHZ'
 
     @options = {
       ip: @customer_ip,
@@ -849,6 +850,95 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.retrieve(response.authorization, order_id: generate_unique_id)
     assert response.success?
     assert response.test?
+  end
+
+  def test_reference_purchase_sends_subscription_id_from_authorization
+    stub_comms do
+      @gateway.purchase(@amount, '1000;2240165983980008402433;AhjzbwSP5cIx;store;;USD;7123456789012345678901;credit_card', @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<subscriptionID>7123456789012345678901</subscriptionID>), data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_bare_subscription_id
+    response = stub_comms do
+      @gateway.purchase(@amount, '7123456789012345678901', @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<subscriptionID>7123456789012345678901</subscriptionID>), data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_unstore_with_bare_subscription_id
+    response = stub_comms do
+      @gateway.unstore('7123456789012345678901', order_id: generate_unique_id)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<subscriptionID>7123456789012345678901</subscriptionID>), data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_delete_subscription_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_transient_token
+    options = @options.merge(transient_token: true, billing_address: address(name: 'Jane Doe'))
+    response = stub_comms do
+      @gateway.purchase(@amount, @transient_token, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<tokenSource>\s+<transientToken>#{@transient_token}</transientToken>\s+</tokenSource>), data
+      assert_match %r(<billTo>\s+<firstName>Jane</firstName>\s+<lastName>Doe</lastName>), data
+      assert_match %r(<ccCaptureService run="true">), data
+      assert_not_match %r(<card>), data
+      assert_not_match %r(<recurringSubscriptionInfo>), data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_authorize_with_transient_token
+    response = stub_comms do
+      @gateway.authorize(@amount, @transient_token, @options.merge(transient_token: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<transientToken>#{@transient_token}</transientToken>), data
+      assert_match %r(<ccAuthService run="true">), data
+      assert_not_match %r(<ccCaptureService), data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_store_with_transient_token
+    options = { transient_token: true, order_id: generate_unique_id, billing_address: address(name: 'Jane Doe') }
+    response = stub_comms do
+      @gateway.store(@transient_token, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<billTo>\s+<firstName>Jane</firstName>\s+<lastName>Doe</lastName>), data
+      assert_match %r(<recurringSubscriptionInfo>\s+<frequency>on-demand</frequency>\s+</recurringSubscriptionInfo>), data
+      assert_match %r(<tokenSource>\s+<transientToken>#{@transient_token}</transientToken>\s+</tokenSource>), data
+      assert_match %r(<paySubscriptionCreateService run="true"/>), data
+      assert_not_match %r(<card>), data
+      assert_not_match %r(<ccAuthService), data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_create_subscription_response)
+
+    assert_success response
+    assert_equal '2240165983980008402433', response.params['subscriptionID']
+    assert_equal 'credit_card', response.authorization.split(';')[7]
+  end
+
+  def test_store_with_transient_token_and_setup_fee
+    stub_comms do
+      @gateway.store(@transient_token, transient_token: true, order_id: generate_unique_id, setup_fee: 100)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<grandTotalAmount>1.00</grandTotalAmount>), data
+      assert_match %r(<ccAuthService run="true">), data
+      assert_match %r(<ccCaptureService run="true">), data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_create_subscription_response)
   end
 
   def test_avs_result

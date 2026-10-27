@@ -194,6 +194,10 @@ module ActiveMerchant # :nodoc:
         super
       end
 
+      # To pay with a Flex Microform transient token, pass the token's jti
+      # claim as payment_method and options[:transient_token] => true. The
+      # token carries no cardholder name, so pass it in
+      # options[:billing_address][:name]. #purchase and #store work the same.
       def authorize(money, payment_method, options = {})
         if valid_payment_method?(payment_method, options)
           setup_address_hash(options)
@@ -544,6 +548,7 @@ module ActiveMerchant # :nodoc:
         options[:subscription] = default_subscription_params.update(
           options[:subscription] || {}
         )
+        return build_create_subscription_from_token_request(payment_method, options) if options[:transient_token]
 
         xml = Builder::XmlMarkup.new indent: 2
         add_address(xml, payment_method, options[:billing_address], options)
@@ -568,6 +573,24 @@ module ActiveMerchant # :nodoc:
         end
         add_subscription_create_service(xml, options)
         add_business_rules_data(xml, payment_method, options)
+        add_tax_management_indicator(xml, options)
+        xml.target!
+      end
+
+      def build_create_subscription_from_token_request(token, options)
+        xml = Builder::XmlMarkup.new indent: 2
+        add_address(xml, token, options[:billing_address], options)
+        add_purchase_data(xml, options[:setup_fee] || 0, true, options)
+        # Frequency only: CyberSource rejects a token store that also carries
+        # the recurring billing fields add_subscription sends by default
+        xml.tag! 'recurringSubscriptionInfo' do
+          xml.tag! 'frequency', options[:subscription][:frequency]
+        end
+        add_transient_token(xml, token)
+        options[:payment_method] = :credit_card
+        add_purchase_service(xml, token, options) if options[:setup_fee]
+        add_subscription_create_service(xml, options)
+        add_business_rules_data(xml, token, options)
         add_tax_management_indicator(xml, options)
         xml.target!
       end
@@ -752,11 +775,12 @@ module ActiveMerchant # :nodoc:
 
       def address_names(address_name, payment_method)
         names = split_names(address_name)
-        return names if names.any?(&:present?)
+        # A transient token carries no cardholder name
+        return names if names.any?(&:present?) || !payment_method.respond_to?(:first_name)
 
         [
-          payment_method&.first_name,
-          payment_method&.last_name
+          payment_method.first_name,
+          payment_method.last_name
         ]
       end
 
@@ -767,6 +791,12 @@ module ActiveMerchant # :nodoc:
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
           xml.tag!('cvNumber', creditcard.verification_value) unless @options[:ignore_cvv].to_s == 'true' || creditcard.verification_value.blank?
           xml.tag! 'cardType', @@credit_card_codes[card_brand(creditcard).to_sym]
+        end
+      end
+
+      def add_transient_token(xml, token)
+        xml.tag! 'tokenSource' do
+          xml.tag! 'transientToken', token
         end
       end
 
@@ -1087,8 +1117,9 @@ module ActiveMerchant # :nodoc:
 
         xml.tag! 'recurringSubscriptionInfo' do
           if reference
-            subscription_id = reference.split(';')[6]
-            xml.tag! 'subscriptionID',  subscription_id
+            # Also accept the bare ID, as returned in params['subscriptionID']
+            subscription_id = reference.include?(';') ? reference.split(';')[6] : reference
+            xml.tag! 'subscriptionID', subscription_id
           end
 
           xml.tag! 'status',            options[:subscription][:status] if options[:subscription][:status]
@@ -1117,7 +1148,14 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
-        if payment_method_or_reference.is_a?(String)
+        if options[:transient_token]
+          add_address(xml, payment_method_or_reference, options[:billing_address], options)
+          add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
+          add_line_item_data(xml, options)
+          add_purchase_data(xml, money, true, options)
+          add_installments(xml, options)
+          add_transient_token(xml, payment_method_or_reference)
+        elsif payment_method_or_reference.is_a?(String)
           add_purchase_data(xml, money, true, options)
           add_installments(xml, options)
           add_subscription(xml, options, payment_method_or_reference)

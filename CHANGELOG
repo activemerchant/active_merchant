@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* CyberSource: Support Flex Microform transient tokens and bare subscription IDs [gregschmit] #5603
 
 == Version 1.138.0 (October 21, 2026)
 * Connection: Update the bundled CA file to the Mozilla root store as of 2026-10-20, removing emSign ECC Root CA - G3 and Comodo AAA Services root [Ginja] #5600
