@@ -246,7 +246,7 @@ module ActiveMerchant # :nodoc:
           post[:state] = billing_address[:state]
           post[:country] = billing_address[:country]
           post[:zip] = billing_address[:zip]
-          post[:phone] = billing_address[:phone]
+          post[:phone] = billing_address[:phone] || billing_address[:phone_number]
         end
 
         if (shipping_address = options[:shipping_address])
@@ -260,7 +260,7 @@ module ActiveMerchant # :nodoc:
           post[:shipping_state] = shipping_address[:state]
           post[:shipping_country] = shipping_address[:country]
           post[:shipping_zip] = shipping_address[:zip]
-          post[:shipping_phone] = shipping_address[:phone]
+          post[:shipping_phone] = shipping_address[:phone] || shipping_address[:phone_number]
           post[:shipping_email] = options[:shipping_email] if options[:shipping_email]
         end
 
