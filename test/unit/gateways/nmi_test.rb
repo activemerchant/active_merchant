@@ -256,6 +256,42 @@ class NmiTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_purchase_sends_billing_phone_number_as_phone
+    options = @transaction_options.merge(billing_address: address(phone: nil, phone_number: '(555)555-1234'))
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/(^|&)phone=%28555%29555-1234(&|$)/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_prefers_billing_phone_over_phone_number
+    options = @transaction_options.merge(billing_address: address(phone_number: '(555)555-1234'))
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/(^|&)phone=%28555%29555-5555(&|$)/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_sends_shipping_phone_number_as_shipping_phone
+    options = @transaction_options.merge({ shipping_address: })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/shipping_phone=%28123%29456-7890/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -576,6 +612,19 @@ class NmiTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
     assert response.params['customer_vault_id']
     assert response.authorization.include?(response.params['customer_vault_id'])
+  end
+
+  def test_store_sends_billing_phone_number_as_phone
+    options = { billing_address: address(phone: nil, phone_number: '(555)555-1234') }
+
+    response = stub_comms do
+      @gateway.store(@credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/customer_vault=add_customer/, data)
+      assert_match(/(^|&)phone=%28555%29555-1234(&|$)/, data)
+    end.respond_with(successful_store_response)
+
+    assert_success response
   end
 
   def test_failed_store
