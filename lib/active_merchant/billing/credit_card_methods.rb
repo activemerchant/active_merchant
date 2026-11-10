@@ -347,7 +347,7 @@ module ActiveMerchant # :nodoc:
       # discover:         https://www.discover.com/credit-cards/help-center/glossary.html
       # american_express: https://online.americanexpress.com/myca/fuidfyp/us/action?request_type=un_fuid&Face=en_US
       def valid_card_verification_value?(cvv, brand)
-        cvv.to_s =~ /^\d{#{card_verification_value_length(brand)}}$/
+        cvv.to_s =~ /\A\d{#{card_verification_value_length(brand)}}\z/
       end
 
       def card_verification_value_length(brand)
