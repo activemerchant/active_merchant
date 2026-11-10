@@ -95,6 +95,15 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_false valid_card_verification_value?(12345, 'american_express')
   end
 
+  def test_verification_value_must_match_the_whole_string
+    %W(123\n 123\ninvalid invalid\n123 123\n456).each do |value|
+      assert_false valid_card_verification_value?(value, 'visa'), value.inspect
+    end
+    %W(1234\n 1234\ninvalid invalid\n1234).each do |value|
+      assert_false valid_card_verification_value?(value, 'american_express'), value.inspect
+    end
+  end
+
   def test_should_be_able_to_identify_valid_issue_numbers
     assert valid_issue_number?(1)
     assert valid_issue_number?(10)

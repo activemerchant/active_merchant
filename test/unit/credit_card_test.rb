@@ -223,6 +223,13 @@ class CreditCardTest < Test::Unit::TestCase
     assert_valid card
   end
 
+  def test_multiline_verification_value_is_invalid
+    card = credit_card('4242424242424242', verification_value: "123\ninvalid")
+
+    assert_equal ['should be 3 digits'], card.validate[:verification_value]
+    assert_equal "123\ninvalid", card.verification_value
+  end
+
   def test_should_be_valid_when_not_requiring_a_verification_value
     CreditCard.require_verification_value = true
     card = credit_card('4242424242424242', verification_value: nil, require_verification_value: false)
